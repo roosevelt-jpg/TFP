@@ -71,6 +71,8 @@ jobs:
     needs: [lint, typecheck]
     env:
       NODE_OPTIONS: --max-old-space-size=4096
+      # Placeholder env so the build validates the schema without real secrets.
+      NEXT_PUBLIC_APP_URL: https://example.com
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
