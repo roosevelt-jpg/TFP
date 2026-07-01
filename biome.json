@@ -18,7 +18,8 @@
       "!**/*.tsbuildinfo",
       "!**/next-env.d.ts",
       "!pnpm-lock.yaml",
-      "!.mcp.json"
+      "!.mcp.json",
+      "!public"
     ]
   },
   "formatter": {
