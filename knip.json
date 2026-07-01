@@ -3,12 +3,13 @@
   "entry": [
     "src/app/**/*.{ts,tsx}",
     "src/env.ts",
-    "src/lib/cn.ts",
+    "src/lib/**/*.ts",
     "src/components/**/*.tsx",
+    "src/content/**/*.ts",
     "src/hooks/**/*.ts"
   ],
   "project": ["src/**/*.{ts,tsx}"],
-  "ignoreDependencies": ["tailwindcss"],
+  "ignoreDependencies": ["tailwindcss", "tw-animate-css", "shadcn"],
   "rules": {
     "files": "error",
     "dependencies": "error",
