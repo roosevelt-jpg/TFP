@@ -1,3 +1,198 @@
 @import "tailwindcss";
 
-/* Design tokens (design-tokens.css) are wired into @theme in a later P1 PR. */
+/* Design tokens — single source of truth. Swapping --red retints the site. */
+:root {
+  --red: #d8231c;
+  --red-bright: #ea3a2e;
+
+  --bg: #0a0a0a;
+  --bg-2: #0c0c0b;
+  --surface: #121110;
+  --surface-2: #171513;
+
+  --hairline: #211f1d;
+  --hairline-strong: #322e2a;
+
+  --text: #f4f1ec;
+  --text-muted: #9a938c;
+  --text-dim: #6e6862;
+
+  --cta: var(--red);
+  --cta-contrast: #ffffff;
+  --good: #3ba776;
+  --ring: rgba(216, 35, 28, 0.38);
+
+  /* Warm neutral, deliberately not WhatsApp teal, to sit in-palette. */
+  --chat-panel: rgba(20, 18, 16, 0.5);
+  --chat-header: rgba(32, 28, 25, 0.6);
+  --chat-in: rgba(34, 30, 27, 0.88);
+  --chat-out: var(--surface-2);
+  --chat-solid: #0b0a09;
+
+  --font-display: "Newsreader", Georgia, serif;
+  --font-body: "Poppins", system-ui, -apple-system, sans-serif;
+  --track-label: 0.16em;
+
+  --fs-eyebrow: 0.72rem;
+  --fs-display: clamp(2.2rem, 7vw, 4.7rem);
+  --fs-h2: clamp(1.95rem, 5vw, 3.1rem);
+  --fs-h3: clamp(1.15rem, 2.6vw, 1.4rem);
+  --fs-lead: clamp(1.04rem, 2.2vw, 1.24rem);
+
+  --r-xs: 2px;
+  --r-sm: 3px;
+  --r-md: 4px;
+  --r-lg: 6px;
+  --r-pill: 999px;
+
+  --space-section: clamp(82px, 12vw, 140px);
+  --gutter: clamp(20px, 5vw, 40px);
+  --maxw: 1180px;
+  --maxw-narrow: 760px;
+
+  --shadow-card: 0 20px 50px rgba(0, 0, 0, 0.5);
+  --grid-size: 62px;
+
+  /* Un-tokenizable mask/background values, centralised so components carry none. */
+  --grid-line: rgba(255, 255, 255, 0.045);
+  --grid-line-red: rgba(216, 35, 28, 0.6);
+  --spotlight-mask: radial-gradient(
+    200px circle at var(--mx, -400px) var(--my, -400px),
+    #000,
+    transparent 62%
+  );
+  --vignette-hero: radial-gradient(
+    70% 58% at 50% 40%,
+    #000,
+    rgba(0, 0, 0, 0.14) 30%,
+    transparent 56%
+  );
+  --vignette-soft: radial-gradient(
+    80% 60% at 50% 0%,
+    #000 0%,
+    rgba(0, 0, 0, 0.18) 34%,
+    transparent 60%
+  );
+  --vignette-full: radial-gradient(
+    80% 70% at 50% 42%,
+    #000,
+    rgba(0, 0, 0, 0.3) 55%,
+    transparent 82%
+  );
+
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-emphasis: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-shine: cubic-bezier(0.3, 0.5, 0.2, 1);
+}
+
+/* `inline` so utilities use the token value, not a re-reference — required
+   because the tokens are defined in :root above (Tailwind v4 docs). */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-dim: var(--text-dim);
+  --color-red: var(--red);
+  --color-red-bright: var(--red-bright);
+  --color-good: var(--good);
+  --color-cta-contrast: var(--cta-contrast);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+
+  --tracking-label: var(--track-label);
+
+  --radius-xs: var(--r-xs);
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+
+  --text-display: var(--fs-display);
+  --text-h2: var(--fs-h2);
+  --text-h3: var(--fs-h3);
+  --text-lead: var(--fs-lead);
+  --text-eyebrow: var(--fs-eyebrow);
+
+  --shadow-card: var(--shadow-card);
+
+  --ease-out: var(--ease-out);
+  --ease-emphasis: var(--ease-emphasis);
+  --ease-shine: var(--ease-shine);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+}
+
+h1,
+h2 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.018em;
+  line-height: 1.04;
+}
+
+h1 em,
+h2 em {
+  font-style: italic;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Defined outside @theme so they are always emitted (used via animate-[…]). */
+@keyframes shine {
+  to {
+    transform: translateX(360%);
+  }
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes caret {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
