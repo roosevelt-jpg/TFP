@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm biome ci . --reporter=github
+
+  guard-gaps:
+    name: Lint Rule Gaps (grep guards)
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Forbid mutable exports (export let/var)
+        run: |
+          if git ls-files "src/**/*.ts" "src/**/*.tsx" \
+            | xargs grep -nE '^export (let|var)\b' 2>/dev/null; then
+            echo "::error::Mutable exports (export let/var) are forbidden. Use export const or move state inside functions."
+            exit 1
+          fi
+
+      - name: Forbid <a href="/..."> to internal routes (use next/link)
+        run: |
+          if git ls-files "src/**/*.tsx" \
+            | xargs grep -nE '<a\s+[^>]*href="/[^"]*"' 2>/dev/null \
+            | grep -v -E 'href="/(api)' \
+            | grep . ; then
+            echo "::error::Use <Link> from next/link for internal routes instead of <a href=\"/...\">."
+            exit 1
+          fi
+
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [lint, typecheck]
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/cache@v4
+        with:
+          path: |
+            .next/cache
+          key: nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**') }}
+          restore-keys: |
+            nextjs-${{ hashFiles('pnpm-lock.yaml') }}-
+      - run: pnpm build
