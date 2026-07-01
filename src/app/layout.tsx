@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { siteConfig } from "@/config/site";
 
+import { body, display } from "./fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -44,8 +45,17 @@ type RootLayoutProps = Readonly<{ children: React.ReactNode }>;
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en" className="h-full antialiased">
-      <body className="flex min-h-full flex-col">{children}</body>
+    <html
+      lang="en"
+      className={`${display.variable} ${body.variable} h-full antialiased`}
+      style={
+        {
+          "--font-display": `var(--font-display-next), Georgia, serif`,
+          "--font-body": `var(--font-body-next), system-ui, sans-serif`,
+        } as React.CSSProperties
+      }
+    >
+      <body className="flex min-h-full flex-col font-body">{children}</body>
     </html>
   );
 }
