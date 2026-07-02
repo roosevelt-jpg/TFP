@@ -49,7 +49,6 @@
   --r-sm: 3px;
   --r-md: 4px;
   --r-lg: 6px;
-  --r-pill: 999px;
 
   --space-section: clamp(82px, 12vw, 140px);
   --gutter: clamp(20px, 5vw, 40px);
@@ -117,7 +116,6 @@
   --radius-sm: var(--r-sm);
   --radius-md: var(--r-md);
   --radius-lg: var(--r-lg);
-  --radius-pill: var(--r-pill);
 
   --text-display: var(--fs-display);
   --text-h2: var(--fs-h2);
