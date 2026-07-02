@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
 import { siteConfig } from "@/config/site";
 
@@ -39,6 +39,11 @@ export const metadata: Metadata = {
       "max-video-preview": -1,
     },
   },
+};
+
+export const viewport: Viewport = {
+  colorScheme: "dark",
+  themeColor: "#0A0A0A",
 };
 
 type RootLayoutProps = Readonly<{ children: React.ReactNode }>;

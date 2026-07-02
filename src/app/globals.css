@@ -19,7 +19,9 @@
 
   --text: #f4f1ec;
   --text-muted: #9a938c;
-  --text-dim: #6e6862;
+  /* #827c76 (4.8:1 on --bg) clears WCAG AA for small text; the design's
+     #6e6862 was 3.6:1. Kept as close to the original grey as AA allows. */
+  --text-dim: #827c76;
 
   --cta: var(--red);
   --cta-contrast: #ffffff;
@@ -115,6 +117,7 @@
   --radius-sm: var(--r-sm);
   --radius-md: var(--r-md);
   --radius-lg: var(--r-lg);
+  --radius-pill: var(--r-pill);
 
   --text-display: var(--fs-display);
   --text-h2: var(--fs-h2);
@@ -180,6 +183,8 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 h1,

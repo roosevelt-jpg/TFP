@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { Container } from "./Container";
+
 type NavItem = { label: string; href: string };
 
 type SiteHeaderProps = {
@@ -11,8 +13,8 @@ type SiteHeaderProps = {
 
 export function SiteHeader({ nav, cta, variant = "full" }: SiteHeaderProps) {
   return (
-    <header className="relative z-2 px-(--gutter) py-[18px]">
-      <div className="mx-auto flex max-w-(--maxw) items-center justify-between gap-4">
+    <header className="relative z-2 py-[18px]">
+      <Container className="flex items-center justify-center gap-4 min-[900px]:justify-between">
         <Link
           href="/"
           className="flex items-center gap-2.5 text-[0.98rem] font-semibold"
@@ -22,8 +24,8 @@ export function SiteHeader({ nav, cta, variant = "full" }: SiteHeaderProps) {
             alt="The Formula Programme"
             width={1440}
             height={209}
-            className="h-[26px] w-auto"
-            priority
+            loading="eager"
+            className="relative top-[3px] h-[26px] w-auto"
           />
         </Link>
 
@@ -48,7 +50,7 @@ export function SiteHeader({ nav, cta, variant = "full" }: SiteHeaderProps) {
             {cta}
           </nav>
         )}
-      </div>
+      </Container>
     </header>
   );
 }
