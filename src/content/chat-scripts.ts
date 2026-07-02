@@ -14,7 +14,7 @@ export const heroChat: ChatMessage[] = [
   { from: "user", text: "Heavy. Legs are wrecked 😅", time: "7:05" },
   {
     from: "coach",
-    text: "Good — that's growth. 30g protein within the hour.",
+    text: "Good — that’s growth. 30g protein within the hour.",
     time: "7:05",
   },
   { from: "user", text: "On it. Swap rows for pull-ups?", time: "7:06" },
@@ -34,7 +34,7 @@ export const heroChat: ChatMessage[] = [
 export const solutionChat: ChatMessage[] = [
   {
     from: "coach",
-    text: "It's 9:10pm — you've not logged dinner. What did you have?",
+    text: "It’s 9:10pm — you’ve not logged dinner. What did you have?",
   },
   {
     from: "user",
@@ -42,7 +42,7 @@ export const solutionChat: ChatMessage[] = [
   },
   {
     from: "coach",
-    text: "Solid meal. The ice cream's fine — that's life. Add a 15-min walk tomorrow and we're square. 👊",
+    text: "Solid meal. The ice cream’s fine — that’s life. Add a 15-min walk tomorrow and we’re square. 👊",
   },
 ];
 
@@ -50,15 +50,15 @@ export const solutionChat: ChatMessage[] = [
 export const signupRailChat = (waPreview: string): ChatMessage[] => [
   {
     from: "coach",
-    text: `Soon as your spot opens, I'll text ${waPreview} to kick things off. 👊`,
+    text: `Soon as your spot opens, I’ll text ${waPreview} to kick things off. 👊`,
   },
 ];
 
-// Confirmation (purchase) — coach's first live message.
+// Confirmation (purchase) — coach’s first live message.
 export const confirmationChat: ChatMessage[] = [
   {
     from: "coach",
-    text: "Welcome in 👊 I'm your coach for the next 8 weeks. First up — what time do you usually train?",
+    text: "Welcome in 👊 I’m your coach for the next 8 weeks. First up — what time do you usually train?",
   },
 ];
 
@@ -66,7 +66,7 @@ export const confirmationChat: ChatMessage[] = [
 export const waitlistChat: ChatMessage[] = [
   {
     from: "coach",
-    text: "You're on the list 🙌 I'll message you right here the moment your spot opens. Sit tight.",
+    text: "You’re on the list 🙌 I’ll message you right here the moment your spot opens. Sit tight.",
   },
 ];
 
@@ -74,6 +74,6 @@ export const waitlistChat: ChatMessage[] = [
 export const heroTypewriter: string[] = [
   "texts you back.",
   "keeps you going.",
-  "won't let you quit.",
+  "won’t let you quit.",
   "checks in daily.",
 ];
