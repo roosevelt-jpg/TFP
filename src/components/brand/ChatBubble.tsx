@@ -5,15 +5,25 @@ type ChatBubbleProps = {
   children?: React.ReactNode;
   time?: string;
   typing?: boolean;
+  compact?: boolean;
 };
 
-export function ChatBubble({ from, children, time, typing }: ChatBubbleProps) {
+export function ChatBubble({
+  from,
+  children,
+  time,
+  typing,
+  compact,
+}: ChatBubbleProps) {
   const coach = from === "coach";
   return (
     <div className={cn("flex", coach ? "justify-start" : "justify-end")}>
       <div
         className={cn(
-          "text-text max-w-[88%] rounded-[11px] px-3 py-2 text-[0.85rem] leading-[1.42]",
+          "text-text",
+          compact
+            ? "max-w-[90%] rounded-[10px] px-2.5 py-[7px] text-[0.8rem] leading-[1.38]"
+            : "max-w-[88%] rounded-[11px] px-3 py-[9px] text-[0.88rem] leading-[1.45]",
           coach
             ? "rounded-tl-[3px] bg-(--chat-in)"
             : "bg-surface-2 rounded-tr-[3px]",

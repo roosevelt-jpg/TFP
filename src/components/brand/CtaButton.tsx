@@ -53,7 +53,7 @@ export function CtaButton({
       {withShine && (
         <span
           aria-hidden
-          className="ease-shine pointer-events-none absolute inset-y-0 left-0 w-1/2 -translate-x-[200%] bg-[linear-gradient(105deg,transparent,rgba(255,255,255,.3),transparent)] transition-transform duration-[850ms] group-hover:translate-x-[360%]"
+          className="ease-shine pointer-events-none absolute inset-y-0 left-0 w-1/2 translate-x-[-200%] bg-[linear-gradient(105deg,transparent,rgba(255,255,255,.3),transparent)] transition-none duration-850 group-hover:translate-x-[360%] group-hover:transition-transform"
         />
       )}
     </a>

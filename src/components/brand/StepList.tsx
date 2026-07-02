@@ -6,7 +6,11 @@ type StepListProps = {
 };
 
 export function StepList({ children, className }: StepListProps) {
-  return <div className={cn("grid gap-8", className)}>{children}</div>;
+  return (
+    <div className={cn("grid gap-[clamp(34px,5vw,48px)]", className)}>
+      {children}
+    </div>
+  );
 }
 
 type StepProps = {
@@ -38,8 +42,10 @@ export function Step({
           {index}
         </div>
       )}
-      <h3 className="font-display mt-4 text-[1.15rem] font-medium">{title}</h3>
-      <p className="text-muted mt-2 leading-relaxed">{children}</p>
+      <h3 className="font-body mt-[18px] mb-[7px] text-h3 font-semibold">
+        {title}
+      </h3>
+      <p className="text-muted max-w-[34ch] leading-[1.6]">{children}</p>
     </div>
   );
 }

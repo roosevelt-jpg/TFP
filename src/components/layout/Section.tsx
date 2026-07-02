@@ -4,13 +4,11 @@ import { Container } from "./Container";
 
 type SectionProps = React.ComponentPropsWithoutRef<"section"> & {
   divided?: boolean;
-  tone?: "bg" | "bg-2";
   containerWidth?: "default" | "narrow";
 };
 
 export function Section({
   divided = false,
-  tone = "bg",
   containerWidth = "default",
   className,
   children,
@@ -18,9 +16,10 @@ export function Section({
 }: SectionProps) {
   return (
     <section
+      // Transparent (relative for content stacking) so the fixed cursor
+      // SpotlightGrid shows through every section; opaque cards mask it locally.
       className={cn(
-        "py-(--space-section)",
-        tone === "bg-2" ? "bg-bg-2" : "bg-bg",
+        "relative py-(--space-section)",
         divided && "border-hairline border-t",
         className,
       )}

@@ -7,6 +7,7 @@ type ChatHeaderProps = {
   status?: string;
   online?: boolean;
   avatar?: string;
+  compact?: boolean;
 };
 
 export function ChatHeader({
@@ -14,31 +15,50 @@ export function ChatHeader({
   status = "online",
   online = true,
   avatar,
+  compact = false,
 }: ChatHeaderProps) {
+  const avatarSize = compact ? 27 : 34;
   return (
-    <div className="flex items-center gap-[9px] bg-(--chat-header) px-[13px] py-[11px]">
+    <div
+      className={cn(
+        "flex items-center bg-(--chat-header)",
+        compact
+          ? "gap-[9px] px-[11px] py-[9px]"
+          : "gap-2.5 px-[15px] py-[13px]",
+      )}
+    >
       {avatar ? (
         <Image
           src={avatar}
           alt=""
           aria-hidden
-          width={30}
-          height={30}
-          className="size-[30px] rounded-full object-cover object-[50%_8%]"
+          width={avatarSize}
+          height={avatarSize}
+          style={{ width: avatarSize, height: avatarSize }}
+          className="rounded-full object-cover object-[50%_8%]"
         />
       ) : (
         <span
           aria-hidden
-          className="bg-red grid size-[30px] place-items-center rounded-full font-semibold text-white"
+          style={{ width: avatarSize, height: avatarSize }}
+          className="bg-red grid place-items-center rounded-full font-semibold text-white"
         >
           K
         </span>
       )}
       <div className="leading-tight">
-        <div className="text-text text-[0.82rem] font-semibold">{name}</div>
         <div
           className={cn(
-            "flex items-center gap-[5px] text-[0.62rem]",
+            "text-text font-semibold",
+            compact ? "text-[0.79rem]" : "text-[0.86rem]",
+          )}
+        >
+          {name}
+        </div>
+        <div
+          className={cn(
+            "flex items-center gap-[5px]",
+            compact ? "text-[0.61rem]" : "text-[0.66rem]",
             online ? "text-good" : "text-dim",
           )}
         >

@@ -1,0 +1,90 @@
+// Structured content for repeated marketing blocks. Keeps copy out of components.
+
+export type Benefit = {
+  title: string;
+  body: string;
+};
+
+// Solution section capability rows (landing + How It Works).
+export const coachCapabilities: Benefit[] = [
+  {
+    title: "Checks in first",
+    body: "Proactive messages before you think to open it. The days you’d skip are the days it shows up.",
+  },
+  {
+    title: "Answers anything",
+    body: "Form, a swap, what to order out — ask in plain English, get a straight answer in seconds.",
+  },
+  {
+    title: "Knows your plan",
+    body: "It tracks where you are in the eight weeks and adapts to how your week actually went.",
+  },
+  {
+    title: "Won’t let you coast",
+    body: "Missed a session? It’ll know. Expect a nudge — not a lecture.",
+  },
+];
+
+// "What’s included" cards (landing).
+export const included: Benefit[] = [
+  {
+    title: "The 8-week programme",
+    body: "Progressive training (gym or home) and a flexible nutrition framework with targets and swaps. In your inbox the moment you’re in — yours to keep for good.",
+  },
+  {
+    title: "Weekly check-ins",
+    body: "Your coach reviews the week, banks the wins and resets your targets. Accountability that turns up — on the quiet weeks especially.",
+  },
+  {
+    title: "Form & nutrition Q&A",
+    body: "Send a form clip, ask for a meal swap, sanity-check a craving at 11pm. A straight, no-nonsense answer in seconds — any hour.",
+  },
+];
+
+// How-it-works steps (landing + How It Works).
+export const steps: Benefit[] = [
+  {
+    title: "Join the waitlist",
+    body: "Register your interest in under a minute. No payment now — you’re just reserving your spot.",
+  },
+  {
+    title: "Get your invite",
+    body: "When your spot opens we’ll email you to check out — then your programme and WhatsApp coach unlock instantly.",
+  },
+  {
+    title: "Show up",
+    body: "Train the plan. Your coach handles the rest — check-ins, answers and the nudges that keep you honest.",
+  },
+];
+
+// Measured-progress benchmarks (landing).
+export const benchmarks: string[] = [
+  "Strength",
+  "Conditioning",
+  "Body composition",
+  "Work capacity",
+];
+
+// Brotherhood / community section (landing).
+export const community: Benefit[] = [
+  {
+    title: "Same standard",
+    body: "One system, one bar. Everyone training to the level Kane sets — no shortcuts.",
+  },
+  {
+    title: "Real accountability",
+    body: "People who show up when you post your session — and notice when you don’t.",
+  },
+  {
+    title: "Same fight",
+    body: "Eight weeks, shared. You start together, you finish together.",
+  },
+];
+
+// Pricing card feature list (landing).
+export const pricingFeatures: string[] = [
+  "Full 8-week training + nutrition programme — yours to keep",
+  "Personal Performance Coach in WhatsApp, in Kane’s voice — 8 weeks",
+  "Proactive weekly check-ins & accountability",
+  "Form & nutrition Q&A, any hour",
+];

@@ -55,9 +55,9 @@ function PressLogoImage({
       src={logo.src}
       alt={hidden ? "" : logo.alt}
       aria-hidden={hidden}
-      width={148}
-      height={25}
-      className="h-[25px] w-auto max-w-[148px] object-contain"
+      width={logo.width}
+      height={logo.height}
+      className="h-[25px] w-auto object-contain"
     />
   );
 }
