@@ -20,6 +20,10 @@ type BrandChatProps = {
   animated?: boolean;
   loop?: boolean;
   translucent?: boolean;
+  fixedHeight?: boolean;
+  compact?: boolean;
+  /** Illustrative demo — hides the looping chat from assistive tech. */
+  decorative?: boolean;
   className?: string;
 };
 
@@ -29,11 +33,15 @@ export function BrandChat({
   animated = false,
   loop = false,
   translucent = true,
+  fixedHeight = false,
+  compact = false,
+  decorative = false,
   className,
 }: BrandChatProps) {
   const shown = useSequencedMessages(messages, animated, loop);
   return (
     <div
+      aria-hidden={decorative || undefined}
       className={cn(
         "overflow-hidden rounded-md border",
         translucent
@@ -42,13 +50,24 @@ export function BrandChat({
         className,
       )}
     >
-      {header && <ChatHeader {...header} />}
-      <div className="flex flex-col gap-2 p-[13px]">
+      {header && <ChatHeader {...header} compact={compact} />}
+      <div
+        className={cn(
+          "flex flex-col",
+          compact ? "gap-1.5 p-[11px]" : "gap-2.5 p-[15px]",
+          fixedHeight && "h-[172px] justify-end overflow-hidden",
+        )}
+      >
         {shown.map((m) =>
           m.typing ? (
-            <ChatBubble key="typing" from="coach" typing />
+            <ChatBubble key={m.id} from="coach" typing compact={compact} />
           ) : (
-            <ChatBubble key={`${m.from}-${m.text}`} from={m.from} time={m.time}>
+            <ChatBubble
+              key={m.id}
+              from={m.from}
+              time={m.time}
+              compact={compact}
+            >
               {m.text}
             </ChatBubble>
           ),
