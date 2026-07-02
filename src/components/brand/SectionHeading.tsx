@@ -20,7 +20,6 @@ export function SectionHeading({
   return (
     <Tag
       className={cn(
-        "text-balance",
         size === "display" ? "text-display" : "text-h2",
         align === "center" && "text-center",
         className,

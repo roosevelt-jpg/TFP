@@ -7,7 +7,7 @@ export function StatBlock({ value, caption }: StatBlockProps) {
   return (
     <div>
       <div className="font-display text-[1.7rem]">{value}</div>
-      <div className="bg-hairline-strong my-2.5 h-px" />
+      <div className="bg-hairline-strong my-[9px] h-px" />
       <div className="text-dim text-[0.78rem] font-semibold tracking-widest uppercase">
         {caption}
       </div>

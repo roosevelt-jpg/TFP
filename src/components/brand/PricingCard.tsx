@@ -68,6 +68,39 @@ export function PricingCard({
           {reassurance}
         </p>
       )}
+
+      <div className="text-dim mt-4 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 text-[0.77rem] min-[480px]:gap-4">
+        <span className="inline-flex items-center gap-2">
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-[13px]"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <title>Lock</title>
+            <rect x="4" y="11" width="16" height="9" rx="1" />
+            <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+          </svg>
+          No payment to join today
+        </span>
+        <span className="inline-flex items-center gap-2">
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="size-[13px]"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <title>Guarantee</title>
+            <path d="M9 12l2 2 4-4" />
+            <circle cx="12" cy="12" r="9" />
+          </svg>
+          14-day money-back guarantee
+        </span>
+      </div>
     </div>
   );
 }
