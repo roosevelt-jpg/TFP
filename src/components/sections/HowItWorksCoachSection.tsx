@@ -19,7 +19,7 @@ export function HowItWorksCoachSection() {
             Trained on how Kane <em>actually coaches.</em>
           </SectionHeading>
         </Reveal>
-        <div className="mt-[46px] grid items-start gap-[clamp(32px,5vw,64px)] md:grid-cols-2">
+        <div className="mt-[46px] grid items-start gap-[clamp(32px,5vw,64px)] min-[820px]:grid-cols-2">
           <div>
             {coachCapabilities.map((cap, i) => (
               <Reveal key={cap.title} delayMs={i * 70}>

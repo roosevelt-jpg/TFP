@@ -15,7 +15,7 @@ const cta = cva(
         invert: "bg-text text-bg hover:brightness-95",
       },
       size: {
-        sm: "px-[18px] py-2.5 text-sm",
+        sm: "min-h-11 px-[18px] py-2.5 text-sm",
         md: "px-7 py-4 text-[1.02rem]",
         lg: "px-8 py-[18px] text-[1.1rem]",
       },

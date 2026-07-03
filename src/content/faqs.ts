@@ -8,7 +8,7 @@ export type Faq = {
 export const faqs: Faq[] = [
   {
     q: "How does the Performance Coach actually work?",
-    a: "Once you’re in, you connect on WhatsApp in about 30 seconds. Your coach messages you there like a normal chat — it checks in, asks what you ate and how training went, answers questions and adjusts as you go. No new app to learn.",
+    a: "Once your spot opens and you’re in, you connect on WhatsApp in about 30 seconds. Your coach messages you there like a normal chat — it checks in, asks what you ate and how training went, answers questions and adjusts as you go. No new app to learn.",
   },
   {
     q: "Is it really Kane, or a bot?",
@@ -16,7 +16,7 @@ export const faqs: Faq[] = [
   },
   {
     q: "What’s in the 8-week programme?",
-    a: "A complete progressive training plan (gym or home), a flexible nutrition framework with targets and swaps, warm-ups, mobility and a weekly structure. It lands in your inbox instantly after purchase — yours to keep.",
+    a: "A complete progressive training plan (gym or home), a flexible nutrition framework with targets and swaps, warm-ups, mobility and a weekly structure. It lands in your inbox the moment your spot opens — yours to keep.",
   },
   {
     q: "Tell me about the £79/month after.",

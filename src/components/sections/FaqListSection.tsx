@@ -11,7 +11,8 @@ export function FaqListSection() {
   return (
     <section className="relative pb-[clamp(30px,5vw,48px)]">
       <Container>
-        <Accordion>
+        <h2 className="sr-only">Questions and answers</h2>
+        <Accordion defaultValue={[faqs[0].q]}>
           {faqs.map((faq) => (
             <AccordionItem key={faq.q} value={faq.q}>
               <AccordionTrigger>{faq.q}</AccordionTrigger>
