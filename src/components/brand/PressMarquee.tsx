@@ -12,7 +12,7 @@ type PressMarqueeProps = {
 
 export function PressMarquee({
   logos,
-  label = "As featured in",
+  label = "You've seen us on",
   speedSeconds = 42,
   className,
 }: PressMarqueeProps) {
