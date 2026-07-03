@@ -2,25 +2,17 @@
 
 import { returnValidationErrors } from "next-safe-action";
 
-import { checkHoneypot } from "@/lib/abuse/honeypot";
 import { actionClient } from "@/lib/safe-action";
 import { cleanEmail } from "@/lib/sanitize/email";
 import { toE164 } from "@/lib/sanitize/phone";
 import { cleanText } from "@/lib/sanitize/text";
 import { waitlistSchema } from "@/lib/validation/waitlist/schema";
+import { encodeConfirmationToken } from "@/lib/waitlist/confirmation-token";
 
 export const joinWaitlist = actionClient
   .metadata({ actionName: "joinWaitlist" })
   .inputSchema(waitlistSchema)
   .action(async ({ parsedInput }) => {
-    const spam = checkHoneypot(parsedInput.honeypot, parsedInput.renderedAt);
-
-    if (spam) {
-      console.warn("[waitlist] rejected:", spam);
-      // Passive: pretend success so bots get no signal. P4 hard-blocks.
-      return { ok: true as const, ref: "WL-QUEUED" };
-    }
-
     const whatsapp = toE164(parsedInput.whatsapp);
 
     if (!whatsapp) {
@@ -47,9 +39,14 @@ export const joinWaitlist = actionClient
     };
 
     // STUB persistence — real Supabase upsert (idempotent on email) + Trigger
-    // enqueue (welcome email, GHL contact) land in P3.
+    // enqueue (welcome email, GHL contact) land in P3, returning the row id.
     const ref = `WL-${lead.email.slice(0, 3).toUpperCase()}${Date.now().toString(36).slice(-5).toUpperCase()}`;
     console.info("[waitlist] lead captured (stub):", { ...lead, ref });
 
-    return { ok: true as const, ref };
+    const id = encodeConfirmationToken({
+      ref,
+      firstName: lead.name.split(" ")[0] || undefined,
+    });
+
+    return { ok: true as const, id };
   });

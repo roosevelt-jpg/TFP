@@ -1,15 +1,27 @@
-type Option = { value: string; label: string };
+type Option = { value: string; label: string; tip?: string };
 
 export const GOAL_OPTIONS = [
   { value: "lose", label: "Lose fat" },
   { value: "build", label: "Build muscle" },
-  { value: "fit", label: "Get fit" },
+  { value: "fit", label: "Fighting-fit" },
 ] as const satisfies readonly Option[];
 
 export const LEVEL_OPTIONS = [
-  { value: "beg", label: "Beginner" },
-  { value: "int", label: "Intermediate" },
-  { value: "adv", label: "Advanced" },
+  {
+    value: "beg",
+    label: "Beginner",
+    tip: "New to training, or back after a long break.",
+  },
+  {
+    value: "int",
+    label: "Intermediate",
+    tip: "Training consistently and comfortable with the basics.",
+  },
+  {
+    value: "adv",
+    label: "Advanced",
+    tip: "Experienced under load and chasing the next level.",
+  },
 ] as const satisfies readonly Option[];
 
 export const SEX_OPTIONS = [
@@ -24,7 +36,7 @@ export const DIET_OPTIONS = [
   { value: "vegan", label: "Vegan" },
   { value: "pescatarian", label: "Pescatarian" },
   { value: "halal", label: "Halal" },
-  { value: "other", label: "Other" },
+  { value: "other", label: "Other (I’ll tell my coach)" },
 ] as const satisfies readonly Option[];
 
 export const GOAL_VALUES = ["lose", "build", "fit"] as const;

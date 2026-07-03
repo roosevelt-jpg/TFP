@@ -3,20 +3,28 @@ import * as z from "zod";
 
 import { DIET_VALUES, GOAL_VALUES, LEVEL_VALUES, SEX_VALUES } from "./options";
 
-// Form inputs arrive as strings; validate a required whole number in range.
-const requiredNumber = (label: string, min: number, max: number) =>
+type NumberRange = {
+  label: string;
+  min: number;
+  max: number;
+  tooLow?: string;
+  tooHigh?: string;
+};
+
+const domainNumber = ({ label, min, max, tooLow, tooHigh }: NumberRange) =>
+  z
+    .number({ error: `${label} must be a number` })
+    .int({ error: `${label} must be a whole number` })
+    .min(min, { error: tooLow ?? `${label} looks too low` })
+    .max(max, { error: tooHigh ?? `${label} looks too high` });
+
+const requiredNumber = (range: NumberRange) =>
   z
     .string()
     .trim()
-    .min(1, { error: `${label} is required` })
+    .min(1, { error: `${range.label} is required` })
     .transform((v) => Number(v))
-    .pipe(
-      z
-        .number({ error: `${label} must be a number` })
-        .int({ error: `${label} must be a whole number` })
-        .min(min, { error: `${label} looks too low` })
-        .max(max, { error: `${label} looks too high` }),
-    );
+    .pipe(domainNumber(range));
 
 export const nameField = z
   .string()
@@ -44,11 +52,37 @@ export const levelField = z.enum(LEVEL_VALUES, {
 });
 export const sexField = z.enum(SEX_VALUES, { error: "Select one" });
 
-export const ageField = requiredNumber("Age", 16, 100);
-export const heightField = requiredNumber("Height", 120, 250);
-export const weightField = requiredNumber("Weight", 35, 300);
+const AGE_RANGE: NumberRange = {
+  label: "Age",
+  min: 16,
+  max: 100,
+  tooLow: "You must be 16 or over to join",
+  tooHigh: "That age looks too high",
+};
+const HEIGHT_RANGE: NumberRange = { label: "Height", min: 120, max: 272 };
+const WEIGHT_RANGE: NumberRange = { label: "Weight", min: 35, max: 300 };
 
-export const goalWeightField = z.string().trim().max(4).optional();
+export const ageField = domainNumber(AGE_RANGE);
+export const heightField = domainNumber(HEIGHT_RANGE);
+export const weightField = domainNumber(WEIGHT_RANGE);
+
+const requiredEnum = <const T extends readonly [string, ...string[]]>(
+  values: T,
+  error: string,
+) => z.string().min(1, { error }).pipe(z.enum(values, { error }));
+
+export const goalFormField = requiredEnum(GOAL_VALUES, "Pick a goal");
+export const levelFormField = requiredEnum(
+  LEVEL_VALUES,
+  "Pick your experience level",
+);
+export const sexFormField = requiredEnum(SEX_VALUES, "Select one");
+
+export const ageFormField = requiredNumber(AGE_RANGE);
+export const heightFormField = requiredNumber(HEIGHT_RANGE);
+export const weightFormField = requiredNumber(WEIGHT_RANGE);
+
+export const goalWeightField = z.string().trim().max(5).optional();
 
 export const injuriesField = z
   .string()
@@ -56,7 +90,6 @@ export const injuriesField = z
   .max(300, { error: "Keep it under 300 characters" })
   .optional();
 
-// The select submits "" when untouched; treat that as "no preference".
 export const dietField = z.preprocess(
   (v) => (v === "" ? undefined : v),
   z.enum(DIET_VALUES).optional(),
@@ -66,5 +99,6 @@ export const consentField = z.literal(true, {
   error: "You must agree to continue",
 });
 
-export const honeypotField = z.literal("").optional();
-export const renderedAtField = z.coerce.number().optional();
+export const consentFormField = z
+  .boolean()
+  .pipe(z.literal(true, { error: "You must agree to continue" }));

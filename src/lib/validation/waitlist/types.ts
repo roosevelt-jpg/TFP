@@ -1,5 +1,6 @@
 import type { z } from "zod";
 
-import type { waitlistSchema } from "./schema";
+import type { waitlistFormSchema } from "./schema";
 
-export type WaitlistFormValues = z.input<typeof waitlistSchema>;
+export type WaitlistFormInput = z.input<typeof waitlistFormSchema>;
+export type WaitlistFormOutput = z.output<typeof waitlistFormSchema>;
