@@ -64,7 +64,6 @@ export function WaitlistForm({
 
   const form = useForm<WaitlistFormInput, unknown, WaitlistFormOutput>({
     resolver: zodResolver(waitlistFormSchema),
-    // Don't nag: validate on submit, then keep corrected fields live.
     mode: "onSubmit",
     reValidateMode: "onChange",
     defaultValues: DEFAULTS,
