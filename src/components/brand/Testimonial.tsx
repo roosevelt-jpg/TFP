@@ -30,7 +30,7 @@ export function Testimonial({
     >
       <span
         aria-hidden
-        className="ease-shine pointer-events-none absolute inset-y-0 left-0 w-[55%] translate-x-[-220%] bg-[linear-gradient(105deg,transparent,var(--sheen-soft),transparent)] transition-none duration-900 group-hover:translate-x-[320%] group-hover:transition-transform"
+        className="ease-shine pointer-events-none absolute inset-y-0 left-0 w-[55%] translate-x-[-220%] bg-(image:--sheen-gradient-soft) transition-none duration-900 group-hover:translate-x-[320%] group-hover:transition-transform"
       />
       <div
         role="img"
