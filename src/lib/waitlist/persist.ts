@@ -2,6 +2,7 @@ import "server-only";
 
 import { headers } from "next/headers";
 
+import { firstNameOf } from "@/lib/name";
 import { db } from "@/db";
 import { Prisma } from "@/generated/prisma/client";
 
@@ -34,6 +35,7 @@ type LeadDetails = Omit<
   Prisma.WaitlistCreateInput,
   "ref" | "publicToken" | keyof CreateOnlyFields
 >;
+
 type CreateOnlyFields = {
   consentAt: Date;
   consentText: string;
@@ -50,12 +52,19 @@ type CreateOnlyFields = {
   landingPath: string | null;
 };
 
+export type UpsertResult = {
+  publicToken: string;
+  ref: string;
+  firstName: string;
+  isNew: boolean;
+};
+
 // Idempotent on email: a returning email refreshes `details` but keeps its
-// original ref/token/consent/attribution. Returns the confirmation publicToken.
+// original ref/token/consent/attribution.
 export async function upsertWaitlistLead(
   details: LeadDetails,
   createOnly: CreateOnlyFields,
-): Promise<string> {
+): Promise<UpsertResult> {
   for (let attempt = 0; attempt < MAX_REF_ATTEMPTS; attempt++) {
     try {
       const lead = await db.waitlist.upsert({
@@ -67,9 +76,20 @@ export async function upsertWaitlistLead(
           publicToken: generatePublicToken(),
         },
         update: details,
-        select: { publicToken: true },
+        select: {
+          publicToken: true,
+          ref: true,
+          name: true,
+          createdAt: true,
+          updatedAt: true,
+        },
       });
-      return lead.publicToken;
+      return {
+        publicToken: lead.publicToken,
+        ref: lead.ref,
+        firstName: firstNameOf(lead.name),
+        isNew: lead.createdAt.getTime() === lead.updatedAt.getTime(),
+      };
     } catch (error) {
       if (isRefCollision(error) && attempt < MAX_REF_ATTEMPTS - 1) continue;
       throw error;

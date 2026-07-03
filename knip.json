@@ -6,7 +6,9 @@
     "src/lib/**/*.ts",
     "src/components/**/*.tsx",
     "src/content/**/*.ts",
-    "src/hooks/**/*.ts"
+    "src/hooks/**/*.ts",
+    "src/trigger/**/*.{ts,tsx}",
+    "trigger.config.ts"
   ],
   "project": ["src/**/*.{ts,tsx}"],
   "ignoreDependencies": [
@@ -14,7 +16,9 @@
     "tw-animate-css",
     "shadcn",
     "@prisma/client",
-    "tsx"
+    "tsx",
+    "@trigger.dev/build",
+    "@react-email/ui"
   ],
   "rules": {
     "files": "error",

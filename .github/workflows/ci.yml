@@ -75,6 +75,8 @@ jobs:
       NEXT_PUBLIC_APP_URL: https://example.com
       DATABASE_URL: postgresql://user:pass@localhost:5432/db
       DIRECT_URL: postgresql://user:pass@localhost:5432/db
+      RESEND_API_KEY: re_placeholder
+      RESEND_FROM: onboarding@resend.dev
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6

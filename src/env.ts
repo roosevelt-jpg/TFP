@@ -11,6 +11,8 @@ export const env = createEnv({
     PAYMENTS_LIVE: z.stringbool().default(false),
     DATABASE_URL: z.url(),
     DIRECT_URL: z.url(),
+    RESEND_API_KEY: z.string().min(1),
+    RESEND_FROM: z.string().min(1),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.url(),
