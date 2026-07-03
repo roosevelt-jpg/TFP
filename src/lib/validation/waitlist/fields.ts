@@ -26,6 +26,13 @@ const requiredNumber = (range: NumberRange) =>
     .transform((v) => Number(v))
     .pipe(domainNumber(range));
 
+const optionalNumber = (range: NumberRange) =>
+  z
+    .string()
+    .trim()
+    .transform((v) => (v === "" ? undefined : Number(v)))
+    .pipe(domainNumber(range).optional());
+
 export const nameField = z
   .string()
   .trim()
@@ -61,6 +68,11 @@ const AGE_RANGE: NumberRange = {
 };
 const HEIGHT_RANGE: NumberRange = { label: "Height", min: 120, max: 272 };
 const WEIGHT_RANGE: NumberRange = { label: "Weight", min: 35, max: 300 };
+const GOAL_WEIGHT_RANGE: NumberRange = {
+  label: "Goal weight",
+  min: 35,
+  max: 300,
+};
 
 export const ageField = domainNumber(AGE_RANGE);
 export const heightField = domainNumber(HEIGHT_RANGE);
@@ -82,7 +94,8 @@ export const ageFormField = requiredNumber(AGE_RANGE);
 export const heightFormField = requiredNumber(HEIGHT_RANGE);
 export const weightFormField = requiredNumber(WEIGHT_RANGE);
 
-export const goalWeightField = z.string().trim().max(5).optional();
+export const goalWeightField = domainNumber(GOAL_WEIGHT_RANGE).optional();
+export const goalWeightFormField = optionalNumber(GOAL_WEIGHT_RANGE);
 
 export const injuriesField = z
   .string()
@@ -94,6 +107,22 @@ export const dietField = z.preprocess(
   (v) => (v === "" ? undefined : v),
   z.enum(DIET_VALUES).optional(),
 );
+
+const attributionString = z.string().trim().max(300).optional();
+
+export const attributionField = z
+  .object({
+    utmSource: attributionString,
+    utmMedium: attributionString,
+    utmCampaign: attributionString,
+    utmContent: attributionString,
+    utmTerm: attributionString,
+    fbclid: attributionString,
+    gclid: attributionString,
+    referrer: z.string().trim().max(1000).optional(),
+    landingPath: z.string().trim().max(1000).optional(),
+  })
+  .optional();
 
 export const consentField = z.literal(true, {
   error: "You must agree to continue",
