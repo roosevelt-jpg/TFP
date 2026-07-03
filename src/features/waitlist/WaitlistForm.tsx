@@ -37,6 +37,7 @@ import type {
   WaitlistFormInput,
   WaitlistFormOutput,
 } from "@/lib/validation/waitlist/types";
+import { getAttribution } from "@/lib/waitlist/attribution";
 
 const DEFAULTS: WaitlistFormInput = {
   name: "",
@@ -79,7 +80,10 @@ export function WaitlistForm({
 
   const onSubmit = handleSubmit(async (values) => {
     const toastId = toast.loading("Joining…");
-    const res = await executeAsync(values);
+    const res = await executeAsync({
+      ...values,
+      attribution: getAttribution(),
+    });
 
     const whatsappError = res?.validationErrors?.whatsapp?._errors?.[0];
     if (whatsappError) {
