@@ -210,6 +210,13 @@
   --radius-sm: calc(var(--radius) - 4px);
 }
 
+html {
+  /* Reserve the scrollbar gutter so scroll-locking overlays (base-ui
+     Select/Dialog toggle the root overflow on open) can't reflow the page
+     sideways. */
+  scrollbar-gutter: stable;
+}
+
 body {
   background: var(--bg);
   color: var(--text);
