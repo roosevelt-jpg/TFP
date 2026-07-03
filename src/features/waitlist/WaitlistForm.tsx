@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { firstNameOf } from "@/lib/name";
 import {
   DIET_OPTIONS,
   GOAL_OPTIONS,
@@ -72,7 +73,7 @@ export function WaitlistForm({
   const { errors } = formState;
 
   const nameValue = useWatch({ control, name: "name" });
-  const firstName = nameValue?.trim().split(" ")[0] || undefined;
+  const firstName = firstNameOf(nameValue ?? "") || undefined;
 
   const { executeAsync, isPending, result } = useAction(joinWaitlist);
 

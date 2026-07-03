@@ -2,6 +2,7 @@
 
 import { returnValidationErrors } from "next-safe-action";
 
+import { firstNameOf } from "@/lib/name";
 import { actionClient } from "@/lib/safe-action";
 import { cleanEmail } from "@/lib/sanitize/email";
 import { toE164 } from "@/lib/sanitize/phone";
@@ -45,7 +46,7 @@ export const joinWaitlist = actionClient
 
     const id = encodeConfirmationToken({
       ref,
-      firstName: lead.name.split(" ")[0] || undefined,
+      firstName: firstNameOf(lead.name) || undefined,
     });
 
     return { ok: true as const, id };
