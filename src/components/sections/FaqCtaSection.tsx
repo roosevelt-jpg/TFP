@@ -15,7 +15,7 @@ export function FaqCtaSection() {
             </SectionHeading>
             <p className="text-muted text-lead mx-auto mt-3.5 max-w-[42ch] leading-[1.6]">
               Joining the waitlist is free. When early access opens it’s £
-              {PRICE_TODAY} to start — programme + AI coach — then £
+              {PRICE_TODAY} to start — programme + AI coach for 8 weeks — then £
               {PRICE_MONTHLY}/mo, cancel anytime.
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">

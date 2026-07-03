@@ -7,6 +7,7 @@ export function HowItWorksStepsSection() {
   return (
     <section className="relative pb-(--space-section)">
       <Container>
+        <h2 className="sr-only">How it works, step by step</h2>
         <StepList className="md:grid-cols-3">
           {howItWorksSteps.map((step, i) => (
             <Reveal key={step.title} delayMs={i * 100}>
