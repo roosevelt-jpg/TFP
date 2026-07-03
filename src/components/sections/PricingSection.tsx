@@ -21,7 +21,7 @@ export function PricingSection() {
             currency={CURRENCY}
             features={pricingFeatures}
             cta={{ label: "Join the Waitlist", href: "/join" }}
-            reassurance="No payment to join the waitlist. When your spot opens you’ll check out at this price — then cancel anytime, no retention hoops."
+            reassurance="No payment to join the waitlist. When your spot opens you’ll lock in this price — then cancel anytime, no retention hoops."
           />
         </div>
       </Reveal>
