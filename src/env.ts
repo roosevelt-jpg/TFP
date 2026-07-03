@@ -6,6 +6,9 @@ export const env = createEnv({
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
+    // Release toggle: flip to true when billing goes live to surface the
+    // membership support flows (billing, pause, cancel, refund).
+    PAYMENTS_LIVE: z.stringbool().default(false),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.url(),
