@@ -9,7 +9,13 @@
     "src/hooks/**/*.ts"
   ],
   "project": ["src/**/*.{ts,tsx}"],
-  "ignoreDependencies": ["tailwindcss", "tw-animate-css", "shadcn"],
+  "ignoreDependencies": [
+    "tailwindcss",
+    "tw-animate-css",
+    "shadcn",
+    "@prisma/client",
+    "tsx"
+  ],
   "rules": {
     "files": "error",
     "dependencies": "error",

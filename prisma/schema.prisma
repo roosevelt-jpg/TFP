@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Goal {
+  lose
+  build
+  fit
+}
+
+enum Level {
+  beg
+  int
+  adv
+}
+
+enum Sex {
+  male
+  female
+  other
+}
+
+enum Diet {
+  none
+  vegetarian
+  vegan
+  pescatarian
+  halal
+  other
+}
+
+model Waitlist {
+  id String @id @default(cuid())
+
+  // ref: human display code. publicToken: unguessable key used in the /joined
+  // URL (never expose the primary key there).
+  ref         String @unique
+  publicToken String @unique
+
+  email        String  @unique
+  name         String
+  whatsapp     String
+  goal         Goal
+  level        Level
+  sex          Sex
+  age          Int
+  heightCm     Int
+  weightKg     Int
+  goalWeightKg Int?
+  diet         Diet?
+  injuries     String?
+
+  consentAt     DateTime @default(now())
+  consentText   String
+  policyVersion String
+  consentIp     String?
+
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmContent  String?
+  utmTerm     String?
+  fbclid      String?
+  gclid       String?
+  referrer    String?
+  landingPath String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+}

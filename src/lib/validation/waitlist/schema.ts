@@ -3,6 +3,7 @@ import * as z from "zod";
 import {
   ageField,
   ageFormField,
+  attributionField,
   consentField,
   consentFormField,
   dietField,
@@ -10,6 +11,7 @@ import {
   goalField,
   goalFormField,
   goalWeightField,
+  goalWeightFormField,
   heightField,
   heightFormField,
   injuriesField,
@@ -23,7 +25,6 @@ import {
   whatsappField,
 } from "./fields";
 
-// Server-side truth: coerces/transforms raw input into the persisted shape.
 export const waitlistSchema = z.object({
   name: nameField,
   email: emailField,
@@ -38,11 +39,9 @@ export const waitlistSchema = z.object({
   diet: dietField,
   injuries: injuriesField,
   consent: consentField,
+  attribution: attributionField,
 });
 
-// Client-side mirror: field types match what controlled inputs hold (empty
-// selects, string numerics, boolean consent) so the inferred form type has no
-// input/output skew and defaultValues need no casts.
 export const waitlistFormSchema = z.object({
   name: nameField,
   email: emailField,
@@ -53,8 +52,9 @@ export const waitlistFormSchema = z.object({
   age: ageFormField,
   heightCm: heightFormField,
   weightKg: weightFormField,
-  goalWeightKg: goalWeightField,
+  goalWeightKg: goalWeightFormField,
   diet: dietField,
   injuries: injuriesField,
   consent: consentFormField,
+  attribution: attributionField,
 });

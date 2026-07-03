@@ -2,21 +2,25 @@ import "server-only";
 
 import { cache } from "react";
 
-import { decodeConfirmationToken } from "@/lib/waitlist/confirmation-token";
+import { firstNameOf } from "@/lib/name";
+import { db } from "@/db";
 
 import type { WaitlistConfirmation } from "../dto";
 
-/**
- * Fetches the confirmation record for a waitlist sign-up by its id.
- *
- * Public query — no auth, accessed via the opaque id handed to /joined after a
- * successful submit. Returns null if the id doesn't resolve (page → notFound).
- *
- * STUB: decodes the id (see confirmation-token). In P3 this becomes a Supabase
- * select on the persisted lead; the signature is unchanged.
- */
+// Looked up by the unguessable publicToken — knowing it is the capability, so
+// no auth. Null when it doesn't resolve (page shows its in-page not-found).
 export const getWaitlistConfirmation = cache(
-  async (id: string): Promise<WaitlistConfirmation | null> => {
-    return decodeConfirmationToken(id);
+  async (publicToken: string): Promise<WaitlistConfirmation | null> => {
+    const lead = await db.waitlist.findUnique({
+      where: { publicToken },
+      select: { ref: true, name: true },
+    });
+
+    if (!lead) return null;
+
+    return {
+      ref: lead.ref,
+      firstName: firstNameOf(lead.name) || undefined,
+    };
   },
 );
