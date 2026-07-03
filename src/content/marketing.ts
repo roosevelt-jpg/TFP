@@ -57,6 +57,23 @@ export const steps: Benefit[] = [
   },
 ];
 
+// How It Works page — the three-step walkthrough (distinct copy from the
+// landing's condensed `steps`).
+export const howItWorksSteps: Benefit[] = [
+  {
+    title: "Join the waitlist",
+    body: "Tell us your goal and where to reach you. Takes under a minute — no payment now.",
+  },
+  {
+    title: "Get the lot, instantly",
+    body: "Your programme lands in your inbox and your coach says hello on WhatsApp. Set up before your coffee’s brewed.",
+  },
+  {
+    title: "Show up — it does the rest",
+    body: "Daily check-ins, instant answers and the nudges that keep you honest. You bring the work; it brings the accountability.",
+  },
+];
+
 // Measured-progress benchmarks (landing).
 export const benchmarks: string[] = [
   "Strength",
