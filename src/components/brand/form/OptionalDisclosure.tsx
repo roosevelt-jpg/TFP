@@ -22,14 +22,14 @@ export function OptionalDisclosure({
         type="button"
         onClick={toggle}
         aria-expanded={open}
-        className="text-muted hover:text-text flex w-full items-center justify-between text-[0.9rem] font-medium transition-colors"
+        className="group/disclosure text-muted hover:text-text flex w-full items-center justify-between gap-4 text-[0.9rem] font-medium transition-colors"
       >
         {summary}
         <span
           aria-hidden
           className={cn(
-            "text-dim text-[1.35rem] leading-none transition-transform duration-300",
-            open && "rotate-45",
+            "border-hairline-strong text-text grid size-[26px] shrink-0 place-items-center rounded-xs border text-[1.05rem] leading-none transition-transform duration-300",
+            open && "rotate-45 border-current",
           )}
         >
           +

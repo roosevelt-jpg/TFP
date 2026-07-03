@@ -30,9 +30,13 @@ export function SiteHeader({ nav, cta, variant = "full" }: SiteHeaderProps) {
         </Link>
 
         {variant === "minimal" ? (
-          <Link href="/" className="text-muted text-[0.92rem]">
-            Back to site
-          </Link>
+          <div className="hidden min-[900px]:block">
+            {cta ?? (
+              <Link href="/" className="text-muted text-[0.92rem]">
+                Back to site
+              </Link>
+            )}
+          </div>
         ) : (
           <nav
             aria-label="Main"
