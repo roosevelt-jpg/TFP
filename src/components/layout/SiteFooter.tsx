@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { cn } from "@/lib/cn";
+
 import { Container } from "./Container";
 
 type FooterLink = { label: string; href: string };
@@ -9,13 +11,58 @@ type SiteFooterProps = {
   links?: FooterLink[];
   disclaimer?: React.ReactNode;
   width?: "default" | "narrow";
+  // Compact single-row footer for utility pages (404, checkout) — no logo block.
+  minimal?: boolean;
 };
+
+function FooterNav({
+  links,
+  className,
+  linkClassName,
+}: {
+  links?: FooterLink[];
+  className: string;
+  linkClassName?: string;
+}) {
+  if (!links || links.length === 0) return null;
+  return (
+    <nav aria-label="Footer" className={className}>
+      {links.map((link) => (
+        <Link
+          key={link.href}
+          href={link.href}
+          className={cn("hover:text-text transition-colors", linkClassName)}
+        >
+          {link.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
 
 export function SiteFooter({
   links,
   disclaimer,
   width = "default",
+  minimal = false,
 }: SiteFooterProps) {
+  if (minimal) {
+    return (
+      <footer className="border-hairline relative z-10 border-t py-6">
+        <Container width={width}>
+          <div className="text-dim flex flex-wrap items-center justify-between gap-x-[22px] gap-y-2.5 text-[0.78rem]">
+            <span>© 2026 The Formula Performance.</span>
+            <FooterNav
+              links={links}
+              className="flex flex-wrap gap-x-[22px] gap-y-2.5"
+              linkClassName="text-muted"
+            />
+          </div>
+        </Container>
+      </footer>
+    );
+  }
+
   return (
     <footer className="border-hairline relative border-t pt-12 pb-28">
       <Container width={width}>
@@ -34,22 +81,10 @@ export function SiteFooter({
             </p>
           </div>
 
-          {links && links.length > 0 && (
-            <nav
-              aria-label="Footer"
-              className="text-muted flex flex-wrap gap-x-7 gap-y-3.5 text-[0.92rem]"
-            >
-              {links.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="hover:text-text transition-colors"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-          )}
+          <FooterNav
+            links={links}
+            className="text-muted flex flex-wrap gap-x-7 gap-y-3.5 text-[0.92rem]"
+          />
         </div>
 
         <div className="bg-hairline mt-[30px] mb-5 h-px" />
