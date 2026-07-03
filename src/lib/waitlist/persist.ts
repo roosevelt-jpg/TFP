@@ -21,11 +21,8 @@ function isRefCollision(error: unknown): boolean {
   return fields.some((f) => f === "ref" || f === "publicToken");
 }
 
-/**
- * Best-effort client IP for consent evidence. Prefers the platform-attested
- * header over the client-settable leftmost x-forwarded-for hop; still not
- * authoritative (spoofable if the app is ever hit without a trusted proxy).
- */
+// Best-effort consent evidence: prefer the platform-attested header over the
+// client-settable x-forwarded-for (spoofable without a trusted proxy).
 export async function clientIp(): Promise<string | null> {
   const h = await headers();
   const attested = h.get("x-real-ip") ?? h.get("x-vercel-forwarded-for");
@@ -53,14 +50,8 @@ type CreateOnlyFields = {
   landingPath: string | null;
 };
 
-/**
- * Upserts a waitlist lead, idempotent on email: a returning email refreshes its
- * `details` but keeps the row it first got — original ref, token, consent and
- * first-touch attribution. Returns the public token for the confirmation URL.
- *
- * ref/publicToken are random; the DB unique constraints are the source of truth
- * for their uniqueness, and we retry on the (near-impossible) collision.
- */
+// Idempotent on email: a returning email refreshes `details` but keeps its
+// original ref/token/consent/attribution. Returns the confirmation publicToken.
 export async function upsertWaitlistLead(
   details: LeadDetails,
   createOnly: CreateOnlyFields,

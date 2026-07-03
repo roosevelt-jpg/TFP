@@ -6,14 +6,8 @@ import { randomBytes, randomInt } from "node:crypto";
 const ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 const REF_LENGTH = 8;
 
-/**
- * A random, human-readable waitlist reference (e.g. "WL-7H2K9F4B").
- *
- * Opaque and non-enumerable (doesn't leak sign-up counts). Uniqueness is
- * guaranteed by the `Waitlist.ref` unique constraint, not by this function —
- * the caller inserts and retries on a conflict. 32^8 ≈ 1.1e12 keyspace, so
- * collisions are negligible.
- */
+// Human-readable display code. Uniqueness is enforced by the DB constraint, not
+// here — the caller retries on a collision.
 export function generateRef(): string {
   let code = "";
   for (let i = 0; i < REF_LENGTH; i++) {
@@ -22,11 +16,8 @@ export function generateRef(): string {
   return `WL-${code}`;
 }
 
-/**
- * A high-entropy, URL-safe token (~192 bits) used as the unguessable key in the
- * /joined confirmation URL — so the internal primary key is never exposed and
- * confirmations can't be enumerated.
- */
+// Unguessable ~192-bit key for the /joined URL, so the primary key is never
+// exposed and confirmations can't be enumerated.
 export function generatePublicToken(): string {
   return randomBytes(24).toString("base64url");
 }

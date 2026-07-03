@@ -2,11 +2,11 @@
 
 import { captureAttribution } from "@/lib/waitlist/attribution";
 
+// Run once at module init (fires on first load) rather than in an effect.
 if (typeof window !== "undefined") {
   captureAttribution();
 }
 
-// Renders nothing; it exists only so the layout imports this client module.
 export function AttributionCapture() {
   return null;
 }

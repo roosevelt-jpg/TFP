@@ -43,31 +43,25 @@ function readFromUrl(): Attribution {
   return data;
 }
 
-/**
- * Persists first-touch attribution on the first visit. Safe to call on every
- * page load — it only writes if nothing is stored yet (first touch wins).
- */
+// Safe to call on every load — writes only if nothing is stored (first touch wins).
 export function captureAttribution(): void {
   try {
     if (localStorage.getItem(STORAGE_KEY)) return;
     const data = readFromUrl();
-
     const hasSignal = Object.keys(data).some((k) => k !== "landingPath");
     if (hasSignal) localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch {
-    // localStorage can throw (private mode, quota) — attribution is best-effort.
+    // Best-effort: localStorage can throw in private mode / on quota.
   }
 }
 
-/** The stored first-touch attribution, or undefined if none was captured. */
 export function getAttribution(): Attribution | undefined {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return undefined;
     const parsed: unknown = JSON.parse(raw);
-    // Only a plain object is valid attribution — anything else (a tampered or
-    // legacy value) degrades to undefined rather than failing the whole signup
-    // when the server schema rejects it.
+    // Non-object (tampered/legacy) degrades to undefined instead of failing the
+    // whole signup when the server schema rejects it.
     if (
       typeof parsed !== "object" ||
       parsed === null ||

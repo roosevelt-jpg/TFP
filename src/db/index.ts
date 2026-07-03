@@ -4,9 +4,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 
 import { PrismaClient } from "@/generated/prisma/client";
 
-// Single instance across HMR reloads in dev (avoids connection exhaustion). The
-// adapter (with its pg pool) is only built when a client is actually created —
-// DATABASE_URL is the pooled/runtime connection (Prisma v7 driver adapter).
+// Reused across HMR reloads so dev doesn't exhaust connections.
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
 export const db =

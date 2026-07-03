@@ -7,13 +7,8 @@ import { db } from "@/db";
 
 import type { WaitlistConfirmation } from "../dto";
 
-/**
- * Fetches the confirmation for a waitlist sign-up by its public token — the
- * unguessable value handed to /joined after a successful submit.
- *
- * Public query, no auth: knowing the token is the capability. Returns null if
- * it doesn't resolve, so the page renders its in-page "not found" state.
- */
+// Looked up by the unguessable publicToken — knowing it is the capability, so
+// no auth. Null when it doesn't resolve (page shows its in-page not-found).
 export const getWaitlistConfirmation = cache(
   async (publicToken: string): Promise<WaitlistConfirmation | null> => {
     const lead = await db.waitlist.findUnique({
