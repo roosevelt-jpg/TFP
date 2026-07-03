@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { cn } from "@/lib/cn";
+
 import { Container } from "./Container";
 
 type NavItem = { label: string; href: string };
@@ -9,12 +11,31 @@ type SiteHeaderProps = {
   nav?: NavItem[];
   cta?: React.ReactNode;
   variant?: "full" | "minimal";
+  // Set on pages with no hero image, where the logo is the LCP element.
+  logoPriority?: boolean;
+  // Minimal variant only: hide the cta on mobile (e.g. /join relocates it).
+  ctaOnMobile?: boolean;
 };
 
-export function SiteHeader({ nav, cta, variant = "full" }: SiteHeaderProps) {
+export function SiteHeader({
+  nav,
+  cta,
+  variant = "full",
+  logoPriority = false,
+  ctaOnMobile = true,
+}: SiteHeaderProps) {
   return (
     <header className="relative z-2 py-[18px]">
-      <Container className="flex items-center justify-center gap-4 min-[900px]:justify-between">
+      <Container
+        className={cn(
+          "flex items-center gap-4 min-[900px]:justify-between",
+          // Logo + cta both visible on mobile → pin them to the edges so the
+          // logo lines up with the content gutter below; otherwise centre.
+          variant === "minimal" && ctaOnMobile
+            ? "justify-between"
+            : "justify-center",
+        )}
+      >
         <Link
           href="/"
           className="flex items-center gap-2.5 text-[0.98rem] font-semibold"
@@ -25,12 +46,13 @@ export function SiteHeader({ nav, cta, variant = "full" }: SiteHeaderProps) {
             width={1440}
             height={209}
             loading="eager"
+            fetchPriority={logoPriority ? "high" : undefined}
             className="relative top-[3px] h-[26px] w-auto"
           />
         </Link>
 
         {variant === "minimal" ? (
-          <div className="hidden min-[900px]:block">
+          <div className={ctaOnMobile ? undefined : "hidden min-[900px]:block"}>
             {cta ?? (
               <Link href="/" className="text-muted text-[0.92rem]">
                 Back to site

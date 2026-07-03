@@ -99,6 +99,7 @@ export default function JoinedPage({
 
       <SiteHeader
         variant="minimal"
+        logoPriority
         cta={
           <span className="text-good inline-flex items-center gap-[7px] text-[0.8rem]">
             <span aria-hidden className="bg-good size-[7px] rounded-full" />
