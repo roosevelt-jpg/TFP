@@ -9,8 +9,8 @@ type WhatsAppNumberFieldProps = {
   value: string;
   onChange: (value: string) => void;
   onBlur?: () => void;
-  invalid?: boolean;
-  describedBy?: string;
+  "aria-invalid"?: true;
+  "aria-describedby"?: string;
   previewName?: string;
 };
 
@@ -19,9 +19,8 @@ export function WhatsAppNumberField({
   value,
   onChange,
   onBlur,
-  invalid,
-  describedBy,
   previewName,
+  ...aria
 }: WhatsAppNumberFieldProps) {
   return (
     <div className="grid gap-2.5">
@@ -30,12 +29,14 @@ export function WhatsAppNumberField({
         type="tel"
         inputMode="tel"
         autoComplete="tel"
+        maxLength={25}
         placeholder="+44 7700 900000"
         value={value}
-        aria-invalid={invalid || undefined}
-        aria-describedby={describedBy}
         onBlur={onBlur}
-        onChange={(e) => onChange(new AsYouType("GB").input(e.target.value))}
+        onChange={(e) =>
+          onChange(new AsYouType("GB").input(e.target.value.slice(0, 20)))
+        }
+        {...aria}
       />
       {value.length > 4 && (
         <div className="bg-(--chat-in) text-text w-fit max-w-full rounded-md rounded-tl-[3px] px-3 py-2 text-[0.8rem]">

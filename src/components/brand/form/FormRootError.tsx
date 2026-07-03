@@ -13,7 +13,7 @@ export function FormRootError({ message, className }: FormRootErrorProps) {
       role="alert"
       aria-live="polite"
       className={cn(
-        "bg-red/10 text-red border-red/40 rounded-md border p-3 text-[0.85rem]",
+        "bg-danger/10 text-danger border-danger/40 rounded-xs border p-3 text-[0.85rem]",
         className,
       )}
     >

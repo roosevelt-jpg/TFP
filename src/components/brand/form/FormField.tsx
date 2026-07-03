@@ -1,10 +1,16 @@
+type FieldControlProps = {
+  id: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: true;
+};
+
 type FormFieldProps = {
-  label: React.ReactNode;
+  label?: React.ReactNode;
   htmlFor: string;
   hint?: React.ReactNode;
   optional?: boolean;
   error?: string;
-  children: React.ReactNode;
+  children: (control: FieldControlProps) => React.ReactNode;
 };
 
 export function FormField({
@@ -15,12 +21,18 @@ export function FormField({
   error,
   children,
 }: FormFieldProps) {
+  const hintId = hint ? `${htmlFor}-hint` : undefined;
+  const errorId = error ? `${htmlFor}-error` : undefined;
+  const describedBy = [error ? undefined : hintId, errorId]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <div className="grid gap-2">
       {label ? (
         <label
           htmlFor={htmlFor}
-          className="flex items-baseline justify-between text-[0.85rem] font-medium"
+          className="text-muted flex items-baseline justify-between text-[0.8rem] font-semibold"
         >
           <span>{label}</span>
           {optional && (
@@ -28,20 +40,21 @@ export function FormField({
           )}
         </label>
       ) : null}
-      {children}
+      {children({
+        id: htmlFor,
+        "aria-describedby": describedBy || undefined,
+        "aria-invalid": error ? true : undefined,
+      })}
       {hint && !error && (
-        <p
-          id={`${htmlFor}-hint`}
-          className="text-dim text-[0.78rem] leading-normal"
-        >
+        <p id={hintId} className="text-dim text-[0.78rem] leading-normal">
           {hint}
         </p>
       )}
       {error && (
         <p
-          id={`${htmlFor}-error`}
+          id={errorId}
           role="alert"
-          className="text-red text-[0.78rem] leading-normal"
+          className="text-danger text-[0.78rem] leading-normal"
         >
           {error}
         </p>
