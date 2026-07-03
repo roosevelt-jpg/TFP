@@ -73,6 +73,8 @@ jobs:
       NODE_OPTIONS: --max-old-space-size=4096
       # Placeholder env so the build validates the schema without real secrets.
       NEXT_PUBLIC_APP_URL: https://example.com
+      DATABASE_URL: postgresql://user:pass@localhost:5432/db
+      DIRECT_URL: postgresql://user:pass@localhost:5432/db
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
