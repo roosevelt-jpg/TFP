@@ -42,7 +42,12 @@ export default function JoinPage() {
         You’re one step from the waitlist
       </div>
 
-      <SiteHeader variant="minimal" cta={<SecureBadge />} />
+      <SiteHeader
+        variant="minimal"
+        cta={<SecureBadge />}
+        logoPriority
+        ctaOnMobile={false}
+      />
 
       <div className="flex justify-center px-(--gutter) min-[900px]:hidden">
         <SecureBadge />

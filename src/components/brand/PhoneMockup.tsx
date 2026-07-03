@@ -24,7 +24,8 @@ export function PhoneMockup({ image, chat, className }: PhoneMockupProps) {
         alt={image.alt}
         width={2272}
         height={2542}
-        preload
+        loading="eager"
+        fetchPriority="high"
         sizes="(max-width: 940px) min(390px, 86vw), min(500px, 90vw)"
         className="block h-auto w-full filter-[contrast(1.03)_drop-shadow(0_20px_44px_rgba(0,0,0,0.6))] mask-[linear-gradient(to_bottom,#000_87%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,#000_87%,transparent_100%)]"
       />
