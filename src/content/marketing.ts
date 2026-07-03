@@ -49,7 +49,7 @@ export const steps: Benefit[] = [
   },
   {
     title: "Get your invite",
-    body: "When your spot opens we’ll email you to check out — then your programme and WhatsApp coach unlock instantly.",
+    body: "When your spot opens we’ll email you to claim your place — then your programme and WhatsApp coach unlock instantly.",
   },
   {
     title: "Show up",
@@ -65,7 +65,7 @@ export const benchmarks: string[] = [
   "Work capacity",
 ];
 
-// Brotherhood / community section (landing).
+// Community section (landing).
 export const community: Benefit[] = [
   {
     title: "Same standard",

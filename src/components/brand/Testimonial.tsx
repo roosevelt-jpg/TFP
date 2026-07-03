@@ -24,13 +24,13 @@ export function Testimonial({
   return (
     <figure
       className={cn(
-        "group bg-bg border-hairline relative flex flex-col gap-[15px] overflow-hidden rounded-xs border p-[26px] transition-[transform,border-color,box-shadow] duration-500 ease-emphasis hover:scale-[1.015] hover:border-hairline-strong hover:shadow-[0_16px_38px_rgba(0,0,0,0.4)]",
+        "group bg-bg border-hairline relative flex flex-col gap-[15px] overflow-hidden rounded-xs border p-[26px] transition-[transform,border-color,box-shadow] duration-500 ease-emphasis hover:scale-[1.015] hover:border-hairline-strong hover:shadow-(--shadow-hover)",
         featured && "border-t-red border-t-2",
       )}
     >
       <span
         aria-hidden
-        className="ease-shine pointer-events-none absolute inset-y-0 left-0 w-[55%] translate-x-[-220%] bg-[linear-gradient(105deg,transparent,rgba(255,255,255,0.08),transparent)] transition-none duration-900 group-hover:translate-x-[320%] group-hover:transition-transform"
+        className="ease-shine pointer-events-none absolute inset-y-0 left-0 w-[55%] translate-x-[-220%] bg-[linear-gradient(105deg,transparent,var(--sheen-soft),transparent)] transition-none duration-900 group-hover:translate-x-[320%] group-hover:transition-transform"
       />
       <div
         role="img"

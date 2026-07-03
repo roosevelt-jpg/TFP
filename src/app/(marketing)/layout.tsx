@@ -1,5 +1,6 @@
 import { MotionProvider } from "@/components/brand/MotionProvider";
 import { SpotlightGrid } from "@/components/brand/SpotlightGrid";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function MarketingLayout({
   children,
@@ -10,6 +11,7 @@ export default function MarketingLayout({
     <MotionProvider>
       <SpotlightGrid />
       {children}
+      <Toaster />
     </MotionProvider>
   );
 }

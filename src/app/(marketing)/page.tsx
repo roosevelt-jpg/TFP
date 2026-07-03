@@ -4,6 +4,7 @@ import { StickyCtaBar } from "@/components/brand/StickyCtaBar";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SkipLink } from "@/components/layout/SkipLink";
 import { AboutSection } from "@/components/sections/AboutSection";
 import { CommunitySection } from "@/components/sections/CommunitySection";
 import { FaqSection } from "@/components/sections/FaqSection";
@@ -35,12 +36,7 @@ const FOOTER_LINKS = [
 export default function Home() {
   return (
     <>
-      <a
-        href="#main"
-        className="bg-surface text-text focus-visible:ring-ring sr-only z-50 rounded-sm px-4 py-2 focus-visible:not-sr-only focus-visible:fixed focus-visible:top-3 focus-visible:left-3 focus-visible:ring-2"
-      >
-        Skip to content
-      </a>
+      <SkipLink />
       <AnnouncementBar>
         First cohort opening soon — limited spots on the waiting list
       </AnnouncementBar>

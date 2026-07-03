@@ -41,7 +41,7 @@ export function ChatHeader({
         <span
           aria-hidden
           style={{ width: avatarSize, height: avatarSize }}
-          className="bg-red grid place-items-center rounded-full font-semibold text-white"
+          className="bg-red text-cta-contrast grid place-items-center rounded-full font-semibold"
         >
           K
         </span>

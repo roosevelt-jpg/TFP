@@ -43,7 +43,7 @@ export function MeasuredProgress({ benchmarks }: MeasuredProgressProps) {
         {benchmarks.map((benchmark) => (
           <span
             key={benchmark}
-            className="bg-bg border-hairline-strong rounded-pill border px-4 py-[9px] text-[0.82rem]"
+            className="bg-bg border-hairline-strong rounded-full border px-4 py-[9px] text-[0.82rem]"
           >
             {benchmark}
           </span>

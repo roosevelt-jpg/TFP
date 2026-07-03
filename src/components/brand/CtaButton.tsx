@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/cn";
@@ -23,11 +25,15 @@ const cta = cva(
   },
 );
 
-type CtaButtonProps = React.ComponentPropsWithoutRef<"a"> &
-  VariantProps<typeof cta> & {
-    withArrow?: boolean;
-    withShine?: boolean;
-  };
+type CtaVariants = VariantProps<typeof cta> & {
+  withArrow?: boolean;
+  withShine?: boolean;
+};
+
+type CtaButtonProps =
+  | ({ as?: "a"; href: string } & CtaVariants &
+      React.ComponentPropsWithoutRef<"a">)
+  | ({ as: "button" } & CtaVariants & React.ComponentPropsWithoutRef<"button">);
 
 export function CtaButton({
   variant,
@@ -39,8 +45,8 @@ export function CtaButton({
   children,
   ...props
 }: CtaButtonProps) {
-  return (
-    <a className={cn(cta({ variant, size, block }), className)} {...props}>
+  const content = (
+    <>
       {children}
       {withArrow && (
         <span
@@ -53,9 +59,26 @@ export function CtaButton({
       {withShine && (
         <span
           aria-hidden
-          className="ease-shine pointer-events-none absolute inset-y-0 left-0 w-1/2 translate-x-[-200%] bg-[linear-gradient(105deg,transparent,rgba(255,255,255,.3),transparent)] transition-none duration-850 group-hover:translate-x-[360%] group-hover:transition-transform"
+          className="ease-shine pointer-events-none absolute inset-y-0 left-0 w-1/2 translate-x-[-200%] bg-[linear-gradient(105deg,transparent,var(--sheen),transparent)] transition-none duration-850 group-hover:translate-x-[360%] group-hover:transition-transform"
         />
       )}
-    </a>
+    </>
+  );
+  const classes = cn(cta({ variant, size, block }), className);
+
+  if (props.as === "button") {
+    const { as: _as, ...rest } = props;
+    return (
+      <button className={classes} {...rest}>
+        {content}
+      </button>
+    );
+  }
+
+  const { as: _as, href, ...rest } = props;
+  return (
+    <Link href={href} className={classes} {...rest}>
+      {content}
+    </Link>
   );
 }
