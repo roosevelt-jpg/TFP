@@ -225,17 +225,20 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-h1,
-h2 {
-  font-family: var(--font-display);
-  font-weight: 500;
-  letter-spacing: -0.018em;
-  line-height: 1.04;
-}
+/* In @layer base so utilities (e.g. font-body on a legal h2) can override. */
+@layer base {
+  h1,
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.018em;
+    line-height: 1.04;
+  }
 
-h1 em,
-h2 em {
-  font-style: italic;
+  h1 em,
+  h2 em {
+    font-style: italic;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
