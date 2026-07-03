@@ -29,9 +29,8 @@ import {
   type SupportFormValues,
   supportSchema,
 } from "@/lib/validation/support/schema";
+import { siteConfig } from "@/config/site";
 import { SupportSuccess } from "@/features/support/SupportSuccess";
-
-const SUPPORT_EMAIL = "support@theformulaperformance.com";
 
 export function SupportForm({
   defaultType = "general",
@@ -247,8 +246,11 @@ export function SupportForm({
 
       <p className="text-dim text-center text-[0.77rem]">
         Prefer email? Reach us at{" "}
-        <a href={`mailto:${SUPPORT_EMAIL}`} className="text-text underline">
-          {SUPPORT_EMAIL}
+        <a
+          href={`mailto:${siteConfig.contactEmail}`}
+          className="text-text underline"
+        >
+          {siteConfig.contactEmail}
         </a>
       </p>
     </form>
