@@ -50,3 +50,6 @@ scratchpad-*.png
 
 # Local planning/spec docs — never committed
 docs/
+
+# prisma generated client (rebuilt via prisma generate / postinstall)
+/src/generated/prisma/

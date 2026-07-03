@@ -9,6 +9,8 @@ export const env = createEnv({
     // Release toggle: flip to true when billing goes live to surface the
     // membership support flows (billing, pause, cancel, refund).
     PAYMENTS_LIVE: z.stringbool().default(false),
+    DATABASE_URL: z.url(),
+    DIRECT_URL: z.url(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.url(),
