@@ -2,8 +2,16 @@ import { AbortTaskRunError, logger, retry, schemaTask } from "@trigger.dev/sdk";
 import { z } from "zod";
 
 import { resend } from "@/lib/clients/resend";
+import { siteConfig } from "@/config/site";
 import { WaitlistWelcomeEmail } from "@/emails/waitlist-welcome";
 import { env } from "@/env";
+
+const INSTAGRAM_URL = "https://instagram.com/kanem14";
+const UNSUBSCRIBE_MAILTO = `mailto:${siteConfig.contactEmail}?subject=${encodeURIComponent("Leave the waitlist")}`;
+
+const senderFrom = env.RESEND_FROM.includes("<")
+  ? env.RESEND_FROM
+  : `${siteConfig.name} <${env.RESEND_FROM}>`;
 
 export const sendWelcomeEmail = schemaTask({
   id: "send-welcome-email",
@@ -19,7 +27,7 @@ export const sendWelcomeEmail = schemaTask({
   retry: { maxAttempts: 1 },
   maxDuration: 30,
   run: async ({ email, firstName, ref }) => {
-    const from = env.RESEND_FROM;
+    const from = senderFrom;
     let lastError = "Failed to send welcome email";
 
     const data = await retry
@@ -35,14 +43,18 @@ export const sendWelcomeEmail = schemaTask({
           const result = await resend.emails.send({
             from,
             to: email,
-            subject: "You're on the waitlist — The Formula Programme",
+            subject: "You're on the list — The Formula Programme",
             react: (
               <WaitlistWelcomeEmail
                 firstName={firstName}
-                ref={ref}
-                appUrl={env.NEXT_PUBLIC_APP_URL}
+                waitlistRef={ref}
+                logoUrl={env.EMAIL_LOGO_URL}
+                communityImageUrl={env.EMAIL_COMMUNITY_URL}
+                instagramUrl={INSTAGRAM_URL}
+                unsubscribeUrl={UNSUBSCRIBE_MAILTO}
               />
             ),
+            headers: { "List-Unsubscribe": `<${UNSUBSCRIBE_MAILTO}>` },
           });
 
           // Resend returns failures as `error` (a value, not a throw):

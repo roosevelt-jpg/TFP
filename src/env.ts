@@ -6,13 +6,13 @@ export const env = createEnv({
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
-    // Release toggle: flip to true when billing goes live to surface the
-    // membership support flows (billing, pause, cancel, refund).
     PAYMENTS_LIVE: z.stringbool().default(false),
     DATABASE_URL: z.url(),
     DIRECT_URL: z.url(),
     RESEND_API_KEY: z.string().min(1),
     RESEND_FROM: z.string().min(1),
+    EMAIL_LOGO_URL: z.url(),
+    EMAIL_COMMUNITY_URL: z.url(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.url(),

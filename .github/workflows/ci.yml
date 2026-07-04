@@ -71,12 +71,13 @@ jobs:
     needs: [lint, typecheck]
     env:
       NODE_OPTIONS: --max-old-space-size=4096
-      # Placeholder env so the build validates the schema without real secrets.
       NEXT_PUBLIC_APP_URL: https://example.com
       DATABASE_URL: postgresql://user:pass@localhost:5432/db
       DIRECT_URL: postgresql://user:pass@localhost:5432/db
       RESEND_API_KEY: re_placeholder
       RESEND_FROM: onboarding@resend.dev
+      EMAIL_LOGO_URL: https://example.com/email/logo.png
+      EMAIL_COMMUNITY_URL: https://example.com/email/community.jpg
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
