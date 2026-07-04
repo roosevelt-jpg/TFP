@@ -2,6 +2,7 @@
 
 import { tasks } from "@trigger.dev/sdk";
 
+import { logger } from "@/lib/logger";
 import { firstNameOf } from "@/lib/name";
 import { actionClient } from "@/lib/safe-action";
 import { cleanEmail } from "@/lib/sanitize/email";
@@ -36,7 +37,7 @@ export const submitSupport = actionClient
         firstName: firstName || undefined,
       });
     } catch (error) {
-      console.error("[submitSupport] failed to enqueue support emails:", error);
+      logger.error("Failed to enqueue support emails", error);
     }
 
     return {

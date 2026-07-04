@@ -15,12 +15,17 @@ export const env = createEnv({
     EMAIL_COMMUNITY_URL: z.url(),
     UPSTASH_REDIS_REST_URL: z.url(),
     UPSTASH_REDIS_REST_TOKEN: z.string().min(1),
+    SENTRY_ORG: z.string().min(1).optional(),
+    SENTRY_PROJECT: z.string().min(1).optional(),
+    SENTRY_AUTH_TOKEN: z.string().min(1).optional(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.url(),
+    NEXT_PUBLIC_SENTRY_DSN: z.url().optional(),
   },
   experimental__runtimeEnv: {
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
   emptyStringAsUndefined: true,

@@ -3,6 +3,7 @@
 import { tasks } from "@trigger.dev/sdk";
 import { returnValidationErrors } from "next-safe-action";
 
+import { logger } from "@/lib/logger";
 import { actionClient } from "@/lib/safe-action";
 import { cleanEmail } from "@/lib/sanitize/email";
 import { toE164 } from "@/lib/sanitize/phone";
@@ -62,10 +63,6 @@ export const joinWaitlist = actionClient
       },
     );
 
-    // Fire-and-forget, once per lead. A Trigger outage must not fail the
-    // signup — the lead is already persisted. The idempotency key only guards
-    // a double-submit of this same request (long-term once-per-lead is the
-    // isNew gate), so a short TTL is enough.
     // TODO(P3): enqueue GHL contact upsert.
     if (lead.isNew) {
       try {
@@ -75,9 +72,7 @@ export const joinWaitlist = actionClient
           { idempotencyKey: lead.ref, idempotencyKeyTTL: "1h" },
         );
       } catch (error) {
-        // A failed enqueue creates no run, so it won't show in the Trigger
-        // dashboard — log it here or the welcome email vanishes silently.
-        console.error("[joinWaitlist] failed to enqueue welcome email:", error);
+        logger.error("Failed to enqueue welcome email", error);
       }
     }
 

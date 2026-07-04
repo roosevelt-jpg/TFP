@@ -1,17 +1,30 @@
 import type { NextConfig } from "next";
 
+import { withSentryConfig } from "@sentry/nextjs";
+
 import "./src/env";
+
+function sentryOrigin(): string {
+  const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
+  if (!dsn) return "";
+  try {
+    return ` https://${new URL(dsn).host}`;
+  } catch {
+    return "";
+  }
+}
 
 // Static CSP (no nonce) so pages stay statically prerendered. Shipped as
 // Report-Only first; promote to enforced `Content-Security-Policy` once
-// validated. Tighten script-src/connect-src in P4 when third-party origins
-// (Turnstile, PostHog, Sentry) are introduced.
+// validated. Tighten further when the remaining third-party origins
+// (Turnstile, PostHog) are introduced.
 const contentSecurityPolicy = [
   "default-src 'self'",
   "script-src 'self'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' blob: data:",
   "font-src 'self'",
+  `connect-src 'self'${sentryOrigin()}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -42,4 +55,10 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+});

@@ -3,6 +3,7 @@ import "server-only";
 import { Ratelimit } from "@upstash/ratelimit";
 
 import { redis } from "@/lib/clients/redis";
+import { logger } from "@/lib/logger";
 
 // Layered limits for the public forms (see the P4a design):
 //   global — total backstop so a flood can't overwhelm the DB/Trigger/Resend
@@ -41,8 +42,6 @@ export type RateLimitResult = {
   retryAfter: number;
 };
 
-// Fail open on a runtime Redis error: a blip must not block signups. Config is
-// required (see env), so this only covers Redis being unreachable mid-request.
 export async function checkRateLimit(
   tier: RateLimitTier,
   key: string,
@@ -56,7 +55,9 @@ export async function checkRateLimit(
         : Math.max(1, Math.ceil((reset - Date.now()) / 1000)),
     };
   } catch (error) {
-    console.error(`[rate-limit] ${tier} check failed (allowing):`, error);
+    logger.warn(`Rate-limit ${tier} check failed, allowing request`, {
+      error: String(error),
+    });
     return { success: true, retryAfter: 0 };
   }
 }
