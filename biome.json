@@ -20,7 +20,9 @@
       "!**/src/generated",
       "!pnpm-lock.yaml",
       "!.mcp.json",
-      "!public"
+      "!public",
+      "!src/app/**/icon.svg",
+      "!src/app/**/apple-icon.svg"
     ]
   },
   "formatter": {
