@@ -7,6 +7,8 @@ import { SupportNotificationEmail } from "@/emails/support-notification";
 import { SupportReceivedEmail } from "@/emails/support-received";
 import { env } from "@/env";
 
+import { emailQueue } from "./queues";
+
 const TEAM_INBOX = siteConfig.contactEmail;
 
 const senderFrom = env.RESEND_FROM.includes("<")
@@ -23,7 +25,7 @@ export const sendSupportEmails = schemaTask({
     message: z.string().nullable(),
     firstName: z.string().optional(),
   }),
-  queue: { concurrencyLimit: 2 },
+  queue: emailQueue,
   retry: { maxAttempts: 1 },
   maxDuration: 30,
   run: async ({ requestType, name, email, whatsapp, message, firstName }) => {
