@@ -13,6 +13,8 @@ export const env = createEnv({
     RESEND_FROM: z.string().min(1),
     EMAIL_LOGO_URL: z.url(),
     EMAIL_COMMUNITY_URL: z.url(),
+    UPSTASH_REDIS_REST_URL: z.url(),
+    UPSTASH_REDIS_REST_TOKEN: z.string().min(1),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.url(),

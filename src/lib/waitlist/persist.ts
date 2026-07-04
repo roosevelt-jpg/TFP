@@ -1,12 +1,12 @@
 import "server-only";
 
-import { headers } from "next/headers";
-
 import { firstNameOf } from "@/lib/name";
 import { db } from "@/db";
 import { Prisma } from "@/generated/prisma/client";
 
 import { generatePublicToken, generateRef } from "./ref";
+
+export { clientIp } from "@/lib/client-ip";
 
 const MAX_REF_ATTEMPTS = 5;
 
@@ -20,15 +20,6 @@ function isRefCollision(error: unknown): boolean {
   const target = error.meta?.target;
   const fields = Array.isArray(target) ? target : [target];
   return fields.some((f) => f === "ref" || f === "publicToken");
-}
-
-// Best-effort consent evidence: prefer the platform-attested header over the
-// client-settable x-forwarded-for (spoofable without a trusted proxy).
-export async function clientIp(): Promise<string | null> {
-  const h = await headers();
-  const attested = h.get("x-real-ip") ?? h.get("x-vercel-forwarded-for");
-  if (attested) return attested.trim();
-  return h.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
 }
 
 type LeadDetails = Omit<
