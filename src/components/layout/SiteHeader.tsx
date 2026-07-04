@@ -45,8 +45,7 @@ export function SiteHeader({
             alt="The Formula Programme"
             width={1440}
             height={209}
-            loading="eager"
-            fetchPriority={logoPriority ? "high" : undefined}
+            preload={logoPriority}
             className="relative top-[3px] h-[26px] w-auto"
           />
         </Link>
