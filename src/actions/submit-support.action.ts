@@ -1,13 +1,16 @@
 "use server";
 
 import { tasks } from "@trigger.dev/sdk";
+import { returnValidationErrors } from "next-safe-action";
 
+import { clientIp } from "@/lib/client-ip";
 import { logger } from "@/lib/logger";
 import { firstNameOf } from "@/lib/name";
 import { actionClient } from "@/lib/safe-action";
 import { cleanEmail } from "@/lib/sanitize/email";
 import { toE164 } from "@/lib/sanitize/phone";
 import { cleanMultiline, cleanText } from "@/lib/sanitize/text";
+import { verifyTurnstile } from "@/lib/turnstile";
 import { SUPPORT_TYPE_OPTIONS } from "@/lib/validation/support/options";
 import { supportSchema } from "@/lib/validation/support/schema";
 import type { sendSupportEmails } from "@/trigger/send-support-emails";
@@ -16,6 +19,18 @@ export const submitSupport = actionClient
   .metadata({ actionName: "submitSupport" })
   .inputSchema(supportSchema)
   .action(async ({ parsedInput }) => {
+    const ok = await verifyTurnstile(
+      parsedInput.turnstileToken,
+      await clientIp(),
+      "support",
+    );
+
+    if (!ok) {
+      returnValidationErrors(supportSchema, {
+        turnstileToken: { _errors: ["Verification failed. Please try again."] },
+      });
+    }
+
     const option = SUPPORT_TYPE_OPTIONS.find(
       (o) => o.value === parsedInput.type,
     );

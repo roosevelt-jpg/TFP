@@ -1,7 +1,11 @@
 import { isValidPhoneNumber } from "libphonenumber-js/mobile";
 import * as z from "zod";
 
-import { emailField, nameField } from "@/lib/validation/waitlist/fields";
+import {
+  emailField,
+  nameField,
+  turnstileTokenField,
+} from "@/lib/validation/waitlist/fields";
 
 import { SUPPORT_TYPE_VALUES } from "./options";
 
@@ -16,6 +20,7 @@ export const supportSchema = z
       .trim()
       .max(2000, { error: "Keep it under 2000 characters" })
       .optional(),
+    turnstileToken: turnstileTokenField,
   })
   .superRefine((data, ctx) => {
     if (data.type === "wa") {

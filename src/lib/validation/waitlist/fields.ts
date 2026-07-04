@@ -124,6 +124,10 @@ export const attributionField = z
   })
   .optional();
 
+export const turnstileTokenField = z
+  .string()
+  .min(1, { error: "Please complete the verification" });
+
 export const consentField = z.literal(true, {
   error: "You must agree to continue",
 });

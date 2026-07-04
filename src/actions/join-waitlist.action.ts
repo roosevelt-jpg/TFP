@@ -8,6 +8,7 @@ import { actionClient } from "@/lib/safe-action";
 import { cleanEmail } from "@/lib/sanitize/email";
 import { toE164 } from "@/lib/sanitize/phone";
 import { cleanText } from "@/lib/sanitize/text";
+import { verifyTurnstile } from "@/lib/turnstile";
 import { waitlistSchema } from "@/lib/validation/waitlist/schema";
 import { CONSENT_TEXT, POLICY_VERSION } from "@/lib/waitlist/consent";
 import { clientIp, upsertWaitlistLead } from "@/lib/waitlist/persist";
@@ -17,6 +18,14 @@ export const joinWaitlist = actionClient
   .metadata({ actionName: "joinWaitlist" })
   .inputSchema(waitlistSchema)
   .action(async ({ parsedInput }) => {
+    const ip = await clientIp();
+
+    if (!(await verifyTurnstile(parsedInput.turnstileToken, ip, "join"))) {
+      returnValidationErrors(waitlistSchema, {
+        turnstileToken: { _errors: ["Verification failed. Please try again."] },
+      });
+    }
+
     const whatsapp = toE164(parsedInput.whatsapp);
 
     if (!whatsapp) {

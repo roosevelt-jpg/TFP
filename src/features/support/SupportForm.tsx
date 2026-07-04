@@ -1,6 +1,9 @@
 "use client";
 
+import { useRef } from "react";
+
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { TurnstileInstance } from "@marsidev/react-turnstile";
 import { useAction } from "next-safe-action/hooks";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
@@ -11,6 +14,7 @@ import { FormField } from "@/components/brand/form/FormField";
 import { FormRootError } from "@/components/brand/form/FormRootError";
 import { Input } from "@/components/brand/form/Input";
 import { Textarea } from "@/components/brand/form/Textarea";
+import { TurnstileWidget } from "@/components/brand/form/TurnstileWidget";
 import { WhatsAppNumberField } from "@/components/brand/form/WhatsAppNumberField";
 import {
   Select,
@@ -41,6 +45,8 @@ export function SupportForm({
   options: readonly SupportOption[];
   paymentsLive: boolean;
 }) {
+  const turnstileRef = useRef<TurnstileInstance | undefined>(undefined);
+
   const form = useForm<SupportFormValues>({
     resolver: zodResolver(supportSchema),
     mode: "onSubmit",
@@ -51,10 +57,19 @@ export function SupportForm({
       type: defaultType,
       whatsapp: "",
       message: "",
+      turnstileToken: "",
     },
   });
-  const { control, register, formState, setError, setFocus, handleSubmit } =
-    form;
+  const {
+    control,
+    register,
+    formState,
+    setError,
+    setFocus,
+    setValue,
+    handleSubmit,
+  } = form;
+
   const { errors } = formState;
 
   const type = useWatch({ control, name: "type" });
@@ -77,10 +92,20 @@ export function SupportForm({
       setFocus("whatsapp");
     }
 
+    const turnstileError = res?.validationErrors?.turnstileToken?._errors?.[0];
+
+    if (turnstileError) setError("turnstileToken", { message: turnstileError });
+
     if (res?.validationErrors || res?.serverError || !res?.data) {
+      // The token was consumed server-side; reset for a fresh challenge on retry.
+      turnstileRef.current?.reset();
+
+      setValue("turnstileToken", "");
+
       toast.error("Couldn’t send. Please check the highlighted fields.", {
         id: toastId,
       });
+
       return;
     }
 
@@ -230,6 +255,21 @@ export function SupportForm({
           />
         )}
       </FormField>
+
+      <div className="grid gap-1.5">
+        <TurnstileWidget
+          ref={turnstileRef}
+          action="support"
+          onToken={(token) =>
+            setValue("turnstileToken", token ?? "", { shouldValidate: false })
+          }
+        />
+        {errors.turnstileToken?.message && (
+          <p className="text-red text-[0.82rem]">
+            {errors.turnstileToken.message}
+          </p>
+        )}
+      </div>
 
       {result?.serverError && <FormRootError message={result.serverError} />}
 
