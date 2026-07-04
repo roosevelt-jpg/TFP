@@ -14,15 +14,19 @@ function sentryOrigin(): string {
   }
 }
 
-// Static CSP (no nonce) so pages stay statically prerendered. Enforced after
-// validating in Report-Only that the live site raised no real violations.
-// Tighten further when the remaining third-party origins (PostHog) are added.
+// Static CSP (no nonce) so pages stay statically prerendered — a core project
+// choice (cacheComponents). Per the Next.js CSP guide, a no-nonce static CSP
+// needs 'unsafe-inline' in script-src for the framework's inline hydration
+// bootstrap; nonces would force every page dynamic. 'unsafe-eval' is dev-only
+// (React uses eval for debug stacks; not needed in prod).
 // Cloudflare Turnstile loads a script and renders its challenge in an iframe.
 const TURNSTILE = "https://challenges.cloudflare.com";
+const isDev = process.env.NODE_ENV === "development";
+const scriptEval = isDev ? " 'unsafe-eval'" : "";
 
 const contentSecurityPolicy = [
   "default-src 'self'",
-  `script-src 'self' ${TURNSTILE}`,
+  `script-src 'self' 'unsafe-inline'${scriptEval} ${TURNSTILE}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' blob: data:",
   "font-src 'self'",
