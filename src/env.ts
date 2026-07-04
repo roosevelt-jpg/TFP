@@ -9,6 +9,10 @@ export const env = createEnv({
     PAYMENTS_LIVE: z.stringbool().default(false),
     DATABASE_URL: z.url(),
     DIRECT_URL: z.url(),
+    // Max Postgres connections per serverless instance. Keep low: Supabase's
+    // Supavisor pooler fans requests in, so each instance needs very few. A
+    // signup spike then queues at the pool instead of exhausting Postgres.
+    DB_POOL_MAX: z.coerce.number().int().positive().default(1),
     RESEND_API_KEY: z.string().min(1),
     RESEND_FROM: z.string().min(1),
     EMAIL_LOGO_URL: z.url(),
