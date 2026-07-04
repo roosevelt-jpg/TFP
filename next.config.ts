@@ -14,10 +14,9 @@ function sentryOrigin(): string {
   }
 }
 
-// Static CSP (no nonce) so pages stay statically prerendered. Shipped as
-// Report-Only first; promote to enforced `Content-Security-Policy` once
-// validated. Tighten further when the remaining third-party origins
-// (Turnstile, PostHog) are introduced.
+// Static CSP (no nonce) so pages stay statically prerendered. Enforced after
+// validating in Report-Only that the live site raised no real violations.
+// Tighten further when the remaining third-party origins (PostHog) are added.
 // Cloudflare Turnstile loads a script and renders its challenge in an iframe.
 const TURNSTILE = "https://challenges.cloudflare.com";
 
@@ -37,7 +36,7 @@ const contentSecurityPolicy = [
 ].join("; ");
 
 const securityHeaders = [
-  { key: "Content-Security-Policy-Report-Only", value: contentSecurityPolicy },
+  { key: "Content-Security-Policy", value: contentSecurityPolicy },
   {
     key: "Strict-Transport-Security",
     value: "max-age=63072000; includeSubDomains; preload",
