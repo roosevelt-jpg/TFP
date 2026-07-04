@@ -34,28 +34,24 @@ export function EmailLayout({
       </Head>
       <Preview>{preview}</Preview>
       <Body style={{ margin: 0, padding: 0, backgroundColor: email.bg }}>
+        <div
+          style={{
+            height: "3px",
+            backgroundColor: email.red,
+            fontSize: 0,
+            lineHeight: 0,
+          }}
+        >
+          &nbsp;
+        </div>
         <Container
           style={{
             width: "600px",
             maxWidth: "600px",
-            margin: "30px auto",
+            margin: "0 auto",
             backgroundColor: email.card,
-            border: `1px solid ${email.hairline}`,
-            borderRadius: "8px",
-            overflow: "hidden",
           }}
         >
-          <div
-            style={{
-              height: "3px",
-              backgroundColor: email.red,
-              fontSize: 0,
-              lineHeight: 0,
-            }}
-          >
-            &nbsp;
-          </div>
-
           <Section style={{ padding: "24px 34px" }}>
             <table
               width="100%"

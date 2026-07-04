@@ -97,51 +97,33 @@ export function WaitlistWelcomeEmail({
         </Text>
       </Section>
 
-      <Section style={{ padding: "26px 34px 8px" }}>
-        <table
-          width="100%"
-          cellPadding={0}
-          cellSpacing={0}
-          border={0}
-          role="presentation"
+      <Section style={{ padding: "28px 34px 0" }}>
+        <Heading
+          as="h2"
           style={{
-            backgroundColor: email.panel,
-            border: `1px solid ${email.hairline}`,
-            borderRadius: "5px",
+            margin: "0 0 8px",
+            fontFamily: email.serif,
+            fontWeight: "normal",
+            fontSize: "22px",
+            lineHeight: 1.2,
+            color: email.text,
           }}
         >
-          <tr>
-            <td style={{ padding: "18px 20px" }}>
-              <Text
-                style={{
-                  margin: "0 0 6px",
-                  fontFamily: email.sans,
-                  fontSize: "11px",
-                  fontWeight: "bold",
-                  letterSpacing: "1.5px",
-                  textTransform: "uppercase",
-                  color: email.dim,
-                }}
-              >
-                What happens next
-              </Text>
-              <Text
-                style={{
-                  margin: 0,
-                  fontFamily: email.sans,
-                  fontSize: "14px",
-                  lineHeight: 1.65,
-                  color: email.muted,
-                }}
-              >
-                The moment a place opens, we'll email you to check out. You'll
-                lock in early-access pricing, your programme lands instantly,
-                and your AI coach goes live on WhatsApp at the number you gave
-                us.
-              </Text>
-            </td>
-          </tr>
-        </table>
+          What happens next
+        </Heading>
+        <Text
+          style={{
+            margin: 0,
+            fontFamily: email.sans,
+            fontSize: "15px",
+            lineHeight: 1.65,
+            color: email.muted,
+          }}
+        >
+          The moment a place opens, we'll email you to check out. You'll lock in
+          early-access pricing, your programme lands instantly, and your AI
+          coach goes live on WhatsApp at the number you gave us.
+        </Text>
       </Section>
 
       <Section style={{ padding: "24px 34px 0" }}>

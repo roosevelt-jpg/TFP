@@ -1,10 +1,10 @@
-// Email clients need literal hex. Light palette — warm off-white page + white
-// card, brand red preserved. Light-first so force-inverting clients (Gmail app)
-// don't mangle a dark design; a black logo keeps contrast on the light card.
+// Email clients need literal hex. Flat white, brand red preserved. Light-first
+// so force-inverting clients (Gmail app) don't mangle a dark design; a black
+// logo keeps contrast on white.
 export const email = {
-  bg: "#F5F2EC",
+  bg: "#FFFFFF",
   card: "#FFFFFF",
-  panel: "#FAF8F3",
+  panel: "#FFFFFF",
   hairline: "#E7E2D8",
   border: "#D8D1C4",
   text: "#1A1815",

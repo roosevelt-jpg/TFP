@@ -71,49 +71,32 @@ export function SupportReceivedEmail({
         </Text>
       </Section>
 
-      <Section style={{ padding: "24px 34px 12px" }}>
-        <table
-          width="100%"
-          cellPadding={0}
-          cellSpacing={0}
-          border={0}
-          role="presentation"
+      <Section style={{ padding: "28px 34px 0" }}>
+        <Heading
+          as="h2"
           style={{
-            backgroundColor: email.panel,
-            border: `1px solid ${email.hairline}`,
-            borderRadius: "5px",
+            margin: "0 0 8px",
+            fontFamily: email.serif,
+            fontWeight: "normal",
+            fontSize: "22px",
+            lineHeight: 1.2,
+            color: email.text,
           }}
         >
-          <tr>
-            <td style={{ padding: "18px 20px" }}>
-              <Text
-                style={{
-                  margin: "0 0 6px",
-                  fontFamily: email.sans,
-                  fontSize: "11px",
-                  fontWeight: "bold",
-                  letterSpacing: "1.5px",
-                  textTransform: "uppercase",
-                  color: email.dim,
-                }}
-              >
-                What happens next
-              </Text>
-              <Text
-                style={{
-                  margin: 0,
-                  fontFamily: email.sans,
-                  fontSize: "14px",
-                  lineHeight: 1.65,
-                  color: email.muted,
-                }}
-              >
-                We'll review what you sent and get back to you by email. No need
-                to reply again — just keep an eye on your inbox.
-              </Text>
-            </td>
-          </tr>
-        </table>
+          What happens next
+        </Heading>
+        <Text
+          style={{
+            margin: 0,
+            fontFamily: email.sans,
+            fontSize: "15px",
+            lineHeight: 1.65,
+            color: email.muted,
+          }}
+        >
+          We'll review what you sent and get back to you by email. No need to
+          reply again — just keep an eye on your inbox.
+        </Text>
       </Section>
 
       <Section style={{ padding: "18px 34px 6px" }}>
