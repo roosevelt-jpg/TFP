@@ -78,6 +78,8 @@ jobs:
       RESEND_FROM: onboarding@resend.dev
       EMAIL_LOGO_URL: https://example.com/email/logo.png
       EMAIL_COMMUNITY_URL: https://example.com/email/community.jpg
+      UPSTASH_REDIS_REST_URL: https://example.upstash.io
+      UPSTASH_REDIS_REST_TOKEN: ci_placeholder
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
