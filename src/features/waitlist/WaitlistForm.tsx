@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useRef } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { TurnstileInstance } from "@marsidev/react-turnstile";
 import { useAction } from "next-safe-action/hooks";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
@@ -17,6 +19,7 @@ import { Input } from "@/components/brand/form/Input";
 import { NumberInput } from "@/components/brand/form/NumberInput";
 import { OptionalDisclosure } from "@/components/brand/form/OptionalDisclosure";
 import { SegmentedControl } from "@/components/brand/form/SegmentedControl";
+import { TurnstileWidget } from "@/components/brand/form/TurnstileWidget";
 import { WhatsAppNumberField } from "@/components/brand/form/WhatsAppNumberField";
 import {
   Select,
@@ -53,6 +56,7 @@ const DEFAULTS: WaitlistFormInput = {
   diet: "",
   injuries: "",
   consent: false,
+  turnstileToken: "",
 };
 
 export function WaitlistForm({
@@ -61,6 +65,7 @@ export function WaitlistForm({
   successHref?: string;
 }) {
   const router = useRouter();
+  const turnstileRef = useRef<TurnstileInstance | undefined>(undefined);
 
   const form = useForm<WaitlistFormInput, unknown, WaitlistFormOutput>({
     resolver: zodResolver(waitlistFormSchema),
@@ -68,8 +73,15 @@ export function WaitlistForm({
     reValidateMode: "onChange",
     defaultValues: DEFAULTS,
   });
-  const { control, register, formState, setError, setFocus, handleSubmit } =
-    form;
+  const {
+    control,
+    register,
+    formState,
+    setError,
+    setFocus,
+    setValue,
+    handleSubmit,
+  } = form;
   const { errors } = formState;
 
   const nameValue = useWatch({ control, name: "name" });
@@ -85,14 +97,23 @@ export function WaitlistForm({
     });
 
     const whatsappError = res?.validationErrors?.whatsapp?._errors?.[0];
+
     if (whatsappError) {
       setError("whatsapp", { message: whatsappError });
       setFocus("whatsapp");
     }
+    const turnstileError = res?.validationErrors?.turnstileToken?._errors?.[0];
+
+    if (turnstileError) setError("turnstileToken", { message: turnstileError });
+
     if (res?.validationErrors || res?.serverError || !res?.data) {
+      // The token was consumed server-side; reset for a fresh challenge on retry.
+      turnstileRef.current?.reset();
+      setValue("turnstileToken", "");
       toast.error("Couldn’t submit. Please check the highlighted fields.", {
         id: toastId,
       });
+
       return;
     }
 
@@ -363,6 +384,21 @@ export function WaitlistForm({
           />
         )}
       </FormField>
+
+      <div className="grid gap-1.5">
+        <TurnstileWidget
+          ref={turnstileRef}
+          action="join"
+          onToken={(token) =>
+            setValue("turnstileToken", token ?? "", { shouldValidate: false })
+          }
+        />
+        {errors.turnstileToken?.message && (
+          <p className="text-red text-[0.82rem]">
+            {errors.turnstileToken.message}
+          </p>
+        )}
+      </div>
 
       {result?.serverError && <FormRootError message={result.serverError} />}
 

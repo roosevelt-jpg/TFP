@@ -18,13 +18,17 @@ function sentryOrigin(): string {
 // Report-Only first; promote to enforced `Content-Security-Policy` once
 // validated. Tighten further when the remaining third-party origins
 // (Turnstile, PostHog) are introduced.
+// Cloudflare Turnstile loads a script and renders its challenge in an iframe.
+const TURNSTILE = "https://challenges.cloudflare.com";
+
 const contentSecurityPolicy = [
   "default-src 'self'",
-  "script-src 'self'",
+  `script-src 'self' ${TURNSTILE}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' blob: data:",
   "font-src 'self'",
-  `connect-src 'self'${sentryOrigin()}`,
+  `connect-src 'self' ${TURNSTILE}${sentryOrigin()}`,
+  `frame-src ${TURNSTILE}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

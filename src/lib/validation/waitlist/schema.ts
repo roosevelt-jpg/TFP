@@ -20,6 +20,7 @@ import {
   nameField,
   sexField,
   sexFormField,
+  turnstileTokenField,
   weightField,
   weightFormField,
   whatsappField,
@@ -40,6 +41,7 @@ export const waitlistSchema = z.object({
   injuries: injuriesField,
   consent: consentField,
   attribution: attributionField,
+  turnstileToken: turnstileTokenField,
 });
 
 export const waitlistFormSchema = z.object({
@@ -57,4 +59,5 @@ export const waitlistFormSchema = z.object({
   injuries: injuriesField,
   consent: consentFormField,
   attribution: attributionField,
+  turnstileToken: turnstileTokenField,
 });
