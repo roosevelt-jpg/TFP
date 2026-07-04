@@ -17,9 +17,6 @@ export function SupportSuccess({
 }: SupportSuccessProps) {
   return (
     <div
-      // Focus the card as React commits it (it replaces the form on submit, so
-      // there's no event handler to do this in) — lands keyboard/SR users on
-      // the confirmation instead of the now-detached submit button.
       ref={(node) => node?.focus()}
       tabIndex={-1}
       role="status"
