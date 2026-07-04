@@ -6,6 +6,8 @@ import { siteConfig } from "@/config/site";
 import { WaitlistWelcomeEmail } from "@/emails/waitlist-welcome";
 import { env } from "@/env";
 
+import { emailQueue } from "./queues";
+
 const INSTAGRAM_URL = "https://instagram.com/kanem14";
 const UNSUBSCRIBE_MAILTO = `mailto:${siteConfig.contactEmail}?subject=${encodeURIComponent("Leave the waitlist")}`;
 
@@ -20,10 +22,7 @@ export const sendWelcomeEmail = schemaTask({
     firstName: z.string().optional(),
     ref: z.string(),
   }),
-  // A launch spike queues rather than firing at once. Keep this at or below
-  // the Resend plan's requests/sec (default ~2) so sends don't 429; raise it
-  // in step with the Resend tier.
-  queue: { concurrencyLimit: 2 },
+  queue: emailQueue,
   retry: { maxAttempts: 1 },
   maxDuration: 30,
   run: async ({ email, firstName, ref }) => {
@@ -57,9 +56,6 @@ export const sendWelcomeEmail = schemaTask({
             headers: { "List-Unsubscribe": `<${UNSUBSCRIBE_MAILTO}>` },
           });
 
-          // Resend returns failures as `error` (a value, not a throw):
-          // { message, name, statusCode }. Log the full shape, keep the message
-          // for the abort below, then throw so onThrow retries.
           if (result.error) {
             lastError = `${result.error.name}: ${result.error.message} (${result.error.statusCode})`;
             logger.warn("Resend rejected the send", {
@@ -77,8 +73,7 @@ export const sendWelcomeEmail = schemaTask({
         },
         { maxAttempts: 3, minTimeoutInMs: 1000, factor: 2 },
       )
-      // Retries exhausted: fail without re-running the whole task, surfacing
-      // the last Resend error message in the dashboard.
+
       .catch(() => {
         throw new AbortTaskRunError(lastError);
       });
