@@ -23,6 +23,8 @@ export const env = createEnv({
     SENTRY_PROJECT: z.string().min(1).optional(),
     SENTRY_AUTH_TOKEN: z.string().min(1).optional(),
     TURNSTILE_SECRET_KEY: z.string().min(1),
+    GHL_INTEGRATION_TOKEN: z.string().min(1),
+    GHL_LOCATION_ID: z.string().min(1),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.url(),
