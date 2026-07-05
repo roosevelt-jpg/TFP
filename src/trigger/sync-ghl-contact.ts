@@ -32,6 +32,7 @@ export const syncGhlContact = schemaTask({
     injuries: z.string().nullish(),
   }),
   queue: ghlQueue,
+  // randomize so a burst of failed syncs doesn't retry in lockstep.
   retry: {
     maxAttempts: 5,
     minTimeoutInMs: 1000,
@@ -62,24 +63,23 @@ export const syncGhlContact = schemaTask({
       return result;
     } catch (error) {
       if (error instanceof GhlError) {
+        // Bad payload/auth won't change on retry — stop rather than burn attempts.
         if (error.permanent) {
           throw new AbortTaskRunError(error.message);
         }
-
         if (error.status === 429 && error.retryAfterMs) {
           logger.warn("GHL rate-limited, waiting before retry", {
             ref,
             retryAfterMs: error.retryAfterMs,
           });
-
           await wait.for({ seconds: Math.ceil(error.retryAfterMs / 1000) });
         }
       }
-
       throw error;
     }
   },
   onFailure: async ({ payload, error }) => {
+    // The DB row survives an unreachable GHL, so a failed sync is re-drivable by ref.
     logger.error("GHL contact sync permanently failed", {
       ref: payload.ref,
       email: payload.email,
