@@ -27,6 +27,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
+    "redrive": "tsx scripts/redrive-leads.ts",
     "trigger:dev": "trigger dev",
     "trigger:deploy": "trigger deploy",
     "email:dev": "email dev --dir src/emails"

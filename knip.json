@@ -16,7 +16,6 @@
     "tw-animate-css",
     "shadcn",
     "@prisma/client",
-    "tsx",
     "@trigger.dev/build",
     "@react-email/ui"
   ],
