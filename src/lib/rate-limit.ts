@@ -11,7 +11,7 @@ import { logger } from "@/lib/logger";
 //   email  — one address retried across IPs
 const TIERS = {
   global: { limit: 5000, window: "1 m" },
-  ip: { limit: 5, window: "1 m" },
+  ip: { limit: 30, window: "1 m" },
   email: { limit: 3, window: "1 m" },
 } as const;
 

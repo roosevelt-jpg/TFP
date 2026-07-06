@@ -47,7 +47,7 @@ describe("tier wiring", () => {
     ]);
     expect(limiterConfigs.map((c) => c.limiter)).toEqual([
       { limit: 5000, window: "1 m" },
-      { limit: 5, window: "1 m" },
+      { limit: 30, window: "1 m" },
       { limit: 3, window: "1 m" },
     ]);
   });
