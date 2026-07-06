@@ -17,9 +17,11 @@ const { mocks } = vi.hoisted(() => ({
       vi.fn<
         (id: string, payload: unknown, opts: unknown) => Promise<unknown>
       >(),
+    env: { GHL_SYNC_ENABLED: true },
   },
 }));
 
+vi.mock("@/env", () => ({ env: mocks.env }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit: mocks.checkRateLimit }));
 vi.mock("@/lib/client-ip", () => ({ clientIp: mocks.clientIp }));
 vi.mock("@/lib/turnstile", () => ({ verifyTurnstile: mocks.verifyTurnstile }));
@@ -60,6 +62,7 @@ beforeEach(() => {
   mocks.verifyTurnstile.mockResolvedValue(true);
   mocks.upsertWaitlistLead.mockResolvedValue(newLead);
   mocks.trigger.mockResolvedValue({ id: "run_1" });
+  mocks.env.GHL_SYNC_ENABLED = true;
 });
 
 describe("joinWaitlist", () => {
@@ -126,6 +129,20 @@ describe("joinWaitlist", () => {
     expect(logger.error).toHaveBeenCalledWith(
       "Failed to enqueue GHL contact sync",
       expect.any(Error),
+    );
+  });
+
+  it("skips only the GHL sync when the kill switch is off", async () => {
+    mocks.env.GHL_SYNC_ENABLED = false;
+
+    const result = await joinWaitlist(validInput);
+
+    expect(result.data).toEqual({ ok: true, id: "public-token" });
+    expect(mocks.trigger).toHaveBeenCalledTimes(1);
+    expect(mocks.trigger).toHaveBeenCalledWith(
+      "send-welcome-email",
+      expect.anything(),
+      expect.anything(),
     );
   });
 

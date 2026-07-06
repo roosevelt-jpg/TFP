@@ -25,6 +25,9 @@ export const env = createEnv({
     TURNSTILE_SECRET_KEY: z.string().min(1),
     GHL_INTEGRATION_TOKEN: z.string().min(1),
     GHL_LOCATION_ID: z.string().min(1),
+    // Launch-day kill switch: CRM sync isn't time-critical, so it can be
+    // disabled under incident without touching emails and redriven later.
+    GHL_SYNC_ENABLED: z.stringbool().default(true),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.url(),

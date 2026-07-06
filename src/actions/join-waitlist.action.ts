@@ -12,6 +12,7 @@ import { verifyTurnstile } from "@/lib/turnstile";
 import { waitlistSchema } from "@/lib/validation/waitlist/schema";
 import { CONSENT_TEXT, POLICY_VERSION } from "@/lib/waitlist/consent";
 import { clientIp, upsertWaitlistLead } from "@/lib/waitlist/persist";
+import { env } from "@/env";
 import type { sendWelcomeEmail } from "@/trigger/send-welcome-email";
 import type { syncGhlContact } from "@/trigger/sync-ghl-contact";
 
@@ -57,7 +58,6 @@ export const joinWaitlist = actionClient
           : null,
       },
       {
-        // Set only when a new lead is inserted (returning emails keep these).
         consentAt: new Date(),
         consentText: CONSENT_TEXT,
         policyVersion: POLICY_VERSION,
@@ -85,30 +85,32 @@ export const joinWaitlist = actionClient
         logger.error("Failed to enqueue welcome email", error);
       }
 
-      try {
-        await tasks.trigger<typeof syncGhlContact>(
-          "sync-ghl-contact",
-          {
-            name,
-            email,
-            phone: whatsapp,
-            ref: lead.ref,
-            goal: parsedInput.goal,
-            level: parsedInput.level,
-            sex: parsedInput.sex,
-            age: parsedInput.age,
-            heightCm: parsedInput.heightCm,
-            weightKg: parsedInput.weightKg,
-            goalWeightKg: parsedInput.goalWeightKg ?? null,
-            diet: parsedInput.diet ?? null,
-            injuries: parsedInput.injuries
-              ? cleanText(parsedInput.injuries, 300)
-              : null,
-          },
-          { idempotencyKey: lead.ref, idempotencyKeyTTL: "1h" },
-        );
-      } catch (error) {
-        logger.error("Failed to enqueue GHL contact sync", error);
+      if (env.GHL_SYNC_ENABLED) {
+        try {
+          await tasks.trigger<typeof syncGhlContact>(
+            "sync-ghl-contact",
+            {
+              name,
+              email,
+              phone: whatsapp,
+              ref: lead.ref,
+              goal: parsedInput.goal,
+              level: parsedInput.level,
+              sex: parsedInput.sex,
+              age: parsedInput.age,
+              heightCm: parsedInput.heightCm,
+              weightKg: parsedInput.weightKg,
+              goalWeightKg: parsedInput.goalWeightKg ?? null,
+              diet: parsedInput.diet ?? null,
+              injuries: parsedInput.injuries
+                ? cleanText(parsedInput.injuries, 300)
+                : null,
+            },
+            { idempotencyKey: lead.ref, idempotencyKeyTTL: "1h" },
+          );
+        } catch (error) {
+          logger.error("Failed to enqueue GHL contact sync", error);
+        }
       }
     }
 
