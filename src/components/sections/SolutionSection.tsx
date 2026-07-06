@@ -13,7 +13,7 @@ export function SolutionSection() {
         eyebrow="The difference"
         heading="This one messages first."
         headingChars={16}
-        lead="Not a file you forget. It’s me — coaching you in the one app you already check fifty times a day, trained on exactly how I program, feed and push my own athletes."
+        lead="Not a file you forget. It’s me, coaching you in the one app you already check fifty times a day, trained on exactly how I program, feed and push my own athletes."
       />
       <div className="mt-[54px] grid items-start gap-[clamp(32px,5vw,64px)] md:grid-cols-2">
         <div>

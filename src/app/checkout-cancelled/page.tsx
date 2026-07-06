@@ -37,11 +37,11 @@ export default function CheckoutCancelledPage() {
         <Container width="narrow" className="relative z-1 text-center">
           <Eyebrow align="center">Checkout not completed</Eyebrow>
           <h1 className="text-display mt-4">
-            No charge made — your <em>spot’s still here.</em>
+            No charge made. Your <em>spot’s still here.</em>
           </h1>
           <p className="text-muted text-lead mx-auto mt-[18px] max-w-[44ch] leading-[1.6]">
             Looks like checkout was cancelled before it finished, so your card
-            wasn’t charged. No drama — pick up right where you left off and your
+            wasn’t charged. No drama: pick up right where you left off and your
             coach is still waiting.
           </p>
 

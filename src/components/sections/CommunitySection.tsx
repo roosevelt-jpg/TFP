@@ -15,7 +15,7 @@ export function CommunitySection() {
           </>
         }
         headingChars={16}
-        lead="Everyone on the programme trains to the same standard and holds the same line. A private community that keeps you honest on the days motivation won’t — because the work is easier when you’re not the only one doing it."
+        lead="Everyone on the programme trains to the same standard and holds the same line. A private community that keeps you honest on the days motivation won’t, because the work is easier when you’re not the only one doing it."
       />
       <div className="mt-11 grid gap-[14px] md:grid-cols-3">
         {community.map((item, i) => (

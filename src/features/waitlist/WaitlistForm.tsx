@@ -117,7 +117,7 @@ export function WaitlistForm({
       return;
     }
 
-    toast.success("You’re on the list — check your inbox.", { id: toastId });
+    toast.success("Spot reserved. Check your inbox.", { id: toastId });
     router.push(`${successHref}?id=${encodeURIComponent(res.data.id)}`);
   });
 
@@ -299,7 +299,7 @@ export function WaitlistForm({
         summary={
           <span>
             Add diet, injuries &amp; goal weight{" "}
-            <span className="text-dim font-normal">— optional</span>
+            <span className="text-dim font-normal">(optional)</span>
           </span>
         }
       >
@@ -337,7 +337,7 @@ export function WaitlistForm({
           label="Injuries or limitations"
           htmlFor="wf-injuries"
           optional
-          hint="So your plan works around them — leave blank if none."
+          hint="So your plan works around them. Leave blank if none."
           error={errors.injuries?.message}
         >
           {(control) => (

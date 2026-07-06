@@ -44,9 +44,9 @@ export const terms: LegalDoc = {
         {
           type: "p",
           content: [
-            "Your purchase gives you the full 8-week programme — a structured training and nutrition plan delivered digitally, which is ",
+            "Your purchase gives you the full 8-week programme (a structured training and nutrition plan delivered digitally, which is ",
             { b: "yours to keep" },
-            " — and access to your Performance Coach for 8 weeks. The Services are digital; there is no physical product and nothing is shipped. We may update or improve the programme content over time.",
+            ") and access to your Performance Coach for 8 weeks. The Services are digital; there is no physical product and nothing is shipped. We may update or improve the programme content over time.",
           ],
         },
       ],
@@ -89,7 +89,7 @@ export const terms: LegalDoc = {
         {
           type: "p",
           content: [
-            "Monthly coaching is a recurring subscription. By continuing past your first 8 weeks you authorise us, through Stripe, to charge the then-current monthly fee to your payment method at the start of each billing period until you cancel. Payment processing is scheduled in advance, so a charge already in progress may not be stoppable — if it goes through, it covers your final month and your coach stays active until that period ends.",
+            "Monthly coaching is a recurring subscription. By continuing past your first 8 weeks you authorise us, through Stripe, to charge the then-current monthly fee to your payment method at the start of each billing period until you cancel. Payment processing is scheduled in advance, so a charge already in progress may not be stoppable. If it goes through, it covers your final month and your coach stays active until that period ends.",
           ],
         },
       ],
@@ -102,7 +102,7 @@ export const terms: LegalDoc = {
           content: [
             "You can cancel your monthly coaching membership ",
             { b: "at any time" },
-            " — from your account or by messaging the team. Cancelling stops future charges; you keep the 8-week programme files either way. We don’t use phone calls or retention hoops. Cancellation takes effect at the end of the current paid period.",
+            ", from your account or by messaging the team. Cancelling stops future charges; you keep the 8-week programme files either way. We don’t use phone calls or retention hoops. Cancellation takes effect at the end of the current paid period.",
           ],
         },
       ],
@@ -186,7 +186,7 @@ export const terms: LegalDoc = {
         {
           type: "p",
           content: [
-            "All content in the programme and the Services — text, plans, media, branding, and software — is owned by us or our licensors and is protected by intellectual-property laws. We grant you a limited, personal, non-transferable, non-exclusive licence to access and use it for your own training. No other rights are granted.",
+            "All content in the programme and the Services (text, plans, media, branding, and software) is owned by us or our licensors and is protected by intellectual-property laws. We grant you a limited, personal, non-transferable, non-exclusive licence to access and use it for your own training. No other rights are granted.",
           ],
         },
       ],
@@ -223,7 +223,7 @@ export const terms: LegalDoc = {
         {
           type: "p",
           content: [
-            "Nothing in these Terms limits liability that cannot be limited by law — including liability for death or personal injury caused by our negligence, or for fraud. Subject to that, we are not liable for any indirect or consequential loss, and our total liability arising out of or in connection with the Services will not exceed the amount you paid us in the 12 months before the claim.",
+            "Nothing in these Terms limits liability that cannot be limited by law, including liability for death or personal injury caused by our negligence, or for fraud. Subject to that, we are not liable for any indirect or consequential loss, and our total liability arising out of or in connection with the Services will not exceed the amount you paid us in the 12 months before the claim.",
           ],
         },
       ],

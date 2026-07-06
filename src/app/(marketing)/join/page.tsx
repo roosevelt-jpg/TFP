@@ -11,13 +11,13 @@ import { JoinHeroSection } from "@/components/sections/JoinHeroSection";
 export const metadata: Metadata = {
   title: "Join the waitlist",
   description:
-    "Register your interest in The Formula Programme. Two minutes to join — we’ll email you the moment a spot opens. No payment today.",
+    "Register your interest in The Formula Programme. Two minutes to join. We’ll email you the moment a spot opens. No payment today.",
   alternates: { canonical: "/join" },
   openGraph: {
     url: "/join",
     title: "Join the waitlist | The Formula Programme",
     description:
-      "Two minutes to register your interest. We’ll email you the moment a spot opens — no payment today.",
+      "Two minutes to register your interest. We’ll email you the moment a spot opens. No payment today.",
   },
 };
 

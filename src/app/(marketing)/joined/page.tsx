@@ -97,16 +97,7 @@ export default function JoinedPage({
     <>
       <SkipLink href="#top" />
 
-      <SiteHeader
-        variant="minimal"
-        logoPriority
-        cta={
-          <span className="text-good inline-flex items-center gap-[7px] text-[0.8rem]">
-            <span aria-hidden className="bg-good size-[7px] rounded-full" />
-            You’re on the list
-          </span>
-        }
-      />
+      <SiteHeader variant="minimal" logoPriority />
 
       <main className="relative z-10">
         <Suspense

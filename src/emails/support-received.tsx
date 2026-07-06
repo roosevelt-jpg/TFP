@@ -18,7 +18,7 @@ export function SupportReceivedEmail({
 }: SupportReceivedEmailProps) {
   return (
     <EmailLayout
-      preview="We've got your request — the team will be in touch within one working day."
+      preview="We've got your request. The team will be in touch within one working day."
       logoUrl={logoUrl}
       headerMeta="Support"
       footer={
@@ -95,7 +95,7 @@ export function SupportReceivedEmail({
           }}
         >
           We'll review what you sent and get back to you by email. No need to
-          reply again — just keep an eye on your inbox.
+          reply again. Just keep an eye on your inbox.
         </Text>
       </Section>
 

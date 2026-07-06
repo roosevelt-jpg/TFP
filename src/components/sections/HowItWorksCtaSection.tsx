@@ -16,7 +16,7 @@ export function HowItWorksCtaSection() {
         <Reveal delayMs={80}>
           <p className="text-muted text-lead mx-auto mt-4 max-w-[42ch] leading-[1.6]">
             Joining the waitlist is free. When early access opens it’s £
-            {PRICE_TODAY} to start — programme + AI coach for 8 weeks — then £
+            {PRICE_TODAY} to start (programme + AI coach for 8 weeks), then £
             {PRICE_MONTHLY}/mo, cancel anytime.
           </p>
         </Reveal>

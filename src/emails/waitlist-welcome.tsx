@@ -24,7 +24,7 @@ export function WaitlistWelcomeEmail({
 }: WaitlistWelcomeEmailProps) {
   return (
     <EmailLayout
-      preview="You're on the early-access list — we'll email you the moment your spot opens."
+      preview="You're on the early-access list. We'll email you the moment your spot opens."
       logoUrl={logoUrl}
       headerMeta={`#${waitlistRef}`}
       footer={
@@ -93,7 +93,7 @@ export function WaitlistWelcomeEmail({
         >
           Welcome{firstName ? `, ${firstName}` : ""}. You've reserved your
           early-access spot for the 8-week programme and your AI coach. No
-          payment today — here's what happens next.
+          payment today. Here's what happens next.
         </Text>
       </Section>
 
@@ -149,9 +149,9 @@ export function WaitlistWelcomeEmail({
             color: email.muted,
           }}
         >
-          While you wait, follow Kane for daily training and nutrition tips —
-          and just reply to this email with your main goal so your coach can hit
-          the ground running.
+          While you wait, follow Kane for daily training and nutrition tips, and
+          just reply to this email with your main goal so your coach can hit the
+          ground running.
         </Text>
         <table cellPadding={0} cellSpacing={0} border={0} role="presentation">
           <tr>

@@ -10,7 +10,7 @@ export type TestimonialData = {
 export const testimonials: TestimonialData[] = [
   {
     quote:
-      "The check-ins are what changed it. I’d never made it past week three — this time I finished all eight.",
+      "The check-ins are what changed it. I’d never made it past week three. This time I finished all eight.",
     name: "Jamie T.",
     detail: "Down 7kg",
   },
@@ -23,7 +23,7 @@ export const testimonials: TestimonialData[] = [
   },
   {
     quote:
-      "No app to faff with — it’s just in my WhatsApp pushing me. Worth every penny next to the PDFs I’ve binned.",
+      "No app to faff with. It’s just in my WhatsApp pushing me. Worth every penny next to the PDFs I’ve binned.",
     name: "Marcus L.",
     detail: "8 weeks, no misses",
   },

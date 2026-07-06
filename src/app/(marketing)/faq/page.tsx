@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     url: "/faq",
     title: "FAQ | The Formula Programme",
     description:
-      "Everything about the programme, the Performance Coach, billing and cancelling — answered.",
+      "Everything about the programme, the Performance Coach, billing and cancelling, answered.",
   },
 };
 

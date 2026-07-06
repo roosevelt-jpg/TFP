@@ -38,7 +38,7 @@ export default function Home() {
     <>
       <SkipLink />
       <AnnouncementBar>
-        First cohort opening soon — limited spots on the waiting list
+        First cohort opening soon, limited spots on the waiting list
       </AnnouncementBar>
       <SiteHeader
         nav={NAV}
@@ -66,7 +66,7 @@ export default function Home() {
 
       <SiteFooter
         links={FOOTER_LINKS}
-        disclaimer="Your Performance Coach is an AI trained on Kane's coaching style — not a live person. Results vary. Not medical advice; consult a professional before starting any programme."
+        disclaimer="Your Performance Coach is an AI trained on Kane's coaching style, not a live person. Results vary. Not medical advice; consult a professional before starting any programme."
       />
 
       <StickyCtaBar

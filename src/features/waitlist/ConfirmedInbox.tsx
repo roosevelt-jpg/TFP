@@ -19,7 +19,7 @@ export function ConfirmedInbox() {
           className="text-muted mt-px shrink-0"
         />
         <p className="text-muted text-[0.9rem] leading-relaxed">
-          A confirmation email is on its way — we’ll email you the moment early
+          A confirmation email is on its way. We’ll email you the moment early
           access opens.{" "}
           <span className="text-dim">
             Didn’t get it in a few minutes? Check spam or{" "}

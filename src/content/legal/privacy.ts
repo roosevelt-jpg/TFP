@@ -36,23 +36,23 @@ export const privacy: LegalDoc = {
           items: [
             [
               { b: "Details you give us" },
-              " — your name, email, and WhatsApp number when you join the waitlist or sign up, and optionally your training goal, experience level, and similar profile details.",
+              ": your name, email, and WhatsApp number when you join the waitlist or sign up, and optionally your training goal, experience level, and similar profile details.",
             ],
             [
               { b: "Payment information" },
-              " — handled directly by Stripe. We receive confirmation of payment and limited details (such as the last four digits and card type); we never see or store your full card number.",
+              ": handled directly by Stripe. We receive confirmation of payment and limited details (such as the last four digits and card type); we never see or store your full card number.",
             ],
             [
               { b: "Coaching messages" },
-              " — the messages you exchange with your Performance Coach on WhatsApp, so it can respond and support you.",
+              ": the messages you exchange with your Performance Coach on WhatsApp, so it can respond and support you.",
             ],
             [
               { b: "Support messages" },
-              " — anything you send us when you contact the team.",
+              ": anything you send us when you contact the team.",
             ],
             [
               { b: "Usage data" },
-              " — basic technical information (such as device, browser, and IP address) collected automatically through cookies and similar technologies.",
+              ": basic technical information (such as device, browser, and IP address) collected automatically through cookies and similar technologies.",
             ],
           ],
         },
@@ -74,7 +74,7 @@ export const privacy: LegalDoc = {
               ";",
             ],
             [
-              "run your Performance Coach on WhatsApp — check-ins, answers, and accountability ",
+              "run your Performance Coach on WhatsApp: check-ins, answers, and accountability ",
               { b: "(to perform our contract)" },
               ";",
             ],
@@ -103,7 +103,7 @@ export const privacy: LegalDoc = {
         {
           type: "p",
           content: [
-            "Your WhatsApp number is used solely to message you as your coach. Your conversations are processed — including by our AI provider — to generate helpful, personalised responses, and are not used to build advertising profiles or sold to anyone. You can change your number by contacting the team, and stop messages at any time by cancelling, replying to opt out, or blocking the number in WhatsApp. Messaging is delivered through WhatsApp / Meta and is also governed by their privacy terms.",
+            "Your WhatsApp number is used solely to message you as your coach. Your conversations are processed (including by our AI provider) to generate helpful, personalised responses, and are not used to build advertising profiles or sold to anyone. You can change your number by contacting the team, and stop messages at any time by cancelling, replying to opt out, or blocking the number in WhatsApp. Messaging is delivered through WhatsApp / Meta and is also governed by their privacy terms.",
           ],
         },
       ],
@@ -122,16 +122,16 @@ export const privacy: LegalDoc = {
           items: [
             [
               { b: "Stripe" },
-              " — to process payments and manage subscriptions.",
+              ": to process payments and manage subscriptions.",
             ],
-            [{ b: "WhatsApp / Meta" }, " — to deliver coaching messages."],
+            [{ b: "WhatsApp / Meta" }, ": to deliver coaching messages."],
             [
               { b: "Our email provider" },
-              " — to send service and account emails.",
+              ": to send service and account emails.",
             ],
             [
               { b: "Our AI provider" },
-              " — to power the Performance Coach’s responses.",
+              ": to power the Performance Coach’s responses.",
             ],
           ],
         },
@@ -150,7 +150,7 @@ export const privacy: LegalDoc = {
         {
           type: "p",
           content: [
-            "Some of our processors are based outside the UK or EEA. Where your information is transferred abroad, we rely on appropriate safeguards — such as the UK’s international data transfer agreement or the European Commission’s Standard Contractual Clauses — to keep it protected to the same standard.",
+            "Some of our processors are based outside the UK or EEA. Where your information is transferred abroad, we rely on appropriate safeguards, such as the UK’s international data transfer agreement or the European Commission’s Standard Contractual Clauses, to keep it protected to the same standard.",
           ],
         },
       ],

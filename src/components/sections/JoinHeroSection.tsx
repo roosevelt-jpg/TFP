@@ -16,7 +16,7 @@ export function JoinHeroSection() {
       <Reveal delayMs={120}>
         <p className="text-muted text-lead mx-auto mt-4 max-w-[48ch] text-center leading-relaxed">
           Two minutes to register your interest. We’ll email you the moment a
-          spot opens — no payment today.
+          spot opens. No payment today.
         </p>
       </Reveal>
       <Reveal delayMs={150}>

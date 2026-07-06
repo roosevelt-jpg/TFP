@@ -22,9 +22,9 @@ export function ConfirmedWhatsAppCard() {
             Your spot is reserved
           </h2>
           <p className="text-muted mt-3 max-w-[42ch] leading-relaxed">
-            You’re on the early-access list. The moment a place opens we’ll
-            email you to claim your spot — then your Performance Coach goes live
-            on WhatsApp at the number you gave us.
+            The moment a place opens we’ll email you to claim your spot, then
+            your Performance Coach goes live on WhatsApp at the number you gave
+            us.
           </p>
           <div className="text-muted border-hairline-strong mt-5 inline-flex items-center gap-[9px] rounded-sm border px-4 py-3 text-[0.88rem]">
             <Mail size={15} strokeWidth={2} aria-hidden />

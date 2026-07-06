@@ -43,7 +43,7 @@ export const sendSupportEmails = schemaTask({
             from: senderFrom,
             to: TEAM_INBOX,
             replyTo: email,
-            subject: `New ${requestType} — ${name}`,
+            subject: `New ${requestType} - ${name}`,
             react: (
               <SupportNotificationEmail
                 requestType={requestType}
@@ -78,7 +78,7 @@ export const sendSupportEmails = schemaTask({
       .send({
         from: senderFrom,
         to: email,
-        subject: "We've got your request — The Formula Programme",
+        subject: "We've got your request - The Formula Programme",
         react: (
           <SupportReceivedEmail
             firstName={firstName}

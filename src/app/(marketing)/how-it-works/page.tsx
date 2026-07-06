@@ -12,13 +12,13 @@ import { HowItWorksStepsSection } from "@/components/sections/HowItWorksStepsSec
 export const metadata: Metadata = {
   title: "How it works",
   description:
-    "Kane’s 8-week method, delivered by an AI Performance Coach in your WhatsApp. No new app — join the waitlist, get the programme instantly, and show up.",
+    "Kane’s 8-week method, delivered by an AI Performance Coach in your WhatsApp. No new app. Join the waitlist, get the programme instantly, and show up.",
   alternates: { canonical: "/how-it-works" },
   openGraph: {
     url: "/how-it-works",
     title: "How it works | The Formula Programme",
     description:
-      "A coach that lives in your WhatsApp — Kane’s 8-week method, with daily check-ins and instant answers.",
+      "A coach that lives in your WhatsApp: Kane’s 8-week method, with daily check-ins and instant answers.",
   },
 };
 

@@ -23,7 +23,7 @@ export function SupportSuccess({
       className="bg-bg border-hairline border-t-red shadow-card mt-[30px] rounded-md border border-t-2 p-[clamp(26px,4vw,38px)] outline-none"
     >
       <h2 className="text-[clamp(1.5rem,3.6vw,2rem)]">
-        Thanks, {name} — <em>we’re on it.</em>
+        Thanks, {name}, <em>we’re on it.</em>
       </h2>
       <p className="text-muted mt-3.5 leading-relaxed">
         We’ve logged your <b className="text-text font-semibold">{typeLabel}</b>{" "}

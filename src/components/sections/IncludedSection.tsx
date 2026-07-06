@@ -13,7 +13,7 @@ export function IncludedSection() {
         heading="Everything you need to actually finish."
         headingChars={18}
         leadChars={52}
-        lead="Two things are yours the moment you’re in — and stay in your corner for the full eight weeks."
+        lead="Two things are yours the moment you’re in, and stay in your corner for the full eight weeks."
       />
       <div className="mt-[46px] grid gap-[14px]">
         <Reveal>
@@ -37,7 +37,7 @@ export function IncludedSection() {
             }
           >
             In my voice, trained on how I coach. It checks in, answers and
-            pushes — every day, for eight full weeks. No new app, no logins. You
+            pushes. Every day, for eight full weeks. No new app, no logins. You
             just open WhatsApp.
           </HighlightCard>
         </Reveal>

@@ -6,7 +6,7 @@ import { terms } from "@/content/legal/terms";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description:
-    "The terms for The Formula Programme — the 8-week programme and your AI Performance Coach in WhatsApp, operated by The Formula Performance Elite Ltd.",
+    "The terms for The Formula Programme: the 8-week programme and your AI Performance Coach in WhatsApp, operated by The Formula Performance Elite Ltd.",
   alternates: { canonical: "/terms" },
   openGraph: {
     url: "/terms",

@@ -27,12 +27,12 @@ export const confirmedSecondarySteps = [
   {
     step: 2,
     title: "Watch your inbox",
-    body: "We’ve sent a confirmation to your email. When early access opens, your invite lands there first — keep an eye out (and check spam, just in case).",
+    body: "We’ve sent a confirmation to your email. When early access opens, your invite lands there first. Keep an eye out (and check spam, just in case).",
   },
   {
     step: 3,
     title: "Get a head start",
-    body: "Follow @kanem14 for daily training tips while you wait — and reply to our email with your main goal so your coach can hit the ground running.",
+    body: "Follow @kanem14 for daily training tips while you wait, and reply to our email with your main goal so your coach can hit the ground running.",
     strong: "@kanem14",
   },
 ];

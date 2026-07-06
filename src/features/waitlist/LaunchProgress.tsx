@@ -23,7 +23,7 @@ export function LaunchProgress() {
         />
       </div>
       <div className="text-dim mx-auto mt-[11px] flex max-w-[680px] justify-between text-[0.7rem] font-semibold tracking-[0.14em] uppercase">
-        <span>You’re on the list</span>
+        <span>Spot reserved</span>
         <span>Launching soon</span>
       </div>
     </div>

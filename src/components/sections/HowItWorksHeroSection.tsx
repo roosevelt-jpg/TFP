@@ -28,8 +28,8 @@ export function HowItWorksHeroSection() {
         <Reveal delayMs={120}>
           <p className="text-muted text-lead mx-auto mt-[18px] max-w-[50ch] leading-[1.6]">
             No new app. No logging into a dashboard you’ll forget. Kane’s method
-            reaches you in the one place you already are — and actually keeps
-            you going for eight weeks.
+            reaches you in the one place you already are, and actually keeps you
+            going for eight weeks.
           </p>
         </Reveal>
       </Container>

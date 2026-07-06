@@ -13,7 +13,7 @@ export function ProblemSection() {
             heading="A PDF can’t tell when you quit."
             headingChars={13}
             leadChars={46}
-            lead="It can’t see you skipped Monday. It can’t talk you out of the 9pm takeaway. It never messages you on the day you’re ready to pack it in — so it ends up in your downloads, half-read."
+            lead="It can’t see you skipped Monday. It can’t talk you out of the 9pm takeaway. It never messages you on the day you’re ready to pack it in, so it ends up in your downloads, half-read."
           />
           <Reveal delayMs={180}>
             <p className="mt-[26px] text-[1.2rem] leading-[1.45]">

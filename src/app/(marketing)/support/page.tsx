@@ -15,8 +15,8 @@ import { SupportForm } from "@/features/support/SupportForm";
 import { SupportFormSkeleton } from "@/features/support/SupportFormSkeleton";
 
 const SUPPORT_DESCRIPTION = PAYMENTS_LIVE
-  ? "Get help with The Formula Programme — questions, billing, changing your WhatsApp number, pausing or cancelling. The team replies within one working day."
-  : "Get help with The Formula Programme — questions about the programme, changing your WhatsApp number, or anything else. The team replies within one working day.";
+  ? "Get help with The Formula Programme: questions, billing, changing your WhatsApp number, pausing or cancelling. The team replies within one working day."
+  : "Get help with The Formula Programme: questions about the programme, changing your WhatsApp number, or anything else. The team replies within one working day.";
 
 export const metadata: Metadata = {
   title: "Support",

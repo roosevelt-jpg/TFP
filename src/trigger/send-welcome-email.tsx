@@ -47,7 +47,7 @@ export const sendWelcomeEmail = schemaTask({
       {
         from: senderFrom,
         to: email,
-        subject: "You're on the list — The Formula Programme",
+        subject: "You're on the list - The Formula Programme",
         react: (
           <WaitlistWelcomeEmail
             firstName={firstName}

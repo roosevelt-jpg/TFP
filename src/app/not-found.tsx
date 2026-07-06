@@ -46,7 +46,7 @@ export default function NotFound() {
             You’ve wandered <em>off plan.</em>
           </h1>
           <p className="text-muted mt-3.5 max-w-[42ch] text-[clamp(1.02rem,2.1vw,1.18rem)] leading-[1.6]">
-            This page doesn’t exist — or it moved. Let’s get you back to where
+            This page doesn’t exist, or it moved. Let’s get you back to where
             the work happens.
           </p>
           <div className="mt-7 flex flex-wrap justify-center gap-3">

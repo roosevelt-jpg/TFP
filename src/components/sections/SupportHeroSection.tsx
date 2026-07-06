@@ -26,8 +26,8 @@ export function SupportHeroSection({
         <Reveal delayMs={120}>
           <p className="text-muted text-lead mt-4 max-w-[52ch] leading-[1.6]">
             {paymentsLive
-              ? "Questions, billing, changing your number or cancelling — tell us what you need and the team will get back to you within one working day."
-              : "Questions about the programme, changing your WhatsApp number, or anything else — tell us what you need and the team will get back to you within one working day."}
+              ? "Questions, billing, changing your number or cancelling: tell us what you need and the team will get back to you within one working day."
+              : "Questions about the programme, changing your WhatsApp number, or anything else: tell us what you need and the team will get back to you within one working day."}
           </p>
         </Reveal>
       </Container>

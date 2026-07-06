@@ -20,7 +20,7 @@ export function FinalCtaSection() {
         <Reveal delayMs={80}>
           <p className="text-muted mx-auto mt-5 max-w-[46ch] text-lead leading-[1.6]">
             Join the waitlist and be first in line when early access opens. The
-            hardest part was always starting — this time, you won’t do it alone.
+            hardest part was always starting. This time, you won’t do it alone.
           </p>
         </Reveal>
         <Reveal delayMs={160}>

@@ -109,7 +109,7 @@ export function SupportForm({
       return;
     }
 
-    toast.success("Request received — we’ll be in touch.", { id: toastId });
+    toast.success("Request received. We’ll be in touch.", { id: toastId });
   });
 
   if (hasSucceeded && result.data) {
@@ -229,7 +229,7 @@ export function SupportForm({
           <p className="text-muted text-[0.84rem] leading-[1.55]">
             <b className="text-text font-semibold">Heads up on timing.</b> If
             you’re within <b className="text-text font-semibold">1 day</b> of
-            your next payment, we may not be able to stop it in time — payment
+            your next payment, we may not be able to stop it in time, as payment
             processing is scheduled in advance. If that next charge does go
             through, it simply covers your final month and your coach stays
             active until it ends.

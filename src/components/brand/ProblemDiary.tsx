@@ -5,10 +5,10 @@ type DiaryWeek = {
 };
 
 const weeks: DiaryWeek[] = [
-  { label: "Week 1 — every session done.", done: true },
-  { label: "Week 2 — only missed one.", done: true, fade: "muted" },
-  { label: "Week 3 — “catch up at the weekend.”", done: false, fade: "faint" },
-  { label: "Week 4 — restart Monday.", done: false, fade: "faintest" },
+  { label: "Week 1: every session done.", done: true },
+  { label: "Week 2: only missed one.", done: true, fade: "muted" },
+  { label: "Week 3: “catch up at the weekend.”", done: false, fade: "faint" },
+  { label: "Week 4: restart Monday.", done: false, fade: "faintest" },
 ];
 
 const fadeClass = {

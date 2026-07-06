@@ -45,7 +45,7 @@ export function SegmentedControl({
               checked={selected}
               onChange={() => onChange(o.value)}
               onBlur={onBlur}
-              aria-label={o.tip ? `${o.label} — ${o.tip}` : undefined}
+              aria-label={o.tip ? `${o.label}: ${o.tip}` : undefined}
               className="sr-only"
             />
             {o.label}

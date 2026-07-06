@@ -41,7 +41,7 @@ export function HeroSection() {
             </Reveal>
             <Reveal delayMs={120}>
               <p className="text-muted max-w-[33ch] text-lead leading-[1.6]">
-                My full 8-week training &amp; nutrition system — plus your own
+                My full 8-week training &amp; nutrition system, plus your own
                 Performance Coach in your WhatsApp, built on exactly how I
                 coach. It checks in, holds you to your word, and answers
                 whenever you need it.
@@ -70,7 +70,7 @@ export function HeroSection() {
             <PhoneMockup
               image={{
                 src: "/assets/kane-hero.png",
-                alt: "Kane Mousah — former professional Bellator fighter and founder of The Formula",
+                alt: "Kane Mousah, former professional Bellator fighter and founder of The Formula",
               }}
               chat={heroChat}
             />

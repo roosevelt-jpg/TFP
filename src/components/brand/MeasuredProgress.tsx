@@ -36,7 +36,7 @@ export function MeasuredProgress({ benchmarks }: MeasuredProgressProps) {
         Four benchmarks. <em>Proof you can see.</em>
       </p>
       <p className="text-muted mx-auto mt-3.5 mb-[26px] max-w-[52ch] leading-[1.6]">
-        We test four benchmarks in week one and re-test them in week eight — so
+        We test four benchmarks in week one and re-test them in week eight, so
         your progress is measured from your own starting point, never guessed.
       </p>
       <div className="mb-[30px] flex flex-wrap justify-center gap-2.5">
