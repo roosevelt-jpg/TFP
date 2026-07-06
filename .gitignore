@@ -58,3 +58,4 @@ docs/
 
 # trigger.dev local build cache
 .trigger
+/lighthouse-report
