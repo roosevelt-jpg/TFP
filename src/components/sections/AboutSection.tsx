@@ -3,6 +3,7 @@ import { Reveal } from "@/components/brand/Reveal";
 import { SectionHeader } from "@/components/brand/SectionHeader";
 import { StatBlock } from "@/components/brand/StatBlock";
 import { Section } from "@/components/layout/Section";
+import { siteConfig } from "@/config/site";
 
 export function AboutSection() {
   return (
@@ -14,6 +15,7 @@ export function AboutSection() {
             alt="Kane Mousah flexing at the Bellator weigh-in"
             name="Kane Mousah"
             caption="Ex-pro MMA · Founder, The Formula"
+            follower={{ count: "132K", href: siteConfig.instagramUrl }}
           />
         </Reveal>
         <div>
