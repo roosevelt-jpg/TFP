@@ -53,6 +53,8 @@
     "motion": "^12.42.2",
     "next": "16.2.9",
     "next-safe-action": "^8.5.5",
+    "posthog-js": "^1.402.0",
+    "posthog-node": "^5.42.0",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "react-hook-form": "^7.80.0",

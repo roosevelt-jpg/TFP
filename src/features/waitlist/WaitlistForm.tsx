@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { trackEvent } from "@/lib/analytics";
 import { firstNameOf } from "@/lib/name";
 import {
   DIET_OPTIONS,
@@ -118,6 +119,10 @@ export function WaitlistForm({
     }
 
     toast.success("Spot reserved. Check your inbox.", { id: toastId });
+    // Fired here, not on /joined pageview — that URL is shareable/refreshable.
+    // isNew-gated like the server twin so a returning lead isn't recounted.
+    if (res.data.isNew)
+      trackEvent("waitlist_joined", { goal: values.goal, level: values.level });
     router.push(`${successHref}?id=${encodeURIComponent(res.data.id)}`);
   });
 

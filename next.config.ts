@@ -4,14 +4,29 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 import "./src/env";
 
-function sentryOrigin(): string {
-  const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
-  if (!dsn) return "";
+// CSP origin (with leading space) from an env-provided URL; unset or
+// malformed values degrade to "" so the directive stays valid. Works for the
+// Sentry DSN (origin strips its credentials) and the PostHog proxy host,
+// which serves both ingestion (connect-src) and the lazy-loaded
+// session-replay recorder chunk (script-src).
+function cspOrigin(value: string | undefined): string {
+  if (!value) return "";
   try {
-    return ` https://${new URL(dsn).host}`;
+    return ` ${new URL(value).origin}`;
   } catch {
     return "";
   }
+}
+
+const sentryOrigin = () => cspOrigin(process.env.NEXT_PUBLIC_SENTRY_DSN);
+
+// Direct PostHog hosts pull SDK assets from sibling subdomains (e.g.
+// eu.i.posthog.com fetches from eu-assets.i.posthog.com), so PostHog
+// documents the wildcard as the only stable form. Our own proxy domain
+// serves everything from one origin and stays pinned.
+function posthogOrigin(): string {
+  const origin = cspOrigin(process.env.NEXT_PUBLIC_POSTHOG_HOST);
+  return origin.endsWith(".posthog.com") ? " https://*.posthog.com" : origin;
 }
 
 // Static CSP (no nonce) so pages stay statically prerendered — a core project
@@ -26,11 +41,14 @@ const scriptEval = isDev ? " 'unsafe-eval'" : "";
 
 const contentSecurityPolicy = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${scriptEval} ${TURNSTILE}`,
+  `script-src 'self' 'unsafe-inline'${scriptEval} ${TURNSTILE}${posthogOrigin()}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' blob: data:",
   "font-src 'self'",
-  `connect-src 'self' ${TURNSTILE}${sentryOrigin()}`,
+  // PostHog's replay compression worker is created from a blob: URL; without
+  // an explicit worker-src it falls back to script-src, which has no blob:.
+  "worker-src 'self' blob:",
+  `connect-src 'self' ${TURNSTILE}${sentryOrigin()}${posthogOrigin()}`,
   `frame-src ${TURNSTILE}`,
   "object-src 'none'",
   "base-uri 'self'",

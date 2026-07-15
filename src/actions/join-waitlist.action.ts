@@ -3,6 +3,7 @@
 import { tasks } from "@trigger.dev/sdk";
 import { returnValidationErrors } from "next-safe-action";
 
+import { trackServerEvent } from "@/lib/analytics-server";
 import { logger } from "@/lib/logger";
 import { actionClient } from "@/lib/safe-action";
 import { cleanEmail } from "@/lib/sanitize/email";
@@ -75,6 +76,14 @@ export const joinWaitlist = actionClient
     );
 
     if (lead.isNew) {
+      // Server twin of the client-side waitlist_joined (distinct names per
+      // PostHog dedup guidance); isNew-gated so upsert retries don't recount.
+      await trackServerEvent("lead_created", {
+        goal: parsedInput.goal,
+        level: parsedInput.level,
+        source: "server",
+      });
+
       try {
         await tasks.trigger<typeof sendWelcomeEmail>(
           "send-welcome-email",
@@ -114,5 +123,5 @@ export const joinWaitlist = actionClient
       }
     }
 
-    return { ok: true as const, id: lead.publicToken };
+    return { ok: true as const, id: lead.publicToken, isNew: lead.isNew };
   });

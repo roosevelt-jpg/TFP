@@ -1,5 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// Overridable so local runs can dodge whatever else is parked on 3000 —
+// reuseExistingServer would otherwise happily test a different app.
+const rawPort = process.env.E2E_PORT;
+const port = rawPort && /^\d+$/.test(rawPort) ? Number(rawPort) : 3000;
+
 export default defineConfig({
   testDir: "tests/e2e",
   fullyParallel: true,
@@ -7,7 +12,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: `http://localhost:${port}`,
     trace: "on-first-retry",
     // Deterministic axe contrast results: entrance animations otherwise get
     // snapshotted mid-fade.
@@ -24,8 +29,8 @@ export default defineConfig({
   ],
   globalSetup: "./tests/e2e/global-setup.ts",
   webServer: {
-    command: "pnpm start",
-    url: "http://localhost:3000",
+    command: `pnpm start --port ${port}`,
+    url: `http://localhost:${port}`,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
   },

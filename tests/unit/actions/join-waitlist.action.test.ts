@@ -17,6 +17,8 @@ const { mocks } = vi.hoisted(() => ({
       vi.fn<
         (id: string, payload: unknown, opts: unknown) => Promise<unknown>
       >(),
+    trackServerEvent:
+      vi.fn<(event: string, properties: unknown) => Promise<void>>(),
     env: { GHL_SYNC_ENABLED: true },
   },
 }));
@@ -32,6 +34,9 @@ vi.mock("@/lib/waitlist/persist", () => ({
 vi.mock("@trigger.dev/sdk", () => ({ tasks: { trigger: mocks.trigger } }));
 vi.mock("@/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
+vi.mock("@/lib/analytics-server", () => ({
+  trackServerEvent: mocks.trackServerEvent,
 }));
 
 const validInput = {
@@ -69,7 +74,7 @@ describe("joinWaitlist", () => {
   it("persists a sanitised lead and returns the public token", async () => {
     const result = await joinWaitlist(validInput);
 
-    expect(result.data).toEqual({ ok: true, id: "public-token" });
+    expect(result.data).toEqual({ ok: true, id: "public-token", isNew: true });
     expect(mocks.verifyTurnstile).toHaveBeenCalledWith(
       "tok",
       "1.2.3.4",
@@ -92,6 +97,26 @@ describe("joinWaitlist", () => {
       utmSource: null,
       referrer: null,
     });
+  });
+
+  it("captures the lead_created server event once for a new lead", async () => {
+    await joinWaitlist(validInput);
+
+    expect(mocks.trackServerEvent).toHaveBeenCalledTimes(1);
+    expect(mocks.trackServerEvent).toHaveBeenCalledWith("lead_created", {
+      goal: "lose",
+      level: "beg",
+      source: "server",
+    });
+  });
+
+  it("does not recount a returning lead as a conversion", async () => {
+    mocks.upsertWaitlistLead.mockResolvedValue({ ...newLead, isNew: false });
+
+    const result = await joinWaitlist(validInput);
+
+    expect(result.data).toEqual({ ok: true, id: "public-token", isNew: false });
+    expect(mocks.trackServerEvent).not.toHaveBeenCalled();
   });
 
   it("enqueues both side effects exactly once, idempotent on the lead ref", async () => {
@@ -121,7 +146,7 @@ describe("joinWaitlist", () => {
 
     const result = await joinWaitlist(validInput);
 
-    expect(result.data).toEqual({ ok: true, id: "public-token" });
+    expect(result.data).toEqual({ ok: true, id: "public-token", isNew: true });
     expect(logger.error).toHaveBeenCalledWith(
       "Failed to enqueue welcome email",
       expect.any(Error),
@@ -137,7 +162,7 @@ describe("joinWaitlist", () => {
 
     const result = await joinWaitlist(validInput);
 
-    expect(result.data).toEqual({ ok: true, id: "public-token" });
+    expect(result.data).toEqual({ ok: true, id: "public-token", isNew: true });
     expect(mocks.trigger).toHaveBeenCalledTimes(1);
     expect(mocks.trigger).toHaveBeenCalledWith(
       "send-welcome-email",
@@ -151,7 +176,7 @@ describe("joinWaitlist", () => {
 
     const result = await joinWaitlist(validInput);
 
-    expect(result.data).toEqual({ ok: true, id: "public-token" });
+    expect(result.data).toEqual({ ok: true, id: "public-token", isNew: false });
     expect(mocks.trigger).not.toHaveBeenCalled();
   });
 
