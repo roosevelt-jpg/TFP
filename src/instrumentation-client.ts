@@ -31,6 +31,11 @@ if (posthogKey && posthogHost) {
         defaults: "2026-05-30",
         // PostHog's CMP guidance: always init, gate capture — never the script.
         opt_out_capturing_by_default: consent !== "granted",
+        // Without this, posthog still writes its identifier cookie while
+        // opted out (capture and persistence are separate gates), breaking
+        // the banner's "nothing is set until you choose". It also makes
+        // opt-out DELETE the cookie, so withdrawal actually erases.
+        opt_out_persistence_by_default: true,
         // Already the default; explicit because /join collects name/email/phone.
         session_recording: { maskAllInputs: true },
       });
@@ -43,8 +48,17 @@ if (posthogKey && posthogHost) {
         posthog.opt_out_capturing();
       }
       onTrackingConsentChange((next) => {
-        if (next === "granted") posthog.opt_in_capturing();
-        else posthog.opt_out_capturing();
+        // State checks keep multi-tab broadcasts idempotent (opt-in state is
+        // shared storage, so only the first tab transitions it).
+        if (next === "granted") {
+          if (posthog.has_opted_out_capturing()) posthog.opt_in_capturing();
+          // opt_in only emits $opt_in; the suppressed init-time pageview for
+          // the page being looked at RIGHT NOW must be replayed by hand or
+          // every consenting visitor's landing page goes uncounted.
+          posthog.capture("$pageview");
+        } else if (!posthog.has_opted_out_capturing()) {
+          posthog.opt_out_capturing();
+        }
       });
     })
     .catch(() => {

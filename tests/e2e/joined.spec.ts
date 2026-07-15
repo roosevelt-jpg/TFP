@@ -1,6 +1,10 @@
 import { expect, test } from "@playwright/test";
 
-import { SEEDED_PUBLIC_TOKEN, SEEDED_REF } from "./fixtures";
+import { SEEDED_PUBLIC_TOKEN, SEEDED_REF, seedConsent } from "./fixtures";
+
+test.beforeEach(async ({ context }) => {
+  await seedConsent(context);
+});
 
 test("a seeded confirmation shows the lead's reference", async ({ page }) => {
   await page.goto(`/joined?id=${SEEDED_PUBLIC_TOKEN}`);

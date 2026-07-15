@@ -1,6 +1,9 @@
 import { expect, test } from "@playwright/test";
 
-test.beforeEach(async ({ page }) => {
+import { seedConsent } from "./fixtures";
+
+test.beforeEach(async ({ context, page }) => {
+  await seedConsent(context);
   await page.goto("/join");
 });
 

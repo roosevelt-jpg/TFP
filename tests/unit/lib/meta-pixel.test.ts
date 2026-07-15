@@ -29,7 +29,9 @@ beforeEach(() => {
   Reflect.deleteProperty(window, "fbq");
   Reflect.deleteProperty(window, "_fbq");
   document.head.innerHTML = "";
-  document.cookie = "tfp_tracking_consent=; path=/; max-age=0";
+  // Most cases assume an accepted banner; the denied/unanswered cases below
+  // override this (unanswered now defaults to denied).
+  document.cookie = "tfp_tracking_consent=granted; path=/";
   mocks.env.NEXT_PUBLIC_META_PIXEL_ID = "1234567890";
 });
 
@@ -58,6 +60,20 @@ describe("loadMetaPixel", () => {
     expect(script?.async).toBe(true);
   });
 
+  it("treats an unanswered banner as denied — revoke before init, no PageView, and no fbevents.js request", async () => {
+    document.cookie = "tfp_tracking_consent=; path=/; max-age=0";
+    const { loadMetaPixel } = await importModule();
+
+    loadMetaPixel();
+
+    expect(windowFbq().queue).toEqual([
+      ["consent", "revoke"],
+      ["init", "1234567890"],
+    ]);
+    // Even the script request transfers the visitor's IP to Meta.
+    expect(document.querySelector("script")).toBeNull();
+  });
+
   it("revokes before init and queues NO PageView when the gate is denied — a later grant flushes the queue, so denial-window events must never enter it", async () => {
     document.cookie = "tfp_tracking_consent=denied; path=/";
     const { loadMetaPixel } = await importModule();
@@ -76,12 +92,17 @@ describe("loadMetaPixel", () => {
     const { setTrackingConsent } = await import("@/lib/tracking-consent");
 
     loadMetaPixel();
+    expect(document.querySelector("script")).toBeNull();
+
     setTrackingConsent("granted");
 
     expect(windowFbq().queue.slice(-2)).toEqual([
       ["consent", "grant"],
       ["track", "PageView"],
     ]);
+    expect(document.querySelector("script")?.src).toBe(
+      "https://connect.facebook.net/en_US/fbevents.js",
+    );
   });
 
   it("queues revoke when consent is withdrawn", async () => {

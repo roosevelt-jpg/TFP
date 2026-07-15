@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { CookieChoices } from "@/components/CookieChoices";
 import { LegalLayout } from "@/components/legal/LegalLayout";
 import { privacy } from "@/content/legal/privacy";
 
@@ -17,5 +18,10 @@ export const metadata: Metadata = {
 };
 
 export default function PrivacyPage() {
-  return <LegalLayout doc={privacy} />;
+  return (
+    <LegalLayout
+      doc={privacy}
+      footer={{ heading: "Your cookie choice", body: <CookieChoices /> }}
+    />
+  );
 }

@@ -51,7 +51,10 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.env.NEXT_PUBLIC_POSTHOG_KEY = "phc_test";
   mocks.env.NEXT_PUBLIC_POSTHOG_HOST = "https://hub.example.com";
-  stubCookies({ ph_phc_test_posthog: PH_COOKIE });
+  stubCookies({
+    ph_phc_test_posthog: PH_COOKIE,
+    [TRACKING_CONSENT_COOKIE]: "granted",
+  });
   mocks.shutdown.mockResolvedValue(undefined);
 });
 
@@ -90,7 +93,7 @@ describe("trackServerEvent", () => {
   });
 
   it("falls back to a random distinct id when no posthog cookie exists", async () => {
-    stubCookies({});
+    stubCookies({ [TRACKING_CONSENT_COOKIE]: "granted" });
 
     await trackServerEvent("lead_created", { source: "server" });
     await flushAfter();
@@ -101,7 +104,10 @@ describe("trackServerEvent", () => {
   });
 
   it("warns when a posthog cookie exists but cannot be parsed", async () => {
-    stubCookies({ ph_phc_test_posthog: "not json" });
+    stubCookies({
+      ph_phc_test_posthog: "not json",
+      [TRACKING_CONSENT_COOKIE]: "granted",
+    });
 
     await trackServerEvent("lead_created", { source: "server" });
 
@@ -110,6 +116,15 @@ describe("trackServerEvent", () => {
       { event: "lead_created" },
     );
     expect(mocks.after).toHaveBeenCalledTimes(1);
+  });
+
+  it("skips capture when no decision is stored — unanswered means denied now that the banner exists", async () => {
+    stubCookies({ ph_phc_test_posthog: PH_COOKIE });
+
+    await trackServerEvent("lead_created", { source: "server" });
+
+    expect(mocks.after).not.toHaveBeenCalled();
+    expect(mocks.capture).not.toHaveBeenCalled();
   });
 
   it("honors a denied consent cookie — the server twin respects the same gate as the client", async () => {

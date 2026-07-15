@@ -66,7 +66,15 @@ function renderBlock(block: Block) {
   );
 }
 
-export function LegalLayout({ doc }: { doc: LegalDoc }) {
+export function LegalLayout({
+  doc,
+  footer,
+}: {
+  doc: LegalDoc;
+  // Rendered with the same section chrome as doc sections so interactive
+  // extras (e.g. the cookie-choice control) can't drift from the doc style.
+  footer?: { heading: string; body: React.ReactNode };
+}) {
   return (
     <>
       <SkipLink />
@@ -95,6 +103,14 @@ export function LegalLayout({ doc }: { doc: LegalDoc }) {
                 {section.blocks.map(renderBlock)}
               </section>
             ))}
+            {footer && (
+              <section className="border-hairline border-t py-6">
+                <h2 className="font-body text-text mb-2.5 text-[1.04rem] font-semibold tracking-normal">
+                  {footer.heading}
+                </h2>
+                {footer.body}
+              </section>
+            )}
           </div>
         </Container>
       </main>

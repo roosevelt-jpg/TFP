@@ -9,7 +9,7 @@ import type { LegalDoc } from "./types";
 
 export const privacy: LegalDoc = {
   title: "Privacy Policy",
-  updated: "3 July 2026",
+  updated: "15 July 2026",
   sections: [
     {
       heading: "1 · Who we are",
@@ -52,7 +52,11 @@ export const privacy: LegalDoc = {
             ],
             [
               { b: "Usage data" },
-              ": basic technical information (such as device, browser, and IP address) collected automatically through cookies and similar technologies.",
+              ": with your consent, information about how you use the site (such as pages viewed and how you interact with them) collected through cookies and similar technologies.",
+            ],
+            [
+              { b: "Error and performance data" },
+              ": basic technical information (such as device, browser, and the page involved) when something breaks or runs slowly, collected without cookies to keep the site working (our legitimate interests).",
             ],
           ],
         },
@@ -91,7 +95,12 @@ export const privacy: LegalDoc = {
             [
               "send you updates about the waitlist or product where you’ve asked us to ",
               { b: "(your consent)" },
-              ", which you can withdraw at any time.",
+              ", which you can withdraw at any time;",
+            ],
+            [
+              "understand how the site is used and measure our advertising ",
+              { b: "(your consent)" },
+              ", which you can withdraw at any time via the cookie choice on this page.",
             ],
           ],
         },
@@ -132,6 +141,18 @@ export const privacy: LegalDoc = {
             [
               { b: "Our AI provider" },
               ": to power the Performance Coach’s responses.",
+            ],
+            [
+              { b: "Sentry" },
+              ": to detect and fix errors and performance problems. Sets no cookies, and data is limited to what diagnosis needs.",
+            ],
+            [
+              { b: "PostHog" },
+              ": to analyse how the site is used, including session recordings, only if you accept analytics cookies. Data is hosted in the EU and form entries are masked in recordings.",
+            ],
+            [
+              { b: "Meta" },
+              ": to measure how well our advertising works, only if you accept cookies. Meta may link this to your Facebook or Instagram account under its own privacy policy.",
             ],
           ],
         },
@@ -200,8 +221,29 @@ export const privacy: LegalDoc = {
       blocks: [
         {
           type: "p",
+          content: ["We use three kinds of cookies and similar technologies:"],
+        },
+        {
+          type: "ul",
+          items: [
+            [
+              { b: "Essential" },
+              ": needed for the site to work, including remembering the cookie choice you make in our banner. These are always on.",
+            ],
+            [
+              { b: "Analytics" },
+              ": set only if you accept, to understand how the site is used and improve it (provided by PostHog, including session recordings with form entries masked).",
+            ],
+            [
+              { b: "Advertising" },
+              ": set only if you accept, to measure how well our ads work (provided by Meta).",
+            ],
+          ],
+        },
+        {
+          type: "p",
           content: [
-            "Our website uses a small number of cookies for essential functionality and basic, privacy-respecting analytics. You can control or block cookies through your browser settings; blocking some may affect how the site works.",
+            "Nothing beyond essential cookies is set until you choose in the banner, and you can change your choice at any time using the control at the bottom of this page or by clearing cookies in your browser.",
           ],
         },
       ],

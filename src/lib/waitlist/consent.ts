@@ -3,4 +3,4 @@
 export const CONSENT_TEXT =
   "I agree to join the waitlist and receive updates by email and WhatsApp, and accept the Terms & Privacy Policy.";
 
-export const POLICY_VERSION = "2026-07-03";
+export const POLICY_VERSION = "2026-07-15";

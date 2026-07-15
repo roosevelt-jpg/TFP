@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 
+import { ConsentBanner } from "@/components/ConsentBanner";
 import { MetaPixelPageView } from "@/components/MetaPixelPageView";
 import { siteConfig } from "@/config/site";
 import { env } from "@/env";
@@ -63,6 +64,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
       }
     >
       <body className="flex min-h-full flex-col font-body">
+        {/* Before children: first in tab order, since it's the first thing a
+            new visitor must act on (fixed positioning is unaffected). */}
+        <ConsentBanner />
         {children}
         {env.NEXT_PUBLIC_META_PIXEL_ID ? <MetaPixelPageView /> : null}
       </body>

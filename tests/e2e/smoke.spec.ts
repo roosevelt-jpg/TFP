@@ -1,5 +1,11 @@
 import { expect, test } from "@playwright/test";
 
+import { seedConsent } from "./fixtures";
+
+test.beforeEach(async ({ context }) => {
+  await seedConsent(context);
+});
+
 const PAGES = ["/", "/join", "/faq", "/how-it-works", "/support"];
 
 for (const path of PAGES) {

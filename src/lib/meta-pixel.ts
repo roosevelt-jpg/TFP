@@ -19,6 +19,18 @@ type FbqStub = {
 type Fbq = (...args: unknown[]) => void;
 
 let fbq: Fbq | undefined;
+let scriptInjected = false;
+
+// Even the fbevents.js request transfers the visitor's IP to Meta, so the
+// script itself waits for acceptance; the stub queues everything meanwhile.
+function injectScript(): void {
+  if (scriptInjected) return;
+  scriptInjected = true;
+  const script = document.createElement("script");
+  script.async = true;
+  script.src = "https://connect.facebook.net/en_US/fbevents.js";
+  document.head.appendChild(script);
+}
 
 export function loadMetaPixel(): void {
   const pixelId = env.NEXT_PUBLIC_META_PIXEL_ID;
@@ -29,10 +41,12 @@ export function loadMetaPixel(): void {
     if (typeof existing === "function") {
       // Another installer (tag manager, extension) got here first. The
       // official snippet's `if (f.fbq) return` guard exists so a second
-      // installer never clobbers a live fbq — adopt it instead.
+      // installer never clobbers a live fbq — adopt it instead, and leave
+      // script loading to whoever installed it.
       fbq = (...args: unknown[]) => {
         Reflect.apply(existing, undefined, args);
       };
+      scriptInjected = true;
     } else {
       const stub: FbqStub = Object.assign(
         (...args: unknown[]) => {
@@ -45,11 +59,6 @@ export function loadMetaPixel(): void {
       if (!Reflect.get(window, "_fbq")) Reflect.set(window, "_fbq", stub);
       Reflect.set(window, "fbq", stub);
       fbq = stub;
-
-      const script = document.createElement("script");
-      script.async = true;
-      script.src = "https://connect.facebook.net/en_US/fbevents.js";
-      document.head.appendChild(script);
     }
 
     // Meta's GDPR doc: revoke must precede init. Events sent after a revoke
@@ -57,9 +66,13 @@ export function loadMetaPixel(): void {
     // below fires a track call unless consent is granted at that moment;
     // otherwise a denial-window backlog (stale PageViews, even a Lead)
     // would transmit retroactively once the user opts in.
-    if (getTrackingConsent() !== "granted") fbq("consent", "revoke");
+    const granted = getTrackingConsent() === "granted";
+    if (!granted) fbq("consent", "revoke");
     fbq("init", pixelId);
-    if (getTrackingConsent() === "granted") fbq("track", "PageView");
+    if (granted) {
+      fbq("track", "PageView");
+      injectScript();
+    }
 
     onTrackingConsentChange((consent) => {
       if (consent === "granted") {
@@ -67,6 +80,7 @@ export function loadMetaPixel(): void {
         // Fresh, post-consent view of the current page — replaces the
         // deliberately unqueued pre-consent one.
         fbq?.("track", "PageView");
+        injectScript();
       } else {
         fbq?.("consent", "revoke");
       }

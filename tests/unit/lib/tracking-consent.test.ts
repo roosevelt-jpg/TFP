@@ -26,8 +26,8 @@ afterEach(() => {
 });
 
 describe("getTrackingConsent", () => {
-  it("defaults to granted until a banner ships and stores a decision", () => {
-    expect(getTrackingConsent()).toBe("granted");
+  it("defaults to denied until the banner stores a decision", () => {
+    expect(getTrackingConsent()).toBe("denied");
     expect(getStoredTrackingConsent()).toBeUndefined();
   });
 
@@ -46,7 +46,7 @@ describe("getTrackingConsent", () => {
   ])("degrades a tampered cookie value (%j) to the default", (raw) => {
     document.cookie = `${TRACKING_CONSENT_COOKIE}=${raw}; path=/`;
 
-    expect(getTrackingConsent()).toBe("granted");
+    expect(getTrackingConsent()).toBe("denied");
     expect(getStoredTrackingConsent()).toBeUndefined();
   });
 
@@ -55,7 +55,7 @@ describe("getTrackingConsent", () => {
       throw new Error("blocked");
     });
 
-    expect(getTrackingConsent()).toBe("granted");
+    expect(getTrackingConsent()).toBe("denied");
   });
 });
 
@@ -63,8 +63,8 @@ describe("resolveTrackingConsent", () => {
   it("resolves the same values and default the client getters use — the server gate depends on this", () => {
     expect(resolveTrackingConsent("granted")).toBe("granted");
     expect(resolveTrackingConsent("denied")).toBe("denied");
-    expect(resolveTrackingConsent(undefined)).toBe("granted");
-    expect(resolveTrackingConsent("tampered")).toBe("granted");
+    expect(resolveTrackingConsent(undefined)).toBe("denied");
+    expect(resolveTrackingConsent("tampered")).toBe("denied");
   });
 });
 
