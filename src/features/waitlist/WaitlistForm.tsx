@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { trackEvent } from "@/lib/analytics";
+import { trackLead } from "@/lib/meta-pixel";
 import { firstNameOf } from "@/lib/name";
 import {
   DIET_OPTIONS,
@@ -111,6 +112,7 @@ export function WaitlistForm({
       // The token was consumed server-side; reset for a fresh challenge on retry.
       turnstileRef.current?.reset();
       setValue("turnstileToken", "");
+
       toast.error("Couldn’t submit. Please check the highlighted fields.", {
         id: toastId,
       });
@@ -121,8 +123,11 @@ export function WaitlistForm({
     toast.success("Spot reserved. Check your inbox.", { id: toastId });
     // Fired here, not on /joined pageview — that URL is shareable/refreshable.
     // isNew-gated like the server twin so a returning lead isn't recounted.
-    if (res.data.isNew)
+    if (res.data.isNew) {
       trackEvent("waitlist_joined", { goal: values.goal, level: values.level });
+      // The lead's public token doubles as the CAPI dedup eventID later.
+      trackLead(res.data.id);
+    }
     router.push(`${successHref}?id=${encodeURIComponent(res.data.id)}`);
   });
 

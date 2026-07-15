@@ -72,6 +72,9 @@ export const joinWaitlist = actionClient
         gclid: attribution?.gclid ?? null,
         referrer: attribution?.referrer ?? null,
         landingPath: attribution?.landingPath ?? null,
+        attributionCapturedAt: attribution?.capturedAt
+          ? new Date(attribution.capturedAt)
+          : null,
       },
     );
 

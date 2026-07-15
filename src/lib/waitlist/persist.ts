@@ -41,6 +41,7 @@ type CreateOnlyFields = {
   gclid: string | null;
   referrer: string | null;
   landingPath: string | null;
+  attributionCapturedAt: Date | null;
 };
 
 export type UpsertResult = {

@@ -53,4 +53,13 @@ if (posthogKey && posthogHost) {
     });
 }
 
+// Same lazy pattern as PostHog: nothing ships or runs without the env var.
+if (process.env.NEXT_PUBLIC_META_PIXEL_ID) {
+  void import("@/lib/meta-pixel")
+    .then(({ loadMetaPixel }) => loadMetaPixel())
+    .catch(() => {
+      // The pixel must never take the page down with it.
+    });
+}
+
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

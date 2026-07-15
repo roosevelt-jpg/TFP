@@ -212,6 +212,7 @@ describe("joinWaitlist", () => {
         utmCampaign: "launch",
         referrer: "https://l.instagram.com/",
         landingPath: "/join",
+        capturedAt: "2026-07-15T12:00:00.000Z",
       },
     });
 
@@ -222,6 +223,7 @@ describe("joinWaitlist", () => {
       utmMedium: null,
       referrer: "https://l.instagram.com/",
       landingPath: "/join",
+      attributionCapturedAt: new Date("2026-07-15T12:00:00.000Z"),
     });
   });
 });

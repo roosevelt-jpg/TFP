@@ -69,6 +69,9 @@ model Waitlist {
   gclid       String?
   referrer    String?
   landingPath String?
+  // When the first-touch attribution (incl. fbclid) was captured client-side —
+  // required to reconstruct Meta's _fbc for the Conversions API.
+  attributionCapturedAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

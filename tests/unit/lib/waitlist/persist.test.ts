@@ -79,6 +79,7 @@ const createOnly = {
   gclid: null,
   referrer: null,
   landingPath: null,
+  attributionCapturedAt: null,
 };
 
 beforeEach(() => {

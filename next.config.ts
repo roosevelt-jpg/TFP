@@ -36,19 +36,26 @@ function posthogOrigin(): string {
 // (React uses eval for debug stacks; not needed in prod).
 // Cloudflare Turnstile loads a script and renders its challenge in an iframe.
 const TURNSTILE = "https://challenges.cloudflare.com";
+// Meta documents script-src for fbevents.js. The /tr beacon goes to
+// www.facebook.com via sendBeacon (connect-src) but falls back to an image
+// GET when beacons are unavailable (img-src) — verified with the Pixel
+// Helper when the pixel is enabled.
+const metaEnabled = Boolean(process.env.NEXT_PUBLIC_META_PIXEL_ID);
+const metaScript = metaEnabled ? " https://connect.facebook.net" : "";
+const metaBeacon = metaEnabled ? " https://www.facebook.com" : "";
 const isDev = process.env.NODE_ENV === "development";
 const scriptEval = isDev ? " 'unsafe-eval'" : "";
 
 const contentSecurityPolicy = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${scriptEval} ${TURNSTILE}${posthogOrigin()}`,
+  `script-src 'self' 'unsafe-inline'${scriptEval} ${TURNSTILE}${posthogOrigin()}${metaScript}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' blob: data:",
+  `img-src 'self' blob: data:${metaBeacon}`,
   "font-src 'self'",
   // PostHog's replay compression worker is created from a blob: URL; without
   // an explicit worker-src it falls back to script-src, which has no blob:.
   "worker-src 'self' blob:",
-  `connect-src 'self' ${TURNSTILE}${sentryOrigin()}${posthogOrigin()}`,
+  `connect-src 'self' ${TURNSTILE}${sentryOrigin()}${posthogOrigin()}${metaBeacon}`,
   `frame-src ${TURNSTILE}`,
   "object-src 'none'",
   "base-uri 'self'",

@@ -121,6 +121,7 @@ export const attributionField = z
     gclid: attributionString,
     referrer: z.string().trim().max(1000).optional(),
     landingPath: z.string().trim().max(1000).optional(),
+    capturedAt: z.iso.datetime().optional().catch(undefined),
   })
   .optional();
 

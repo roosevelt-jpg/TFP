@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 
+import { MetaPixelPageView } from "@/components/MetaPixelPageView";
 import { siteConfig } from "@/config/site";
+import { env } from "@/env";
 
 import { body, display } from "./fonts";
 import "./globals.css";
@@ -60,7 +62,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
         } as React.CSSProperties
       }
     >
-      <body className="flex min-h-full flex-col font-body">{children}</body>
+      <body className="flex min-h-full flex-col font-body">
+        {children}
+        {env.NEXT_PUBLIC_META_PIXEL_ID ? <MetaPixelPageView /> : null}
+      </body>
     </html>
   );
 }

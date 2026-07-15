@@ -42,7 +42,44 @@ describe("captureAttribution", () => {
       fbclid: "abc123",
       referrer: "https://l.instagram.com/",
       landingPath: "/join",
+      capturedAt: expect.any(String),
     });
+  });
+
+  it("stamps the capture time as valid ISO — Meta's _fbc needs the fbclid capture moment", () => {
+    visit("/join?fbclid=abc123");
+
+    captureAttribution();
+
+    const capturedAt = JSON.parse(stored() ?? "{}").capturedAt;
+    expect(Number.isNaN(Date.parse(capturedAt))).toBe(false);
+  });
+
+  it("backfills capturedAt onto a pre-existing touch without altering it", () => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ utmSource: "instagram", fbclid: "old123" }),
+    );
+
+    captureAttribution();
+
+    expect(JSON.parse(stored() ?? "{}")).toEqual({
+      utmSource: "instagram",
+      fbclid: "old123",
+      capturedAt: expect.any(String),
+    });
+  });
+
+  it("leaves an already-stamped touch alone", () => {
+    const original = {
+      utmSource: "instagram",
+      capturedAt: "2026-07-01T00:00:00.000Z",
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(original));
+
+    captureAttribution();
+
+    expect(JSON.parse(stored() ?? "{}")).toEqual(original);
   });
 
   it("never overwrites the first touch — attribution belongs to the first campaign", () => {

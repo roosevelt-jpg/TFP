@@ -10,6 +10,9 @@ export type Attribution = {
   gclid?: string;
   referrer?: string;
   landingPath?: string;
+  // First-touch timestamp: Meta's _fbc format embeds the fbclid capture time,
+  // so the Conversions API can't be retrofitted without it.
+  capturedAt?: string;
 };
 
 const STORAGE_KEY = "tfp_attribution";
@@ -43,13 +46,35 @@ function readFromUrl(): Attribution {
   return data;
 }
 
-// Safe to call on every load — writes only if nothing is stored (first touch wins).
 export function captureAttribution(): void {
   try {
-    if (localStorage.getItem(STORAGE_KEY)) return;
+    const stored = localStorage.getItem(STORAGE_KEY);
+
+    if (stored) {
+      // First touches stored before capturedAt shipped get stamped on the
+      // next visit: "first observed" is approximate but reconstructable for
+      // Meta's _fbc, whereas null never is. The touch itself is untouched.
+      const parsed: unknown = JSON.parse(stored);
+
+      if (
+        parsed &&
+        typeof parsed === "object" &&
+        !Array.isArray(parsed) &&
+        !("capturedAt" in parsed)
+      ) {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({ ...parsed, capturedAt: new Date().toISOString() }),
+        );
+      }
+      return;
+    }
     const data = readFromUrl();
     const hasSignal = Object.keys(data).some((k) => k !== "landingPath");
-    if (hasSignal) localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    if (hasSignal) {
+      data.capturedAt = new Date().toISOString();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
   } catch {
     // Best-effort: localStorage can throw in private mode / on quota.
   }
