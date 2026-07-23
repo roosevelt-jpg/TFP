@@ -18,14 +18,6 @@ const domainNumber = ({ label, min, max, tooLow, tooHigh }: NumberRange) =>
     .min(min, { error: tooLow ?? `${label} looks too low` })
     .max(max, { error: tooHigh ?? `${label} looks too high` });
 
-const requiredNumber = (range: NumberRange) =>
-  z
-    .string()
-    .trim()
-    .min(1, { error: `${range.label} is required` })
-    .transform((v) => Number(v))
-    .pipe(domainNumber(range));
-
 const optionalNumber = (range: NumberRange) =>
   z
     .string()
@@ -53,11 +45,13 @@ export const whatsappField = z
     error: "Enter a valid mobile number",
   });
 
-export const goalField = z.enum(GOAL_VALUES, { error: "Pick a goal" });
-export const levelField = z.enum(LEVEL_VALUES, {
-  error: "Pick your experience level",
-});
-export const sexField = z.enum(SEX_VALUES, { error: "Select one" });
+export const goalField = z
+  .enum(GOAL_VALUES, { error: "Pick a goal" })
+  .optional();
+export const levelField = z
+  .enum(LEVEL_VALUES, { error: "Pick your experience level" })
+  .optional();
+export const sexField = z.enum(SEX_VALUES, { error: "Select one" }).optional();
 
 const AGE_RANGE: NumberRange = {
   label: "Age",
@@ -74,25 +68,33 @@ const GOAL_WEIGHT_RANGE: NumberRange = {
   max: 300,
 };
 
-export const ageField = domainNumber(AGE_RANGE);
-export const heightField = domainNumber(HEIGHT_RANGE);
-export const weightField = domainNumber(WEIGHT_RANGE);
+export const ageField = domainNumber(AGE_RANGE).optional();
+export const heightField = domainNumber(HEIGHT_RANGE).optional();
+export const weightField = domainNumber(WEIGHT_RANGE).optional();
 
-const requiredEnum = <const T extends readonly [string, ...string[]]>(
+// Optional string-in enum: RHF fields are strings, so keep the input string
+// ("" → undefined) rather than z.preprocess (which widens input to unknown and
+// breaks the SegmentedControl value typing).
+const optionalEnum = <const T extends readonly [string, ...string[]]>(
   values: T,
   error: string,
-) => z.string().min(1, { error }).pipe(z.enum(values, { error }));
+) =>
+  z
+    .string()
+    .trim()
+    .transform((v) => (v === "" ? undefined : v))
+    .pipe(z.enum(values, { error }).optional());
 
-export const goalFormField = requiredEnum(GOAL_VALUES, "Pick a goal");
-export const levelFormField = requiredEnum(
+export const goalFormField = optionalEnum(GOAL_VALUES, "Pick a goal");
+export const levelFormField = optionalEnum(
   LEVEL_VALUES,
   "Pick your experience level",
 );
-export const sexFormField = requiredEnum(SEX_VALUES, "Select one");
+export const sexFormField = optionalEnum(SEX_VALUES, "Select one");
 
-export const ageFormField = requiredNumber(AGE_RANGE);
-export const heightFormField = requiredNumber(HEIGHT_RANGE);
-export const weightFormField = requiredNumber(WEIGHT_RANGE);
+export const ageFormField = optionalNumber(AGE_RANGE);
+export const heightFormField = optionalNumber(HEIGHT_RANGE);
+export const weightFormField = optionalNumber(WEIGHT_RANGE);
 
 export const goalWeightField = domainNumber(GOAL_WEIGHT_RANGE).optional();
 export const goalWeightFormField = optionalNumber(GOAL_WEIGHT_RANGE);

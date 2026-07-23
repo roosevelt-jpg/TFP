@@ -41,6 +41,20 @@ describe("toGhlCustomFields", () => {
     expect(values({ ...profile, diet: null, injuries: null })).toHaveLength(6);
   });
 
+  it("returns nothing for an empty profile (minimal lead)", () => {
+    expect(toGhlCustomFields({})).toEqual([]);
+  });
+
+  it("sends only the fields the lead provided", () => {
+    expect(values({ goal: "lose" })).toEqual(["Lose fat"]);
+    expect(values({ age: 30 })).toEqual(["30"]);
+  });
+
+  it("omits a nulled-out number without coercing it to a string", () => {
+    expect(values({ ...profile, age: null })).not.toContain("null");
+    expect(values({ ...profile, age: null })).toHaveLength(5);
+  });
+
   it("includes optional fields when present", () => {
     expect(
       values({ ...profile, goalWeightKg: 55, injuries: "Bad knee" }),

@@ -39,13 +39,13 @@ export default function CheckoutCancelledPage() {
           <h1 className="text-display mt-4">
             No charge made. Your <em>spot’s still here.</em>
           </h1>
-          <p className="text-muted text-lead mx-auto mt-[18px] max-w-[44ch] leading-[1.6]">
+          <p className="text-muted text-lead mx-auto mt-4.5 max-w-[44ch] leading-[1.6]">
             Looks like checkout was cancelled before it finished, so your card
             wasn’t charged. No drama: pick up right where you left off and your
             coach is still waiting.
           </p>
 
-          <div className="mt-[30px] flex flex-wrap justify-center gap-3">
+          <div className="mt-7.5 flex flex-wrap justify-center gap-3">
             <CtaButton href={SIGNUP_HREF} size="md" withArrow={false}>
               Finish signing up
             </CtaButton>
@@ -54,11 +54,11 @@ export default function CheckoutCancelledPage() {
             </CtaButton>
           </div>
 
-          <div className="text-dim mt-[22px] flex flex-wrap items-center justify-center gap-x-3.5 gap-y-2 text-[0.8rem]">
+          <div className="text-dim mt-5.5 flex flex-wrap items-center justify-center gap-x-3.5 gap-y-2 text-[0.8rem]">
             <SecureBadge label="Secure Stripe checkout" />
             <span
               aria-hidden
-              className="bg-hairline-strong size-[3px] rounded-full"
+              className="bg-hairline-strong size-0.75 rounded-full"
             />
             <span>
               {CURRENCY}
@@ -66,7 +66,7 @@ export default function CheckoutCancelledPage() {
             </span>
           </div>
 
-          <div className="border-hairline mt-[34px] border-t pt-[22px]">
+          <div className="border-hairline mt-8.5 border-t pt-5.5">
             <p className="text-muted text-[0.9rem] leading-[1.6]">
               Card declined or something not working?{" "}
               <Link href="/support" className="text-text underline">

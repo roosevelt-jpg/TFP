@@ -53,6 +53,15 @@ const validInput = {
   turnstileToken: "tok",
 } as const;
 
+// The reduced required set: no profile fields filled in.
+const minimalInput = {
+  name: "Jane Doe",
+  email: "jane@example.com",
+  whatsapp: "07911 123456",
+  consent: true,
+  turnstileToken: "tok",
+} as const;
+
 const newLead: UpsertResult = {
   publicToken: "public-token",
   ref: "WL-TESTREF1",
@@ -86,9 +95,8 @@ describe("joinWaitlist", () => {
       name: "Jane Doe",
       email: "jane@example.com",
       whatsapp: "+447911123456",
-      goalWeightKg: null,
-      diet: null,
-      injuries: null,
+      goal: "lose",
+      age: 28,
     });
     expect(createOnly).toMatchObject({
       consentText: CONSENT_TEXT,
@@ -108,6 +116,47 @@ describe("joinWaitlist", () => {
       level: "beg",
       source: "server",
     });
+  });
+
+  it("accepts the minimal required set with no profile fields", async () => {
+    const result = await joinWaitlist(minimalInput);
+
+    expect(result.data).toEqual({ ok: true, id: "public-token", isNew: true });
+
+    const [details] = mocks.upsertWaitlistLead.mock.calls[0] ?? [];
+    expect(details).toMatchObject({
+      name: "Jane Doe",
+      email: "jane@example.com",
+      whatsapp: "+447911123456",
+    });
+    for (const key of ["goal", "level", "sex", "age", "heightCm", "weightKg"]) {
+      expect((details as Record<string, unknown>)[key]).toBeUndefined();
+    }
+  });
+
+  it("omits absent goal/level from the lead_created event", async () => {
+    await joinWaitlist(minimalInput);
+
+    expect(mocks.trackServerEvent).toHaveBeenCalledWith("lead_created", {
+      source: "server",
+    });
+  });
+
+  it("syncs a minimal lead to GHL with no profile fields in the payload", async () => {
+    await joinWaitlist(minimalInput);
+
+    const ghlCall = mocks.trigger.mock.calls.find(
+      ([id]) => id === "sync-ghl-contact",
+    );
+    const payload = ghlCall?.[1] as Record<string, unknown>;
+    expect(payload).toMatchObject({
+      name: "Jane Doe",
+      email: "jane@example.com",
+      phone: "+447911123456",
+    });
+    for (const key of ["goal", "level", "sex", "age", "heightCm", "weightKg"]) {
+      expect(payload[key]).toBeUndefined();
+    }
   });
 
   it("does not recount a returning lead as a conversion", async () => {

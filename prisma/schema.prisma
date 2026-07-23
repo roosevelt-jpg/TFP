@@ -45,12 +45,12 @@ model Waitlist {
   email        String  @unique
   name         String
   whatsapp     String
-  goal         Goal
-  level        Level
-  sex          Sex
-  age          Int
-  heightCm     Int
-  weightKg     Int
+  goal         Goal?
+  level        Level?
+  sex          Sex?
+  age          Int?
+  heightCm     Int?
+  weightKg     Int?
   goalWeightKg Int?
   diet         Diet?
   injuries     String?

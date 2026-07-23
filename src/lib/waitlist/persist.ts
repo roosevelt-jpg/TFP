@@ -52,11 +52,17 @@ export type UpsertResult = {
 };
 
 // Idempotent on email: a returning email refreshes `details` but keeps its
-// original ref/token/consent/attribution.
+// original ref/token/consent/attribution. Now that most profile fields are
+// optional, the update only writes the values present this time — a returning
+// lead resubmitting the minimal form must not null out answers they gave before.
 export async function upsertWaitlistLead(
   details: LeadDetails,
   createOnly: CreateOnlyFields,
 ): Promise<UpsertResult> {
+  const definedDetails = Object.fromEntries(
+    Object.entries(details).filter(([, v]) => v != null),
+  ) as Prisma.WaitlistUpdateInput;
+
   for (let attempt = 0; attempt < MAX_REF_ATTEMPTS; attempt++) {
     try {
       const lead = await db.waitlist.upsert({
@@ -67,7 +73,7 @@ export async function upsertWaitlistLead(
           ref: generateRef(),
           publicToken: generatePublicToken(),
         },
-        update: details,
+        update: definedDetails,
         select: {
           publicToken: true,
           ref: true,

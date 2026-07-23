@@ -26,30 +26,51 @@ const labelOf = (
 ) => options.find((o) => o.value === value)?.label ?? value;
 
 export type WaitlistProfile = {
-  goal: string;
-  level: string;
-  sex: string;
-  age: number;
-  heightCm: number;
-  weightKg: number;
+  goal?: string | null;
+  level?: string | null;
+  sex?: string | null;
+  age?: number | null;
+  heightCm?: number | null;
+  weightKg?: number | null;
   goalWeightKg?: number | null;
   diet?: string | null;
   injuries?: string | null;
 };
 
 // Build the GHL customFields array from a waitlist profile. Dropdown fields get
-// the human-readable label (matching each field's options in GHL); optional
-// fields are omitted when absent so we never write empty values.
+// the human-readable label (matching each field's options in GHL); every field
+// is optional now, so each is omitted when absent — we never write empty values
+// and a minimal resubmit never blanks a field GHL already has.
 export function toGhlCustomFields(p: WaitlistProfile): GhlCustomField[] {
-  const fields: GhlCustomField[] = [
-    { id: FIELD_IDS.goal, field_value: labelOf(GOAL_OPTIONS, p.goal) },
-    { id: FIELD_IDS.level, field_value: labelOf(LEVEL_OPTIONS, p.level) },
-    { id: FIELD_IDS.sex, field_value: labelOf(SEX_OPTIONS, p.sex) },
-    { id: FIELD_IDS.age, field_value: String(p.age) },
-    { id: FIELD_IDS.heightCm, field_value: String(p.heightCm) },
-    { id: FIELD_IDS.weightKg, field_value: String(p.weightKg) },
-  ];
+  const fields: GhlCustomField[] = [];
 
+  if (p.goal) {
+    fields.push({
+      id: FIELD_IDS.goal,
+      field_value: labelOf(GOAL_OPTIONS, p.goal),
+    });
+  }
+  if (p.level) {
+    fields.push({
+      id: FIELD_IDS.level,
+      field_value: labelOf(LEVEL_OPTIONS, p.level),
+    });
+  }
+  if (p.sex) {
+    fields.push({
+      id: FIELD_IDS.sex,
+      field_value: labelOf(SEX_OPTIONS, p.sex),
+    });
+  }
+  if (p.age != null) {
+    fields.push({ id: FIELD_IDS.age, field_value: String(p.age) });
+  }
+  if (p.heightCm != null) {
+    fields.push({ id: FIELD_IDS.heightCm, field_value: String(p.heightCm) });
+  }
+  if (p.weightKg != null) {
+    fields.push({ id: FIELD_IDS.weightKg, field_value: String(p.weightKg) });
+  }
   if (p.goalWeightKg != null) {
     fields.push({
       id: FIELD_IDS.goalWeightKg,

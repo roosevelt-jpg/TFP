@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { TurnstileInstance } from "@marsidev/react-turnstile";
@@ -61,6 +61,18 @@ const DEFAULTS: WaitlistFormInput = {
   turnstileToken: "",
 };
 
+const DRAWER_FIELDS = [
+  "goal",
+  "level",
+  "sex",
+  "age",
+  "heightCm",
+  "weightKg",
+  "goalWeightKg",
+  "diet",
+  "injuries",
+] as const satisfies readonly (keyof WaitlistFormInput)[];
+
 export function WaitlistForm({
   successHref = "/joined",
 }: {
@@ -68,6 +80,7 @@ export function WaitlistForm({
 }) {
   const router = useRouter();
   const turnstileRef = useRef<TurnstileInstance | undefined>(undefined);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const form = useForm<WaitlistFormInput, unknown, WaitlistFormOutput>({
     resolver: zodResolver(waitlistFormSchema),
@@ -90,6 +103,15 @@ export function WaitlistForm({
   const firstName = firstNameOf(nameValue ?? "") || undefined;
 
   const { executeAsync, isPending, result } = useAction(joinWaitlist);
+
+  const onInvalid = (fieldErrors: typeof errors) => {
+    const firstDrawerError = DRAWER_FIELDS.find((name) => fieldErrors[name]);
+
+    if (firstDrawerError) {
+      setDrawerOpen(true);
+      requestAnimationFrame(() => setFocus(firstDrawerError));
+    }
+  };
 
   const onSubmit = handleSubmit(async (values) => {
     const toastId = toast.loading("Joining…");
@@ -124,12 +146,15 @@ export function WaitlistForm({
     // Fired here, not on /joined pageview — that URL is shareable/refreshable.
     // isNew-gated like the server twin so a returning lead isn't recounted.
     if (res.data.isNew) {
-      trackEvent("waitlist_joined", { goal: values.goal, level: values.level });
+      trackEvent("waitlist_joined", {
+        ...(values.goal ? { goal: values.goal } : {}),
+        ...(values.level ? { level: values.level } : {}),
+      });
       // The lead's public token doubles as the CAPI dedup eventID later.
       trackLead(res.data.id);
     }
     router.push(`${successHref}?id=${encodeURIComponent(res.data.id)}`);
-  });
+  }, onInvalid);
 
   return (
     <form noValidate onSubmit={onSubmit} className="grid gap-5">
@@ -192,53 +217,66 @@ export function WaitlistForm({
         )}
       </FormField>
 
-      <FormField
-        label="Your main goal"
-        htmlFor="wf-goal"
-        error={errors.goal?.message}
+      <OptionalDisclosure
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        summary={
+          <span>
+            Add your goal, stats &amp; preferences{" "}
+            <span className="text-dim font-normal">(optional)</span>
+          </span>
+        }
       >
-        {(control) => (
-          <Controller
-            control={form.control}
-            name="goal"
-            render={({ field }) => (
-              <SegmentedControl
-                {...control}
-                name="Your main goal"
-                options={GOAL_OPTIONS}
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-              />
-            )}
-          />
-        )}
-      </FormField>
+        <p className="text-dim text-[0.72rem] font-semibold tracking-wide uppercase">
+          About you
+        </p>
 
-      <FormField
-        label="Experience level"
-        htmlFor="wf-level"
-        error={errors.level?.message}
-      >
-        {(control) => (
-          <Controller
-            control={form.control}
-            name="level"
-            render={({ field }) => (
-              <SegmentedControl
-                {...control}
-                name="Experience level"
-                options={LEVEL_OPTIONS}
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-              />
-            )}
-          />
-        )}
-      </FormField>
+        <FormField
+          label="Your main goal"
+          htmlFor="wf-goal"
+          error={errors.goal?.message}
+        >
+          {(control) => (
+            <Controller
+              control={form.control}
+              name="goal"
+              render={({ field }) => (
+                <SegmentedControl
+                  {...control}
+                  name="Your main goal"
+                  options={GOAL_OPTIONS}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                />
+              )}
+            />
+          )}
+        </FormField>
 
-      <div className="border-hairline grid gap-5 border-t pt-5">
+        <FormField
+          label="Experience level"
+          htmlFor="wf-level"
+          error={errors.level?.message}
+        >
+          {(control) => (
+            <Controller
+              control={form.control}
+              name="level"
+              render={({ field }) => (
+                <SegmentedControl
+                  {...control}
+                  name="Experience level"
+                  options={LEVEL_OPTIONS}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                />
+              )}
+            />
+          )}
+        </FormField>
+
         <FormField
           label="Sex"
           htmlFor="wf-sex"
@@ -303,17 +341,12 @@ export function WaitlistForm({
             )}
           </FormField>
         </div>
-      </div>
 
-      <OptionalDisclosure
-        summary={
-          <span>
-            Add diet, injuries &amp; goal weight{" "}
-            <span className="text-dim font-normal">(optional)</span>
-          </span>
-        }
-      >
-        <FormField label="Dietary preference" htmlFor="wf-diet" optional>
+        <p className="text-dim mt-1 text-[0.72rem] font-semibold tracking-wide uppercase">
+          Preferences
+        </p>
+
+        <FormField label="Dietary preference" htmlFor="wf-diet">
           {(control) => (
             <Controller
               control={form.control}
@@ -346,7 +379,6 @@ export function WaitlistForm({
         <FormField
           label="Injuries or limitations"
           htmlFor="wf-injuries"
-          optional
           hint="So your plan works around them. Leave blank if none."
           error={errors.injuries?.message}
         >
@@ -359,7 +391,7 @@ export function WaitlistForm({
             />
           )}
         </FormField>
-        <FormField label="Goal weight (kg)" htmlFor="wf-goalweight" optional>
+        <FormField label="Goal weight (kg)" htmlFor="wf-goalweight">
           {(control) => (
             <NumberInput
               {...control}
@@ -379,8 +411,8 @@ export function WaitlistForm({
             {...register("consent")}
             label={
               <>
-                I agree to join the waitlist and receive updates by email and
-                WhatsApp, and accept the{" "}
+                I confirm I am 16 or over, agree to join the waitlist and
+                receive updates by email and WhatsApp, and accept the{" "}
                 <Link href="/terms" className="text-text underline">
                   Terms
                 </Link>{" "}
@@ -429,12 +461,12 @@ export function WaitlistForm({
         </span>
         <span
           aria-hidden
-          className="bg-hairline-strong size-[3px] rounded-full"
+          className="bg-hairline-strong size-0.75 rounded-full"
         />
         <span>No payment now</span>
         <span
           aria-hidden
-          className="bg-hairline-strong size-[3px] rounded-full"
+          className="bg-hairline-strong size-0.75 rounded-full"
         />
         <span>Early-access pricing</span>
       </div>

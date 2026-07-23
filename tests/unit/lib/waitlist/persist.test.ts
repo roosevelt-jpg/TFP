@@ -161,4 +161,48 @@ describe("upsertWaitlistLead", () => {
     ).rejects.toMatchObject({ code: "P2002" });
     expect(upsertMock).toHaveBeenCalledTimes(5);
   });
+
+  it("writes the full profile on create but omits nullish values from update", async () => {
+    upsertMock.mockResolvedValueOnce(leadRow());
+
+    await upsertWaitlistLead({ ...details }, { ...createOnly });
+
+    const { create, update } = upsertArgs(0);
+    // create keeps the whole detail spread (undefined columns default to NULL).
+    expect(create).toMatchObject({ goal: "lose", goalWeightKg: null });
+    // update never carries the null optionals — they'd clobber prior answers.
+    expect(update).not.toHaveProperty("goalWeightKg");
+    expect(update).not.toHaveProperty("diet");
+    expect(update).not.toHaveProperty("injuries");
+    expect(update).toMatchObject({ goal: "lose", age: 28 });
+  });
+
+  it("never null-clobbers a returning lead resubmitting the minimal form", async () => {
+    upsertMock.mockResolvedValueOnce(leadRow());
+
+    const minimal = {
+      name: "Jane Doe",
+      email: "jane@example.com",
+      whatsapp: "+447911123456",
+      goal: undefined,
+      level: undefined,
+      sex: undefined,
+      age: undefined,
+      heightCm: undefined,
+      weightKg: undefined,
+      goalWeightKg: undefined,
+      diet: undefined,
+      injuries: undefined,
+    } as const;
+
+    await upsertWaitlistLead({ ...minimal }, { ...createOnly });
+
+    const { update } = upsertArgs(0);
+    // Only identity fields refresh; every optional profile field is left alone.
+    expect(update).toEqual({
+      name: "Jane Doe",
+      email: "jane@example.com",
+      whatsapp: "+447911123456",
+    });
+  });
 });

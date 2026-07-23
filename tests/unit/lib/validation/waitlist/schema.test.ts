@@ -6,28 +6,48 @@ import {
   waitlistSchema,
 } from "@/lib/validation/waitlist/schema";
 
-const serverInput = {
+// The minimal required set after the friction-reduction change.
+const minimalServerInput = {
   name: "Jane Doe",
   email: "jane@example.com",
   whatsapp: "07911 123456",
+  consent: true,
+  turnstileToken: "tok",
+};
+
+const serverInput = {
+  ...minimalServerInput,
   goal: "lose",
   level: "beg",
   sex: "female",
   age: 28,
   heightCm: 165,
   weightKg: 60,
-  consent: true,
-  turnstileToken: "tok",
 };
 
-const formInput = {
-  ...serverInput,
-  age: "28",
-  heightCm: "165",
-  weightKg: "60",
+// Form variant of the minimal set: the demoted profile fields arrive as empty
+// controlled strings and must coerce to undefined.
+const minimalFormInput = {
+  ...minimalServerInput,
+  goal: "",
+  level: "",
+  sex: "",
+  age: "",
+  heightCm: "",
+  weightKg: "",
   goalWeightKg: "",
   diet: "",
   injuries: "",
+};
+
+const formInput = {
+  ...minimalFormInput,
+  goal: "lose",
+  level: "beg",
+  sex: "female",
+  age: "28",
+  heightCm: "165",
+  weightKg: "60",
 };
 
 function firstIssue(result: z.ZodSafeParseResult<unknown>): string {
@@ -48,11 +68,24 @@ describe("waitlistFormSchema (client)", () => {
     });
   });
 
+  it("accepts the minimal form (demoted profile fields empty → undefined)", () => {
+    const result = waitlistFormSchema.safeParse(minimalFormInput);
+
+    expect(result.success).toBe(true);
+    expect(result.data).toMatchObject({
+      goal: undefined,
+      level: undefined,
+      sex: undefined,
+      age: undefined,
+      heightCm: undefined,
+      weightKg: undefined,
+    });
+  });
+
   it.each([
     ["age", "15", "You must be 16 or over to join"],
     ["age", "101", "That age looks too high"],
     ["age", "28.5", "Age must be a whole number"],
-    ["age", "", "Age is required"],
     ["heightCm", "119", "Height looks too low"],
     ["heightCm", "273", "Height looks too high"],
     ["weightKg", "34", "Weight looks too low"],
@@ -88,6 +121,21 @@ describe("waitlistFormSchema (client)", () => {
 describe("waitlistSchema (server)", () => {
   it("accepts already-coerced input", () => {
     expect(waitlistSchema.safeParse(serverInput).success).toBe(true);
+  });
+
+  it("accepts the minimal set with profile fields absent", () => {
+    const result = waitlistSchema.safeParse(minimalServerInput);
+
+    expect(result.success).toBe(true);
+    expect(result.data?.goal).toBeUndefined();
+    expect(result.data?.age).toBeUndefined();
+  });
+
+  it("still rejects a provided-but-invalid enum", () => {
+    const result = waitlistSchema.safeParse({ ...serverInput, goal: "shred" });
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.path).toEqual(["goal"]);
   });
 
   it("rejects string numbers — proof the form/server variants aren't swapped", () => {

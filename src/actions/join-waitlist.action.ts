@@ -52,11 +52,11 @@ export const joinWaitlist = actionClient
         age: parsedInput.age,
         heightCm: parsedInput.heightCm,
         weightKg: parsedInput.weightKg,
-        goalWeightKg: parsedInput.goalWeightKg ?? null,
-        diet: parsedInput.diet ?? null,
+        goalWeightKg: parsedInput.goalWeightKg,
+        diet: parsedInput.diet,
         injuries: parsedInput.injuries
           ? cleanText(parsedInput.injuries, 300)
-          : null,
+          : undefined,
       },
       {
         consentAt: new Date(),
@@ -82,8 +82,8 @@ export const joinWaitlist = actionClient
       // Server twin of the client-side waitlist_joined (distinct names per
       // PostHog dedup guidance); isNew-gated so upsert retries don't recount.
       await trackServerEvent("lead_created", {
-        goal: parsedInput.goal,
-        level: parsedInput.level,
+        ...(parsedInput.goal ? { goal: parsedInput.goal } : {}),
+        ...(parsedInput.level ? { level: parsedInput.level } : {}),
         source: "server",
       });
 
@@ -112,11 +112,11 @@ export const joinWaitlist = actionClient
               age: parsedInput.age,
               heightCm: parsedInput.heightCm,
               weightKg: parsedInput.weightKg,
-              goalWeightKg: parsedInput.goalWeightKg ?? null,
-              diet: parsedInput.diet ?? null,
+              goalWeightKg: parsedInput.goalWeightKg,
+              diet: parsedInput.diet,
               injuries: parsedInput.injuries
                 ? cleanText(parsedInput.injuries, 300)
-                : null,
+                : undefined,
             },
             { idempotencyKey: lead.ref, idempotencyKeyTTL: "1h" },
           );
