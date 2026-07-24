@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "concurrently --kill-others --names next,trigger --prefix-colors blue,magenta \"pnpm dev:next\" \"pnpm trigger:dev\"",
     "dev:next": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && node scripts/migrate-on-release.mjs && next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest",

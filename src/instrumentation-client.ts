@@ -12,6 +12,9 @@ Sentry.init({
   enableLogs: true,
   beforeSend: scrubEvent,
   beforeSendLog: scrubLog,
+  // Scripts injected by in-app webviews (Instagram iOS bridge, Android
+  // WebView), not our code: unactionable and they burn quota.
+  ignoreErrors: ["window.webkit.messageHandlers", "Java object is gone"],
 });
 
 const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
