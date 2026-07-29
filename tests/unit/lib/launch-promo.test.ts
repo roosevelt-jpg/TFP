@@ -35,3 +35,18 @@ describe("launch promotion", () => {
     expect(LAUNCH_PROMOTION_LIMIT).toBe(50);
   });
 });
+
+// A placeholder renders for every visitor, so a live code there hands the
+// discount to people who were never sent it. This happened once.
+it("is never used as placeholder text in the checkout form", () => {
+  const form = readFileSync(
+    join(process.cwd(), "src/features/checkout/IntakeForm.tsx"),
+    "utf8",
+  );
+
+  const placeholders = [...form.matchAll(/placeholder="([^"]*)"/g)].map(
+    (match) => match[1],
+  );
+
+  expect(placeholders).not.toContain(LAUNCH_PROMOTION_CODE);
+});

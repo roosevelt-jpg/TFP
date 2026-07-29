@@ -185,7 +185,11 @@ export function IntakeForm({
       </FormField>
 
       {/* Here rather than on Stripe's page: theirs is a collapsed "Add
-          promotion code" link that buyers were missing entirely. */}
+          promotion code" link that buyers were missing entirely.
+
+          The placeholder must never be a live code: it renders for every
+          visitor, which would hand the discount to people who were never
+          sent it. */}
       <FormField
         label="Promo code"
         htmlFor="cf-promo"
@@ -197,7 +201,7 @@ export function IntakeForm({
           <Input
             {...field}
             {...register("promoCode")}
-            placeholder="FORMULA50"
+            placeholder="Enter code"
             autoCapitalize="characters"
             autoComplete="off"
             spellCheck={false}
