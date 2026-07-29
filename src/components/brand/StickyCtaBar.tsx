@@ -30,7 +30,7 @@ export function StickyCtaBar({
 
   return (
     <section
-      aria-label="Join the waitlist"
+      aria-label={cta.label}
       className={cn(
         "border-hairline-strong fixed inset-x-0 bottom-0 z-60 flex items-center justify-between gap-3 border-t bg-[rgba(10,10,10,0.9)] px-3.5 pt-2.5 pb-[calc(10px+env(safe-area-inset-bottom,0px))] backdrop-blur-md transition-transform duration-400 ease-out motion-reduce:transition-none md:hidden",
         shown ? "translate-y-0" : "translate-y-[140%]",

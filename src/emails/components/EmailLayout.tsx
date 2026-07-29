@@ -34,16 +34,6 @@ export function EmailLayout({
       </Head>
       <Preview>{preview}</Preview>
       <Body style={{ margin: 0, padding: 0, backgroundColor: email.bg }}>
-        <div
-          style={{
-            height: "3px",
-            backgroundColor: email.red,
-            fontSize: 0,
-            lineHeight: 0,
-          }}
-        >
-          &nbsp;
-        </div>
         <Container
           style={{
             width: "600px",

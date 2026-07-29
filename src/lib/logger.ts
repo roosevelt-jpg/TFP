@@ -29,6 +29,9 @@ export const logger = {
   error(message: string, error?: unknown, context?: Context) {
     const clean = line("error", message, context);
     if (error !== undefined) {
+      // Sentry gets the error either way, but outside production it also has to
+      // reach the terminal: a headline with no cause is undebuggable locally.
+      if (process.env.NODE_ENV !== "production") console.error(error);
       Sentry.captureException(error, { extra: { message: clean, ...context } });
     } else {
       Sentry.captureMessage(clean, "error");

@@ -50,8 +50,16 @@ next-env.d.ts
 scratchpad-*.png
 .screenshots/
 
-# Local planning/spec docs — never committed
-docs/
+# Local planning/spec docs — never committed. Ignoring the contents rather than
+# the directory itself, so the operational docs below can be un-ignored: git
+# never descends into an excluded directory to reconsider a negation.
+docs/*
+# Read during an incident, so these ship with the code they describe rather
+# than living on one laptop.
+!docs/payments-runbook.md
+!docs/go-live-checklist.md
+!docs/manual-walkthrough.md
+!docs/waitlist-deprecation.md
 
 # prisma generated client (rebuilt via prisma generate / postinstall)
 /src/generated/prisma/

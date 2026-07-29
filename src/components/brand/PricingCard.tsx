@@ -1,3 +1,5 @@
+import { launchCopy } from "@/content/launch-copy";
+
 import { CtaButton } from "./CtaButton";
 
 type PricingCardProps = {
@@ -83,7 +85,7 @@ export function PricingCard({
             <rect x="4" y="11" width="16" height="9" rx="1" />
             <path d="M8 11V8a4 4 0 0 1 8 0v3" />
           </svg>
-          No payment to join today
+          {launchCopy.pricingLock}
         </span>
         <span className="inline-flex items-center gap-2">
           <svg

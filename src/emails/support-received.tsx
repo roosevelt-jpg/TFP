@@ -41,14 +41,15 @@ export function SupportReceivedEmail({
           as="h1"
           style={{
             margin: 0,
-            fontFamily: email.serif,
-            fontWeight: "normal",
-            fontSize: "42px",
-            lineHeight: 1.06,
+            fontFamily: email.sans,
+            fontWeight: "bold",
+            fontSize: "34px",
+            lineHeight: 1.15,
+            letterSpacing: "-0.5px",
             color: email.text,
           }}
         >
-          We're <em style={{ fontStyle: "italic" }}>on it.</em>
+          We're on it.
         </Heading>
         <Text
           style={{
@@ -76,10 +77,10 @@ export function SupportReceivedEmail({
           as="h2"
           style={{
             margin: "0 0 8px",
-            fontFamily: email.serif,
-            fontWeight: "normal",
-            fontSize: "22px",
-            lineHeight: 1.2,
+            fontFamily: email.sans,
+            fontWeight: "bold",
+            fontSize: "20px",
+            lineHeight: 1.25,
             color: email.text,
           }}
         >
@@ -103,14 +104,12 @@ export function SupportReceivedEmail({
         <Text
           style={{
             margin: 0,
-            fontFamily: email.serif,
-            fontStyle: "italic",
-            fontSize: "18px",
+            fontFamily: email.sans,
+            fontSize: "16px",
             color: email.muted,
           }}
         >
-          Talk soon.{" "}
-          <span style={{ color: email.text }}>— The Formula team</span>
+          Talk soon. <span style={{ color: email.text }}>The Formula team</span>
         </Text>
       </Section>
     </EmailLayout>

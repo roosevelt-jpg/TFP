@@ -2,7 +2,9 @@ import { PricingCard } from "@/components/brand/PricingCard";
 import { Reveal } from "@/components/brand/Reveal";
 import { SectionHeader } from "@/components/brand/SectionHeader";
 import { Section } from "@/components/layout/Section";
+import { SIGNUP_HREF } from "@/lib/launch";
 import { CURRENCY, PRICE_MONTHLY, PRICE_TODAY } from "@/lib/pricing";
+import { launchCopy } from "@/content/launch-copy";
 import { pricingFeatures } from "@/content/marketing";
 
 export function PricingSection() {
@@ -20,8 +22,8 @@ export function PricingSection() {
             priceMonthly={PRICE_MONTHLY}
             currency={CURRENCY}
             features={pricingFeatures}
-            cta={{ label: "Join the Waitlist", href: "/join" }}
-            reassurance="No payment to join the waitlist. When your spot opens you’ll lock in this price, then cancel anytime, no retention hoops."
+            cta={{ label: launchCopy.cta, href: SIGNUP_HREF }}
+            reassurance={launchCopy.reassurance}
           />
         </div>
       </Reveal>

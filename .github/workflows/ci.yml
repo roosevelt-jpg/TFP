@@ -50,6 +50,14 @@ jobs:
             exit 1
           fi
 
+      - name: Forbid committed Stripe live keys
+        run: |
+          if git ls-files \
+            | xargs grep -nE '\b(sk|rk)_live_[A-Za-z0-9]{8}' 2>/dev/null; then
+            echo "::error::A Stripe LIVE key literal is committed. Rotate it in the Stripe Dashboard immediately, then move it to an env var."
+            exit 1
+          fi
+
   typecheck:
     name: Type Check
     runs-on: ubuntu-latest
@@ -77,6 +85,35 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm test:run
+
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: formula
+        ports: ["55433:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d formula"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:55433/formula
+      DIRECT_URL: postgresql://postgres:postgres@localhost:55433/formula
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:deploy
+      - run: pnpm test:integration
 
   e2e:
     name: E2E
@@ -108,6 +145,10 @@ jobs:
       TURNSTILE_SECRET_KEY: 1x0000000000000000000000000000000AA
       GHL_INTEGRATION_TOKEN: ci_placeholder
       GHL_LOCATION_ID: ci_placeholder
+      STRIPE_SECRET_KEY: rk_test_ci_placeholder
+      STRIPE_WEBHOOK_SECRET: whsec_ci_placeholder
+      FORMULA_BLOB_STORE_ID: store_ci_placeholder
+      BLOB_READ_WRITE_TOKEN: vercel_blob_rw_ci_placeholder
       E2E_TURNSTILE_DUMMY: "1"
     steps:
       - uses: actions/checkout@v7
@@ -125,6 +166,66 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
+  # The same suite with the payment routes switched on. Separate job because the
+  # two states are mutually exclusive: E2E above proves they 404 before launch,
+  # this proves they work once flipped. Needs no Stripe key — the submit ends at
+  # Turnstile's rejection, since Cloudflare's always-pass test keys omit the
+  # action field our verification requires.
+  e2e-payments:
+    name: E2E (payments on)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: formula
+        ports: ["55433:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d formula"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      DATABASE_URL: postgresql://postgres:postgres@localhost:55433/formula
+      DIRECT_URL: postgresql://postgres:postgres@localhost:55433/formula
+      RESEND_API_KEY: re_placeholder
+      RESEND_FROM: onboarding@resend.dev
+      EMAIL_LOGO_URL: https://example.com/email/logo.png
+      EMAIL_COMMUNITY_URL: https://example.com/email/community.jpg
+      UPSTASH_REDIS_REST_URL: https://example.upstash.io
+      UPSTASH_REDIS_REST_TOKEN: ci_placeholder
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
+      TURNSTILE_SECRET_KEY: 1x0000000000000000000000000000000AA
+      GHL_INTEGRATION_TOKEN: ci_placeholder
+      GHL_LOCATION_ID: ci_placeholder
+      STRIPE_SECRET_KEY: rk_test_ci_placeholder
+      STRIPE_WEBHOOK_SECRET: whsec_ci_placeholder
+      FORMULA_BLOB_STORE_ID: store_ci_placeholder
+      BLOB_READ_WRITE_TOKEN: vercel_blob_rw_ci_placeholder
+      E2E_TURNSTILE_DUMMY: "1"
+      PAYMENTS_LIVE: "true"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm db:deploy
+      - run: pnpm build
+      - run: pnpm test:e2e
+      - uses: actions/upload-artifact@v5
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-payments
           path: playwright-report/
           retention-days: 14
 
@@ -150,6 +251,11 @@ jobs:
 
       GHL_INTEGRATION_TOKEN: ci_placeholder
       GHL_LOCATION_ID: ci_placeholder
+
+      STRIPE_SECRET_KEY: rk_test_ci_placeholder
+      STRIPE_WEBHOOK_SECRET: whsec_ci_placeholder
+      FORMULA_BLOB_STORE_ID: store_ci_placeholder
+      BLOB_READ_WRITE_TOKEN: vercel_blob_rw_ci_placeholder
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -200,6 +306,10 @@ jobs:
       TURNSTILE_SECRET_KEY: 1x0000000000000000000000000000000AA
       GHL_INTEGRATION_TOKEN: ci_placeholder
       GHL_LOCATION_ID: ci_placeholder
+      STRIPE_SECRET_KEY: rk_test_ci_placeholder
+      STRIPE_WEBHOOK_SECRET: whsec_ci_placeholder
+      FORMULA_BLOB_STORE_ID: store_ci_placeholder
+      BLOB_READ_WRITE_TOKEN: vercel_blob_rw_ci_placeholder
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6

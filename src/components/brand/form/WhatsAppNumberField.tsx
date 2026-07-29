@@ -21,6 +21,9 @@ type WhatsAppNumberFieldProps = {
   "aria-invalid"?: true;
   "aria-describedby"?: string;
   previewName?: string;
+  // Trails the number in the chat-bubble preview. Defaults to the waitlist's
+  // wording; checkout passes its own, since by then there's no spot to wait for.
+  previewSuffix?: string;
 };
 
 export function WhatsAppNumberField({
@@ -29,6 +32,7 @@ export function WhatsAppNumberField({
   onChange,
   onBlur,
   previewName,
+  previewSuffix = "when your spot opens",
   ...aria
 }: WhatsAppNumberFieldProps) {
   const [country, setCountry] = useState<CountryCode>(DEFAULT_COUNTRY);
@@ -82,8 +86,8 @@ export function WhatsAppNumberField({
       {preview.valid && (
         <div className="bg-(--chat-in) text-text w-fit max-w-full rounded-md rounded-tl-[3px] px-3 py-2 text-[0.8rem]">
           {previewName ? `${previewName}, I` : "I"}’ll text you at{" "}
-          <b className="font-semibold">{preview.international}</b> when your
-          spot opens.
+          <b className="font-semibold">{preview.international}</b>{" "}
+          {previewSuffix}.
         </div>
       )}
     </div>

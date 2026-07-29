@@ -13,6 +13,8 @@ const TIERS = {
   global: { limit: 5000, window: "1 m" },
   ip: { limit: 30, window: "1 m" },
   email: { limit: 3, window: "1 m" },
+  checkoutEmail: { limit: 10, window: "5 m" },
+  download: { limit: 40, window: "5 m" },
 } as const;
 
 export type RateLimitTier = keyof typeof TIERS;
@@ -35,6 +37,8 @@ const limiters: Record<RateLimitTier, Ratelimit> = {
   global: build("global"),
   ip: build("ip"),
   email: build("email"),
+  checkoutEmail: build("checkoutEmail"),
+  download: build("download"),
 };
 
 export type RateLimitResult = {

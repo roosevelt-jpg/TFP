@@ -7,6 +7,8 @@ import { SkipLink } from "@/components/layout/SkipLink";
 import { FaqCtaSection } from "@/components/sections/FaqCtaSection";
 import { FaqHeroSection } from "@/components/sections/FaqHeroSection";
 import { FaqListSection } from "@/components/sections/FaqListSection";
+import { SIGNUP_HREF } from "@/lib/launch";
+import { launchCopy } from "@/content/launch-copy";
 
 export const metadata: Metadata = {
   title: "FAQ",
@@ -36,8 +38,8 @@ export default function FaqPage() {
         variant="minimal"
         logoPriority
         cta={
-          <CtaButton href="/join" size="sm" withArrow={false}>
-            Join the waitlist
+          <CtaButton href={SIGNUP_HREF} size="sm" withArrow={false}>
+            {launchCopy.ctaLower}
           </CtaButton>
         }
       />

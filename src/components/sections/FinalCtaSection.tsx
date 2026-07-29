@@ -3,6 +3,8 @@ import { GridBackdrop } from "@/components/brand/GridBackdrop";
 import { Reveal } from "@/components/brand/Reveal";
 import { SectionHeading } from "@/components/brand/SectionHeading";
 import { Container } from "@/components/layout/Container";
+import { SIGNUP_HREF } from "@/lib/launch";
+import { launchCopy } from "@/content/launch-copy";
 
 export function FinalCtaSection() {
   return (
@@ -19,30 +21,30 @@ export function FinalCtaSection() {
         </Reveal>
         <Reveal delayMs={80}>
           <p className="text-muted mx-auto mt-5 max-w-[46ch] text-lead leading-[1.6]">
-            Join the waitlist and be first in line when early access opens. The
-            hardest part was always starting. This time, you won’t do it alone.
+            {launchCopy.finalCta} The hardest part was always starting. This
+            time, you won’t do it alone.
           </p>
         </Reveal>
         <Reveal delayMs={160}>
           <div className="mt-[30px] flex justify-center">
-            <CtaButton href="/join" size="lg">
-              Join the Waitlist
+            <CtaButton href={SIGNUP_HREF} size="lg">
+              {launchCopy.cta}
             </CtaButton>
           </div>
         </Reveal>
         <Reveal delayMs={220}>
           <div className="text-dim mx-auto mt-[18px] flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 text-[0.85rem] min-[560px]:gap-x-3">
-            <span>No payment to join</span>
+            <span>{launchCopy.trust[0]}</span>
             <span
               aria-hidden
               className="bg-hairline-strong size-[3px] rounded-full"
             />
-            <span>early-access pricing</span>
+            <span>{launchCopy.trust[1]}</span>
             <span
               aria-hidden
               className="bg-hairline-strong hidden size-[3px] rounded-full min-[560px]:inline-block"
             />
-            <span>be first when we launch</span>
+            <span>{launchCopy.trust[2]}</span>
           </div>
         </Reveal>
       </Container>

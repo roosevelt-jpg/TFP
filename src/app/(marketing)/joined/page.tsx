@@ -95,11 +95,11 @@ export default function JoinedPage({
 }) {
   return (
     <>
-      <SkipLink href="#top" />
+      <SkipLink />
 
       <SiteHeader variant="minimal" logoPriority />
 
-      <main className="relative z-10">
+      <main id="main" className="relative z-10">
         <Suspense
           fallback={
             <section className="relative px-(--gutter) pt-[clamp(30px,6vw,64px)] pb-[clamp(40px,6vw,72px)]">

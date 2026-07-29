@@ -4,6 +4,8 @@ export const GOAL_OPTIONS = [
   { value: "lose", label: "Lose fat" },
   { value: "build", label: "Build muscle" },
   { value: "fit", label: "Fighting-fit" },
+  { value: "focus", label: "Sharper focus and energy" },
+  { value: "general", label: "General health" },
 ] as const satisfies readonly Option[];
 
 export const LEVEL_OPTIONS = [
@@ -39,7 +41,13 @@ export const DIET_OPTIONS = [
   { value: "other", label: "Other (I’ll tell my coach)" },
 ] as const satisfies readonly Option[];
 
-export const GOAL_VALUES = ["lose", "build", "fit"] as const;
+export const GOAL_VALUES = [
+  "lose",
+  "build",
+  "fit",
+  "focus",
+  "general",
+] as const;
 export const LEVEL_VALUES = ["beg", "int", "adv"] as const;
 export const SEX_VALUES = ["male", "female", "other"] as const;
 export const DIET_VALUES = [

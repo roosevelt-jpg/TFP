@@ -93,10 +93,10 @@ export function SupportNotificationEmail({
           as="h1"
           style={{
             margin: 0,
-            fontFamily: email.serif,
-            fontWeight: "normal",
-            fontSize: "26px",
-            lineHeight: 1.15,
+            fontFamily: email.sans,
+            fontWeight: "bold",
+            fontSize: "22px",
+            lineHeight: 1.2,
             color: email.text,
           }}
         >

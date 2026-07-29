@@ -8,12 +8,12 @@ const REF_LENGTH = 8;
 
 // Human-readable display code. Uniqueness is enforced by the DB constraint, not
 // here — the caller retries on a collision.
-export function generateRef(): string {
+export function generateRef(prefix = "WL"): string {
   let code = "";
   for (let i = 0; i < REF_LENGTH; i++) {
     code += ALPHABET[randomInt(ALPHABET.length)];
   }
-  return `WL-${code}`;
+  return `${prefix}-${code}`;
 }
 
 // Unguessable ~192-bit key for the /joined URL, so the primary key is never

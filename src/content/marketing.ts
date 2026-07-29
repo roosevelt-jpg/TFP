@@ -1,3 +1,4 @@
+import { launchCopy } from "@/content/launch-copy";
 // Structured content for repeated marketing blocks. Keeps copy out of components.
 
 export type Benefit = {
@@ -44,12 +45,12 @@ export const included: Benefit[] = [
 // How-it-works steps (landing + How It Works).
 export const steps: Benefit[] = [
   {
-    title: "Join the waitlist",
-    body: "Register your interest in under a minute. No payment now. You’re just reserving your spot.",
+    title: launchCopy.steps.one.title,
+    body: launchCopy.steps.one.body,
   },
   {
-    title: "Get your invite",
-    body: "When your spot opens we’ll email you to claim your place. Then your programme and WhatsApp coach unlock instantly.",
+    title: launchCopy.steps.two.title,
+    body: launchCopy.steps.two.body,
   },
   {
     title: "Show up",
@@ -61,8 +62,8 @@ export const steps: Benefit[] = [
 // landing's condensed `steps`).
 export const howItWorksSteps: Benefit[] = [
   {
-    title: "Join the waitlist",
-    body: "Tell us your goal and where to reach you. Takes under a minute. No payment now.",
+    title: launchCopy.steps.one.title,
+    body: launchCopy.howItWorksStepOneBody,
   },
   {
     title: "Get the lot, instantly",

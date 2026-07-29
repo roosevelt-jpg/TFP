@@ -16,6 +16,8 @@ import { PricingSection } from "@/components/sections/PricingSection";
 import { ProblemSection } from "@/components/sections/ProblemSection";
 import { SocialProofSection } from "@/components/sections/SocialProofSection";
 import { SolutionSection } from "@/components/sections/SolutionSection";
+import { SIGNUP_HREF } from "@/lib/launch";
+import { launchCopy } from "@/content/launch-copy";
 import { pressLogos } from "@/content/press-logos";
 
 const NAV = [
@@ -37,14 +39,12 @@ export default function Home() {
   return (
     <>
       <SkipLink />
-      <AnnouncementBar>
-        First cohort opening soon, limited spots on the waiting list
-      </AnnouncementBar>
+      <AnnouncementBar>{launchCopy.announcement}</AnnouncementBar>
       <SiteHeader
         nav={NAV}
         cta={
-          <CtaButton href="/join" size="sm" withArrow={false}>
-            Join the Waitlist
+          <CtaButton href={SIGNUP_HREF} size="sm" withArrow={false}>
+            {launchCopy.cta}
           </CtaButton>
         }
       />
@@ -70,9 +70,9 @@ export default function Home() {
       />
 
       <StickyCtaBar
-        primary="Join the waitlist"
-        secondary="£149 at launch · no payment now"
-        cta={{ label: "Join the Waitlist", href: "/join" }}
+        primary={launchCopy.ctaLower}
+        secondary={launchCopy.stickySecondary}
+        cta={{ label: launchCopy.cta, href: SIGNUP_HREF }}
       />
     </>
   );

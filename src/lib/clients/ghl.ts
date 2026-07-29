@@ -99,3 +99,62 @@ export async function upsertGhlContact(
 
   return { isNew: data.new === true, contactId };
 }
+
+async function ghlFetch(
+  path: string,
+  init: { method: string; body?: unknown },
+): Promise<Response> {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: init.method,
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    headers: {
+      Authorization: `Bearer ${env.GHL_INTEGRATION_TOKEN}`,
+      Version: API_VERSION,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    ...(init.body ? { body: JSON.stringify(init.body) } : {}),
+  });
+
+  if (!res.ok) {
+    throw new GhlError(
+      res.status,
+      await res.text(),
+      parseRetryAfter(res.headers.get("retry-after")),
+    );
+  }
+
+  return res;
+}
+
+// Tags are addressed by name, not id, and both calls are idempotent: adding a
+// tag the contact already has, or removing one it doesn't, is a no-op 2xx.
+export async function addGhlTags(
+  contactId: string,
+  tags: string[],
+): Promise<void> {
+  if (tags.length === 0) return;
+  await ghlFetch(`/contacts/${contactId}/tags`, {
+    method: "POST",
+    body: { tags },
+  });
+}
+
+export async function removeGhlTags(
+  contactId: string,
+  tags: string[],
+): Promise<void> {
+  if (tags.length === 0) return;
+  await ghlFetch(`/contacts/${contactId}/tags`, {
+    method: "DELETE",
+    body: { tags },
+  });
+}
+
+// Needed to decide the welcome tag: whether someone has opted into WhatsApp
+// lives only in the CRM, so it has to be read rather than inferred from Stripe.
+export async function getGhlContactTags(contactId: string): Promise<string[]> {
+  const res = await ghlFetch(`/contacts/${contactId}`, { method: "GET" });
+  const data = (await res.json()) as { contact?: { tags?: string[] } };
+  return data.contact?.tags ?? [];
+}

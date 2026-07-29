@@ -2,6 +2,13 @@ import { expect, test } from "@playwright/test";
 
 import { seedConsent } from "./fixtures";
 
+// The waitlist is retired once payments open: /join redirects to checkout, so
+// there is no form here to exercise. checkout.spec.ts covers the redirect.
+test.skip(
+  process.env.PAYMENTS_LIVE === "true",
+  "the waitlist is retired in this job",
+);
+
 test.beforeEach(async ({ context, page }) => {
   await seedConsent(context);
   await page.goto("/join");

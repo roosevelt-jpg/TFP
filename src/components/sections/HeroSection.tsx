@@ -7,7 +7,9 @@ import { SectionHeading } from "@/components/brand/SectionHeading";
 import { TrustLine } from "@/components/brand/TrustLine";
 import { Typewriter } from "@/components/brand/Typewriter";
 import { Container } from "@/components/layout/Container";
+import { SIGNUP_HREF } from "@/lib/launch";
 import { heroChat, heroTypewriter } from "@/content/chat-scripts";
+import { launchCopy } from "@/content/launch-copy";
 
 export function HeroSection() {
   return (
@@ -49,7 +51,7 @@ export function HeroSection() {
             </Reveal>
             <Reveal delayMs={180}>
               <div className="flex flex-wrap items-center justify-center gap-[13px] min-[940px]:justify-start">
-                <CtaButton href="/join">Join the Waitlist</CtaButton>
+                <CtaButton href={SIGNUP_HREF}>{launchCopy.cta}</CtaButton>
                 <CtaButton
                   href="/how-it-works"
                   variant="ghost"
@@ -60,7 +62,7 @@ export function HeroSection() {
               </div>
             </Reveal>
             <Reveal delayMs={240}>
-              <TrustLine>No payment to join · £149 at launch</TrustLine>
+              <TrustLine>{launchCopy.heroTrust}</TrustLine>
             </Reveal>
           </div>
           <Reveal

@@ -19,6 +19,7 @@
     "@trigger.dev/build",
     "@react-email/ui"
   ],
+  "ignoreBinaries": ["stripe"],
   "rules": {
     "files": "error",
     "dependencies": "error",

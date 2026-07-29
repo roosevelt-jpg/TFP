@@ -1,7 +1,11 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-const PAGES = ["/", "/join", "/faq"];
+// The sign-up page differs by job: the waitlist form before launch, the paid
+// checkout after. Both need auditing, so follow the same switch the site does.
+const SIGNUP = process.env.PAYMENTS_LIVE === "true" ? "/checkout" : "/join";
+
+const PAGES = ["/", SIGNUP, "/faq"];
 
 for (const path of PAGES) {
   test(`${path} has no WCAG A/AA violations`, async ({ page }) => {

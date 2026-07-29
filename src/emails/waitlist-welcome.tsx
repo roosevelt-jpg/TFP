@@ -73,14 +73,15 @@ export function WaitlistWelcomeEmail({
           as="h1"
           style={{
             margin: 0,
-            fontFamily: email.serif,
-            fontWeight: "normal",
-            fontSize: "44px",
-            lineHeight: 1.08,
+            fontFamily: email.sans,
+            fontWeight: "bold",
+            fontSize: "34px",
+            lineHeight: 1.15,
+            letterSpacing: "-0.5px",
             color: email.text,
           }}
         >
-          You're <em style={{ fontStyle: "italic" }}>on the list.</em>
+          You're on the list.
         </Heading>
         <Text
           style={{
@@ -102,10 +103,10 @@ export function WaitlistWelcomeEmail({
           as="h2"
           style={{
             margin: "0 0 8px",
-            fontFamily: email.serif,
-            fontWeight: "normal",
-            fontSize: "22px",
-            lineHeight: 1.2,
+            fontFamily: email.sans,
+            fontWeight: "bold",
+            fontSize: "20px",
+            lineHeight: 1.25,
             color: email.text,
           }}
         >
@@ -131,10 +132,10 @@ export function WaitlistWelcomeEmail({
           as="h2"
           style={{
             margin: "0 0 8px",
-            fontFamily: email.serif,
-            fontWeight: "normal",
-            fontSize: "22px",
-            lineHeight: 1.2,
+            fontFamily: email.sans,
+            fontWeight: "bold",
+            fontSize: "20px",
+            lineHeight: 1.25,
             color: email.text,
           }}
         >
@@ -157,8 +158,7 @@ export function WaitlistWelcomeEmail({
           <tr>
             <td
               style={{
-                border: `1px solid ${email.border}`,
-                borderLeft: `3px solid ${email.red}`,
+                border: `1px solid ${email.text}`,
                 borderRadius: "3px",
                 // Padding on the td, not the <a>: Outlook's Word engine ignores
                 // anchor padding and would collapse the button.
@@ -222,13 +222,12 @@ export function WaitlistWelcomeEmail({
         <Text
           style={{
             margin: 0,
-            fontFamily: email.serif,
-            fontStyle: "italic",
-            fontSize: "18px",
+            fontFamily: email.sans,
+            fontSize: "16px",
             color: email.muted,
           }}
         >
-          Talk soon. <span style={{ color: email.text }}>— Kane</span>
+          Talk soon. <span style={{ color: email.text }}>Kane</span>
         </Text>
       </Section>
     </EmailLayout>

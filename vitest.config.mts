@@ -33,6 +33,10 @@ export default defineConfig({
       TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA",
       GHL_INTEGRATION_TOKEN: "ci_placeholder",
       GHL_LOCATION_ID: "ci_placeholder",
+      STRIPE_SECRET_KEY: "rk_test_ci_placeholder",
+      STRIPE_WEBHOOK_SECRET: "whsec_ci_placeholder",
+      FORMULA_BLOB_STORE_ID: "store_ci_placeholder",
+      BLOB_READ_WRITE_TOKEN: "vercel_blob_rw_ci_placeholder",
     },
     coverage: {
       provider: "v8",

@@ -38,18 +38,45 @@ vi.mock("@/lib/logger", () => ({
 }));
 
 describe("tier wiring", () => {
-  it("builds the three documented tiers with distinct prefixes", () => {
-    expect(limiterConfigs).toHaveLength(3);
+  it("builds the documented tiers with distinct prefixes", () => {
+    expect(limiterConfigs).toHaveLength(5);
     expect(limiterConfigs.map((c) => c.prefix)).toEqual([
       "ratelimit:global",
       "ratelimit:ip",
       "ratelimit:email",
+      "ratelimit:checkoutEmail",
+      "ratelimit:download",
     ]);
     expect(limiterConfigs.map((c) => c.limiter)).toEqual([
       { limit: 5000, window: "1 m" },
       { limit: 30, window: "1 m" },
       { limit: 3, window: "1 m" },
+      { limit: 10, window: "5 m" },
+      { limit: 40, window: "5 m" },
     ]);
+  });
+
+  // A buyer whose card declines comes back and retries. Hitting the waitlist's
+  // 3/min at that moment costs a sale, so checkout must be looser.
+  it("gives checkout more headroom than the waitlist", () => {
+    const email = limiterConfigs.find((c) => c.prefix === "ratelimit:email");
+    const checkout = limiterConfigs.find(
+      (c) => c.prefix === "ratelimit:checkoutEmail",
+    );
+
+    expect(checkout?.limiter.limit).toBeGreaterThan(
+      email?.limiter.limit as number,
+    );
+  });
+
+  // Someone re-downloading their own plan across devices is normal, so this
+  // guards the endpoint rather than the token, which is 256 bits anyway.
+  it("lets a paying customer re-download without being blocked", () => {
+    const download = limiterConfigs.find(
+      (c) => c.prefix === "ratelimit:download",
+    );
+
+    expect(download?.limiter.limit).toBeGreaterThanOrEqual(40);
   });
 
   it("bounds the Redis round-trip so a brownout can't stall the action", () => {

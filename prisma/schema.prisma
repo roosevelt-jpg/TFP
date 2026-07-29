@@ -11,6 +11,8 @@ enum Goal {
   lose
   build
   fit
+  focus
+  general
 }
 
 enum Level {
@@ -34,8 +36,203 @@ enum Diet {
   other
 }
 
+// Payments. Stripe is the system of record; these tables are a derived read
+// model that converges via webhooks plus a daily reconcile, so every write is an
+// idempotent upsert on a unique Stripe id. Timestamptz here; Waitlist predates
+// that and converting it belongs in its own migration.
+
+enum PurchaseStatus {
+  pending
+  paid
+  failed
+  refunded
+}
+
+// Every value Stripe can send, so a Dashboard-initiated pause or uncollectible
+// invoice can't poison the event stream with an un-writable status.
+enum SubscriptionStatus {
+  incomplete
+  incomplete_expired
+  trialing
+  active
+  past_due
+  canceled
+  unpaid
+  paused
+}
+
+// `received` and `failed` are the states Stripe's retry (or the reconcile
+// sweeper) must pick up again — never ack-and-drop them.
+enum StripeEventStatus {
+  received
+  enqueued
+  processed
+  skipped
+  failed
+}
+
+// Created by the webhook once payment lands, never before. Name, email and
+// WhatsApp ride in the Checkout Session's metadata, which is enough to charge
+// someone and reach them; everything else is asked after they've paid.
+model Customer {
+  id String @id @default(cuid())
+
+  // Both unique: the WhatsApp bot identifies an inbound message by number alone,
+  // and GHL's upsert matches on email OR phone.
+  email            String @unique
+  name             String
+  whatsapp         String @unique
+  stripeCustomerId String @unique
+
+  // Recorded per purchase as consent proof, carried through session metadata.
+  consentAt     DateTime @default(now()) @db.Timestamptz
+  consentText   String
+  policyVersion String
+
+  // Set when the buyer came from a waitlist link; null for organic buyers.
+  waitlistId String?
+  waitlist   Waitlist? @relation(fields: [waitlistId], references: [id], onDelete: SetNull)
+
+  coaching      CoachingProfile?
+  purchases     Purchase[]
+  subscriptions Subscription[]
+
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  // @unique on email and whatsapp already provides their indexes.
+  @@index([waitlistId])
+}
+
+// The coaching questions, asked AFTER payment. A paying customer has no row
+// here until they complete onboarding, which is why every field is optional and
+// why nothing in fulfillment depends on it.
+model CoachingProfile {
+  id String @id @default(cuid())
+
+  customerId String   @unique
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  goal         Goal?
+  level        Level?
+  sex          Sex?
+  age          Int?
+  heightCm     Int?
+  weightKg     Int?
+  goalWeightKg Int?
+  diet         Diet?
+  injuries     String?
+
+  completedAt DateTime? @db.Timestamptz
+
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+}
+
+model Purchase {
+  id  String @id @default(cuid())
+  ref String @unique
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  stripeCheckoutSessionId String @unique
+
+  // dahlia severed charge.invoice, invoice.charge and payment_intent.invoice,
+  // so the payment intent shared by the charge and the first invoice is the
+  // only thing a refund can match a purchase on.
+  stripeInvoiceId       String?
+  stripePaymentIntentId String? @unique
+
+  amountTotal   Int
+  discountTotal Int     @default(0)
+  currency      String
+  promoCode     String?
+
+  status PurchaseStatus @default(pending)
+
+  pdfToken String @unique
+
+  // Step ledger: each child task check-and-sets its own column, so a replay
+  // whose Trigger idempotency key has expired still can't double-send. This,
+  // not the queue key, is the real exactly-once guarantee.
+  welcomeEmailAt DateTime? @db.Timestamptz
+  pdfReadyAt     DateTime? @db.Timestamptz
+  ghlSyncedAt    DateTime? @db.Timestamptz
+  capiSentAt     DateTime? @db.Timestamptz
+
+  purchasedAt DateTime? @db.Timestamptz
+
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  @@index([customerId])
+  @@index([status, createdAt])
+}
+
+model Subscription {
+  id                   String @id @default(cuid())
+  stripeSubscriptionId String @unique
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  // Always the programme price. PRO/ELITE live in the same Stripe account and
+  // their events do reach our endpoint (Stripe filters webhooks by event type
+  // only), so the router resolves the price and exits before any write.
+  stripePriceId String
+
+  status SubscriptionStatus
+
+  cancelAtPeriodEnd  Boolean   @default(false)
+  currentPeriodStart DateTime? @db.Timestamptz
+  currentPeriodEnd   DateTime? @db.Timestamptz
+  trialEnd           DateTime? @db.Timestamptz
+  canceledAt         DateTime? @db.Timestamptz
+
+  // Write fence: `created` of the newest event already applied. Concurrent
+  // deliveries can fetch canonical state then race on the write, so an older
+  // event is a no-op — otherwise a stale past_due lands after a terminal cancel.
+  lastStripeEventCreated Int @default(0)
+
+  // Claimed before the heads-up is sent. Stripe can deliver trial_will_end more
+  // than once, and telling someone twice that they are about to be charged
+  // reads as a billing fault.
+  trialEndingEmailAt DateTime? @db.Timestamptz
+
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  @@index([customerId])
+  @@index([status])
+}
+
+// Every signature-verified event, stored before any side effect runs. The event
+// id as primary key makes duplicate delivery a PK conflict rather than a race.
+// Payloads are pruned after 90 days; the envelope stays as an audit trail.
+model StripeEvent {
+  id        String            @id
+  type      String
+  livemode  Boolean
+  payload   Json?
+  status    StripeEventStatus @default(received)
+  attempts  Int               @default(0)
+  lastError String?
+
+  receivedAt  DateTime  @default(now()) @db.Timestamptz
+  processedAt DateTime? @db.Timestamptz
+
+  // Redrive and the reconcile sweeper scan by status, newest first. A partial
+  // index would be smaller, but Prisma can't express one and migrations stay
+  // Prisma-generated, so this composite covers the same queries.
+  @@index([status, receivedAt])
+  @@index([type, receivedAt])
+}
+
 model Waitlist {
   id String @id @default(cuid())
+
+  customers Customer[]
 
   // ref: human display code. publicToken: unguessable key used in the /joined
   // URL (never expose the primary key there).
@@ -60,15 +257,19 @@ model Waitlist {
   policyVersion String
   consentIp     String?
 
-  utmSource   String?
-  utmMedium   String?
-  utmCampaign String?
-  utmContent  String?
-  utmTerm     String?
-  fbclid      String?
-  gclid       String?
-  referrer    String?
-  landingPath String?
+  // Claimed before the launch announcement is sent, so a re-run of the blast
+  // skips anyone already told rather than mailing the list twice.
+  launchEmailAt DateTime? @db.Timestamptz
+
+  utmSource             String?
+  utmMedium             String?
+  utmCampaign           String?
+  utmContent            String?
+  utmTerm               String?
+  fbclid                String?
+  gclid                 String?
+  referrer              String?
+  landingPath           String?
   // When the first-touch attribution (incl. fbclid) was captured client-side —
   // required to reconstruct Meta's _fbc for the Conversions API.
   attributionCapturedAt DateTime?

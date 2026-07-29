@@ -8,11 +8,12 @@ import { HowItWorksCoachSection } from "@/components/sections/HowItWorksCoachSec
 import { HowItWorksCtaSection } from "@/components/sections/HowItWorksCtaSection";
 import { HowItWorksHeroSection } from "@/components/sections/HowItWorksHeroSection";
 import { HowItWorksStepsSection } from "@/components/sections/HowItWorksStepsSection";
+import { SIGNUP_HREF } from "@/lib/launch";
+import { launchCopy } from "@/content/launch-copy";
 
 export const metadata: Metadata = {
   title: "How it works",
-  description:
-    "Kane’s 8-week method, delivered by an AI Performance Coach in your WhatsApp. No new app. Join the waitlist, get the programme instantly, and show up.",
+  description: launchCopy.howItWorksDescription,
   alternates: { canonical: "/how-it-works" },
   openGraph: {
     url: "/how-it-works",
@@ -37,8 +38,8 @@ export default function HowItWorksPage() {
         variant="minimal"
         logoPriority
         cta={
-          <CtaButton href="/join" size="sm" withArrow={false}>
-            Join the waitlist
+          <CtaButton href={SIGNUP_HREF} size="sm" withArrow={false}>
+            {launchCopy.ctaLower}
           </CtaButton>
         }
       />

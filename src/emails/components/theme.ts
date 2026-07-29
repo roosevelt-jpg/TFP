@@ -12,6 +12,8 @@ export const email = {
   dim: "#938C84",
   dimmer: "#A8A199",
   red: "#D8231C",
-  serif: "Georgia, 'Times New Roman', serif",
+  // One face throughout. A second display face and red accents on every button
+  // read as decoration rather than design, so headings are set in the body face
+  // at a heavier weight instead.
   sans: "Arial, Helvetica, sans-serif",
 } as const;

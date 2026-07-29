@@ -25,6 +25,11 @@ const labelOf = (
   value: string,
 ) => options.find((o) => o.value === value)?.label ?? value;
 
+// Waitlist Goal predates the programme and only offers the original three, so
+// focus and general have nowhere to go here. They reach the coach through the
+// programme's own Goal field instead; sending them here would save blank.
+const WAITLIST_GOALS = new Set(["lose", "build", "fit"]);
+
 export type WaitlistProfile = {
   goal?: string | null;
   level?: string | null;
@@ -44,7 +49,7 @@ export type WaitlistProfile = {
 export function toGhlCustomFields(p: WaitlistProfile): GhlCustomField[] {
   const fields: GhlCustomField[] = [];
 
-  if (p.goal) {
+  if (p.goal && WAITLIST_GOALS.has(p.goal)) {
     fields.push({
       id: FIELD_IDS.goal,
       field_value: labelOf(GOAL_OPTIONS, p.goal),

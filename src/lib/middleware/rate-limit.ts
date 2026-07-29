@@ -4,6 +4,8 @@ import { clientIp } from "@/lib/client-ip";
 import { AppError, ERROR_CODES } from "@/lib/errors/app-error";
 import { checkRateLimit, type RateLimitTier } from "@/lib/rate-limit";
 
+const PAYMENT_ACTIONS = new Set(["createCheckoutSession"]);
+
 function emailKey(clientInput: unknown): string | null {
   if (
     typeof clientInput === "object" &&
@@ -35,7 +37,14 @@ export const rateLimitMiddleware = createMiddleware<{
   if (ip) await enforce("ip", `${metadata.actionName}:${ip}`);
 
   const email = emailKey(clientInput);
-  if (email) await enforce("email", `${metadata.actionName}:${email}`);
+  if (email) {
+    // Paying actions get the looser tier: blocking a buyer mid-retry costs a
+    // sale, where blocking a repeat waitlist signup costs nothing.
+    const tier = PAYMENT_ACTIONS.has(metadata.actionName)
+      ? "checkoutEmail"
+      : "email";
+    await enforce(tier, `${metadata.actionName}:${email}`);
+  }
 
   return next();
 });

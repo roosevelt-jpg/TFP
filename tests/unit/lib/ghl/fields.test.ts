@@ -77,7 +77,18 @@ describe("toGhlCustomFields", () => {
     );
   });
 
-  it("falls back to the raw value for an unknown option", () => {
-    expect(values({ ...profile, goal: "shred" })).toContain("shred");
+  // Waitlist Goal only offers the original three. focus and general reach the
+  // coach through the programme's own Goal field; sending them to this one
+  // would save blank rather than erroring.
+  it("sends the label for the three goals this field offers", () => {
+    expect(values({ goal: "lose" })).toEqual(["Lose fat"]);
+    expect(values({ goal: "build" })).toEqual(["Build muscle"]);
+    expect(values({ goal: "fit" })).toEqual(["Fighting-fit"]);
+  });
+
+  it("omits a goal this field has no option for", () => {
+    expect(values({ goal: "focus" })).toEqual([]);
+    expect(values({ goal: "general" })).toEqual([]);
+    expect(values({ goal: "shred" })).toEqual([]);
   });
 });

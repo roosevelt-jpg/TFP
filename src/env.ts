@@ -9,9 +9,6 @@ export const env = createEnv({
     PAYMENTS_LIVE: z.stringbool().default(false),
     DATABASE_URL: z.url(),
     DIRECT_URL: z.url(),
-    // Max Postgres connections per serverless instance. Keep low: Supabase's
-    // Supavisor pooler fans requests in, so each instance needs very few. A
-    // signup spike then queues at the pool instead of exhausting Postgres.
     DB_POOL_MAX: z.coerce.number().int().positive().default(1),
     RESEND_API_KEY: z.string().min(1),
     RESEND_FROM: z.string().min(1),
@@ -23,11 +20,21 @@ export const env = createEnv({
     SENTRY_PROJECT: z.string().min(1).optional(),
     SENTRY_AUTH_TOKEN: z.string().min(1).optional(),
     TURNSTILE_SECRET_KEY: z.string().min(1),
+    STRIPE_SECRET_KEY: z.string().min(1),
+    STRIPE_WEBHOOK_SECRET: z.string().min(1),
     GHL_INTEGRATION_TOKEN: z.string().min(1),
     GHL_LOCATION_ID: z.string().min(1),
     // Launch-day kill switch: CRM sync isn't time-critical, so it can be
     // disabled under incident without touching emails and redriven later.
     GHL_SYNC_ENABLED: z.stringbool().default(true),
+
+    // BetterStack heartbeat. Reconcile is the guarantee of last resort, so it
+    // failing silently is the one failure nothing else would catch.
+    RECONCILE_HEARTBEAT_URL: z.url().optional(),
+
+    // Private store holding the master programme and each watermarked copy.
+    FORMULA_BLOB_STORE_ID: z.string().min(1),
+    BLOB_READ_WRITE_TOKEN: z.string().min(1),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.url(),
