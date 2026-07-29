@@ -54,6 +54,7 @@ export function IntakeForm({
       email: prefill?.email ?? "",
       whatsapp: prefill?.whatsapp ?? "",
       consent: false,
+      promoCode: "",
       turnstileToken: "",
     },
   });
@@ -78,6 +79,14 @@ export function IntakeForm({
     if (whatsappError) {
       setError("whatsapp", { message: whatsappError });
       setFocus("whatsapp");
+    }
+
+    // Only the server can tell a real code from a plausible one, so its verdict
+    // has to land on the field rather than in a toast that dismisses itself.
+    const promoError = res?.validationErrors?.promoCode?._errors?.[0];
+    if (promoError) {
+      setError("promoCode", { message: promoError });
+      setFocus("promoCode");
     }
 
     const turnstileError = res?.validationErrors?.turnstileToken?._errors?.[0];
@@ -175,6 +184,27 @@ export function IntakeForm({
         )}
       </FormField>
 
+      {/* Here rather than on Stripe's page: theirs is a collapsed "Add
+          promotion code" link that buyers were missing entirely. */}
+      <FormField
+        label="Promo code"
+        htmlFor="cf-promo"
+        optional
+        hint="If you were sent one, enter it here and we’ll apply it."
+        error={errors.promoCode?.message}
+      >
+        {(field) => (
+          <Input
+            {...field}
+            {...register("promoCode")}
+            placeholder="FORMULA50"
+            autoCapitalize="characters"
+            autoComplete="off"
+            spellCheck={false}
+          />
+        )}
+      </FormField>
+
       <FormField htmlFor="cf-consent" error={errors.consent?.message}>
         {(field) => (
           <Checkbox
@@ -245,11 +275,6 @@ export function IntakeForm({
 
         <div className="text-dim mt-1 flex flex-wrap items-center gap-x-3.5 gap-y-2 text-[0.8rem]">
           <SecureBadge label="Secure Stripe checkout" />
-          <span
-            aria-hidden
-            className="bg-hairline-strong size-0.75 rounded-full"
-          />
-          <span>Got a code? Add it at checkout</span>
         </div>
       </div>
     </form>

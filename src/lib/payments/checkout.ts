@@ -15,6 +15,9 @@ type BuildParams = {
   waitlistId?: string;
   // Created before the session so Stripe can prefill name, email and phone.
   stripeCustomerId: string;
+  // Resolved from a code the buyer typed on our page. Stripe's own field is a
+  // collapsed link that buyers miss, so when we have one we apply it for them.
+  promotionCodeId?: string;
 };
 
 // Random suffix required by the dahlia integration_identifier convention.
@@ -39,6 +42,7 @@ export function buildCheckoutSessionParams({
   waitlistRef,
   waitlistId,
   stripeCustomerId,
+  promotionCodeId,
 }: BuildParams): Stripe.Checkout.SessionCreateParams {
   const metadata = {
     name,
@@ -63,9 +67,13 @@ export function buildCheckoutSessionParams({
       trial_period_days: TRIAL_DAYS,
       metadata,
     },
-    // Stripe's own promo field. We deliberately don't pass `discounts`: doing so
-    // would disable that field, and then a mistyped code is a dead end.
-    allow_promotion_codes: true,
+    // Mutually exclusive, so this is a switch rather than two settings:
+    //   with a code   apply it, and Stripe hides its own field (nothing left
+    //                 to enter, and the discount is visible before they pay)
+    //   without one   show Stripe's field, so a code can still be entered
+    ...(promotionCodeId
+      ? { discounts: [{ promotion_code: promotionCodeId }] }
+      : { allow_promotion_codes: true }),
     // Always a Customer, never customer_email: Stripe only prefills the phone
     // field from a Customer with `phone` set, and a buyer retyping their number
     // here would disagree with the WhatsApp one they already gave us.

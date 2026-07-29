@@ -40,6 +40,29 @@ test.describe("order summary", () => {
   });
 });
 
+// Stripe's own promo field is a collapsed link that buyers were missing, so
+// this one has to be visible without hunting.
+test.describe("the promo code field", () => {
+  test("is on the page, optional, and not hidden behind anything", async ({
+    page,
+  }) => {
+    const promo = page.getByLabel(/promo code/i);
+
+    await expect(promo).toBeVisible();
+    await expect(promo).toBeEditable();
+  });
+
+  test("does not block a submit when left blank", async ({ page }) => {
+    await page
+      .getByRole("button", { name: "Continue to Secure Payment" })
+      .click();
+
+    // Every other field complains; this one must not.
+    await expect(page.getByText("Enter your full name")).toBeVisible();
+    await expect(page.getByText(/code isn’t valid/i)).toBeHidden();
+  });
+});
+
 test.describe("intake validation", () => {
   // Same field definitions as the waitlist, so the copy must match exactly.
   test("an empty submit surfaces every field error without leaving the page", async ({

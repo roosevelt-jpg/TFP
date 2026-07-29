@@ -36,13 +36,49 @@ describe("buildCheckoutSessionParams", () => {
     expect(params.subscription_data?.trial_period_days).toBe(56);
   });
 
-  // Passing `discounts` would disable Stripe's promo field, turning a mistyped
-  // code into a dead end.
-  it("enables Stripe's promotion code field and passes no discounts", () => {
-    const params = buildCheckoutSessionParams(base);
+  // Stripe treats these as mutually exclusive, so which one we send has to
+  // follow whether the buyer already gave us a code.
+  describe("promotion codes", () => {
+    it("offers Stripe's own field when no code was entered", () => {
+      const params = buildCheckoutSessionParams(base);
 
-    expect(params.allow_promotion_codes).toBe(true);
-    expect(params.discounts).toBeUndefined();
+      expect(params.allow_promotion_codes).toBe(true);
+      expect(params.discounts).toBeUndefined();
+    });
+
+    // Applied for them, because Stripe's field is a collapsed link buyers miss.
+    it("applies a resolved code and drops the field", () => {
+      const params = buildCheckoutSessionParams({
+        ...base,
+        promotionCodeId: "promo_123",
+      });
+
+      expect(params.discounts).toEqual([{ promotion_code: "promo_123" }]);
+      expect(params.allow_promotion_codes).toBeUndefined();
+    });
+
+    // Sending both is a Stripe API error, so the buyer would see a generic
+    // failure instead of a checkout page.
+    it("never sends both", () => {
+      for (const promotionCodeId of [undefined, "promo_123"]) {
+        const params = buildCheckoutSessionParams({ ...base, promotionCodeId });
+
+        expect(
+          Boolean(params.discounts) && Boolean(params.allow_promotion_codes),
+        ).toBe(false);
+      }
+    });
+
+    // The id, not the string the buyer typed: `discounts` takes a promo_ id,
+    // and passing the raw code fails.
+    it("sends the resolved id rather than the typed code", () => {
+      const params = buildCheckoutSessionParams({
+        ...base,
+        promotionCodeId: "promo_abc",
+      });
+
+      expect(params.discounts?.[0]).toEqual({ promotion_code: "promo_abc" });
+    });
   });
 
   // Dynamic payment methods: hardcoding this list is the documented trap.

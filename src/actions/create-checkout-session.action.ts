@@ -18,6 +18,7 @@ import {
   checkoutIdempotencyKey,
 } from "@/lib/payments/idempotency";
 import { resolveProgrammePrices } from "@/lib/payments/resolve-prices";
+import { resolvePromotionCode } from "@/lib/payments/resolve-promo";
 import { ensureStripeCustomer } from "@/lib/payments/stripe-customer";
 import { actionClient } from "@/lib/safe-action";
 import { cleanEmail } from "@/lib/sanitize/email";
@@ -65,6 +66,20 @@ export const createCheckoutSession = actionClient
       );
     }
 
+    // Checked before the customer or session is created, so a bad code costs
+    // nothing and reports against the field the buyer can actually fix.
+    const promo = parsedInput.promoCode
+      ? await resolvePromotionCode(parsedInput.promoCode)
+      : null;
+
+    if (promo?.state === "invalid") {
+      returnValidationErrors(checkoutSchema, {
+        promoCode: {
+          _errors: ["That code isn’t valid. Leave it blank to continue."],
+        },
+      });
+    }
+
     const prices = await resolveProgrammePrices();
 
     const waitlist = parsedInput.waitlistToken
@@ -96,6 +111,10 @@ export const createCheckoutSession = actionClient
         waitlistRef: waitlist?.ref,
         waitlistId: waitlist?.id,
         stripeCustomerId,
+        // unavailable falls through without one: Stripe still shows its own
+        // field, so a lookup outage delays the discount rather than the sale.
+        promotionCodeId:
+          promo?.state === "valid" ? promo.promotionCodeId : undefined,
       }),
       idempotencyKey: checkoutIdempotencyKey(stripeCustomerId),
     });
