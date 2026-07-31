@@ -42,6 +42,14 @@ if (posthogKey && posthogHost) {
         // Already the default; explicit because /join collects name/email/phone.
         session_recording: { maskAllInputs: true },
       });
+      // Reduce Motion once made the whole page render blank (SSR opacity:0
+      // never animated away). Registering it keeps the affected slice of
+      // traffic measurable rather than invisible in replays.
+      posthog.register({
+        prefers_reduced_motion: window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches,
+      });
       // PostHog persists its own opt-out, and the default above only applies
       // to first visits — reconcile so the consent cookie stays the single
       // source of truth across revisits, other tabs, and manual changes.

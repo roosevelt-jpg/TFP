@@ -251,6 +251,22 @@ body {
   }
 }
 
+/* Reveal ships at inline opacity:0 and depends on JS to fade in. If hydration
+   never happens (failed chunk, blocked script, in-app webview), no Reveal ref
+   ever adds .motion-ready and this un-hides the page: CSS animations beat
+   inline styles, so no !important needed. The reduce-motion block above only
+   shortens the duration; the delay and forwards fill still apply. */
+html:not(.motion-ready) [data-reveal] {
+  animation: reveal-rescue 0.4s ease-out 2.5s forwards;
+}
+
+@keyframes reveal-rescue {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* Defined outside @theme so they are always emitted (used via animate-[…]). */
 @keyframes shine {
   to {
