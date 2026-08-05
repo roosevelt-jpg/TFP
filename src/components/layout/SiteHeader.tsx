@@ -29,11 +29,10 @@ export function SiteHeader({
       <Container
         className={cn(
           "flex items-center gap-4 min-[900px]:justify-between",
-          // Logo + cta both visible on mobile → pin them to the edges so the
-          // logo lines up with the content gutter below; otherwise centre.
-          variant === "full" || ctaOnMobile
-            ? "justify-between"
-            : "justify-center",
+          // Centre the logo whenever it is alone on the row. The landing header
+          // has nav + cta, but both are desktop-only, so it centres on mobile
+          // too and only splits once they appear.
+          ctaOnMobile ? "justify-between" : "justify-center",
         )}
       >
         <Link

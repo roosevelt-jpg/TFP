@@ -10,7 +10,10 @@ export function TrustLine({ rating = 5, children, className }: TrustLineProps) {
   return (
     <div
       className={cn(
-        "text-dim flex flex-wrap items-center gap-3 text-[0.84rem]",
+        // Centred column when the stars and text can't share a line (every
+        // phone width), so the two halves don't centre independently of each
+        // other and read as misaligned.
+        "text-dim flex flex-col items-center gap-1.5 text-center text-[0.84rem] min-[520px]:flex-row min-[520px]:gap-3 min-[520px]:text-left",
         className,
       )}
     >

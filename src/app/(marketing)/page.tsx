@@ -47,15 +47,16 @@ export default function Home() {
       </AnnouncementBar>
       <SiteHeader
         nav={NAV}
+        ctaOnMobile={false}
         cta={
+          // Desktop only: on mobile the hero CTA and the sticky bar already
+          // cover it, and dropping it lets the logo sit centred.
           <CtaButton
             href={SIGNUP_HREF}
             size="sm"
-            withArrow={false}
-            className="whitespace-nowrap max-[359px]:px-3"
+            className="hidden whitespace-nowrap min-[900px]:inline-flex"
           >
-            <span className="min-[900px]:hidden">{launchCopy.ctaShort}</span>
-            <span className="hidden min-[900px]:inline">{launchCopy.cta}</span>
+            {launchCopy.cta}
           </CtaButton>
         }
       />
