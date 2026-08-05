@@ -59,7 +59,10 @@ export function SiteHeader({
             )}
           </div>
         ) : (
-          <div className="flex items-center gap-4">
+          // gap matches the nav's own 30px once the links are visible, so the
+          // space before the CTA doesn't read tighter than the gaps between
+          // links. Stays 16px below that, where only the logo and CTA show.
+          <div className="flex items-center gap-4 min-[900px]:gap-7.5">
             <nav
               aria-label="Main"
               className="hidden items-center gap-[30px] text-[0.92rem] min-[900px]:flex"

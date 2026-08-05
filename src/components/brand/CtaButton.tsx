@@ -39,7 +39,7 @@ export function CtaButton({
   variant,
   size,
   block,
-  withArrow = true,
+  withArrow = false,
   withShine = true,
   className,
   children,

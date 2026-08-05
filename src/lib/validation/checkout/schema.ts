@@ -21,7 +21,9 @@ import {
 // collapsed "Add promotion code" link that buyers miss. Loose here because
 // Stripe is the authority on whether a code is real; this only rejects input
 // that could not be one.
-const promoCodeField = z
+// Exported so the checkout page can sanitise the ?promo= URL param with the
+// same rule the form field uses.
+export const promoCodeField = z
   .string()
   .trim()
   .max(50)

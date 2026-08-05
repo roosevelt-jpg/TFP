@@ -42,6 +42,7 @@ export function BrandChat({
   return (
     <div
       aria-hidden={decorative || undefined}
+      data-chat-mock={decorative || undefined}
       className={cn(
         "overflow-hidden rounded-md border",
         translucent

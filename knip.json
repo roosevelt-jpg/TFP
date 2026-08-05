@@ -8,9 +8,10 @@
     "src/content/**/*.ts",
     "src/hooks/**/*.ts",
     "src/trigger/**/*.{ts,tsx}",
-    "trigger.config.ts"
+    "trigger.config.ts",
+    "scripts/**/*.{ts,mjs}"
   ],
-  "project": ["src/**/*.{ts,tsx}"],
+  "project": ["src/**/*.{ts,tsx}", "scripts/**/*.{ts,mjs}"],
   "ignoreDependencies": [
     "tailwindcss",
     "tw-animate-css",

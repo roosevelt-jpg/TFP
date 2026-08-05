@@ -45,17 +45,25 @@ const metaScript = metaEnabled ? " https://connect.facebook.net" : "";
 const metaBeacon = metaEnabled ? " https://www.facebook.com" : "";
 const isDev = process.env.NODE_ENV === "development";
 const scriptEval = isDev ? " 'unsafe-eval'" : "";
+// Mux VSL playback. Wildcards are Mux's own recommendation: they serve HLS from
+// several CDN subdomains that can change without notice. Granular directives
+// (not the blanket default-src they also document) keep the rest of the policy
+// tight. litix.io is Mux Data's beacon, which the player calls on its own.
+const MUX_STREAM = "https://*.mux.com";
+const MUX_IMAGE = "https://image.mux.com";
+const MUX_DATA = "https://*.litix.io";
 
 const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${scriptEval} ${TURNSTILE}${posthogOrigin()}${metaScript}`,
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' blob: data:${metaBeacon}`,
+  `img-src 'self' blob: data:${metaBeacon} ${MUX_IMAGE} ${MUX_DATA}`,
+  `media-src 'self' blob: ${MUX_STREAM}`,
   "font-src 'self'",
   // PostHog's replay compression worker is created from a blob: URL; without
   // an explicit worker-src it falls back to script-src, which has no blob:.
   "worker-src 'self' blob:",
-  `connect-src 'self' ${TURNSTILE}${sentryOrigin()}${posthogOrigin()}${metaBeacon}`,
+  `connect-src 'self' ${TURNSTILE}${sentryOrigin()}${posthogOrigin()}${metaBeacon} ${MUX_STREAM} ${MUX_IMAGE} ${MUX_DATA}`,
   `frame-src ${TURNSTILE}`,
   "object-src 'none'",
   "base-uri 'self'",

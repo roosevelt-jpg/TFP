@@ -23,7 +23,6 @@ export function PricingSection() {
             currency={CURRENCY}
             features={pricingFeatures}
             cta={{ label: launchCopy.cta, href: SIGNUP_HREF }}
-            reassurance={launchCopy.reassurance}
           />
         </div>
       </Reveal>

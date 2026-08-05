@@ -42,6 +42,7 @@
     "@base-ui/react": "^1.6.0",
     "@hookform/resolvers": "^5.4.0",
     "@marsidev/react-turnstile": "^1.5.3",
+    "@mux/mux-player-react": "^3.13.2",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@react-email/components": "^1.0.12",
@@ -54,6 +55,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.4.2",
+    "embla-carousel-react": "^8.6.0",
     "libphonenumber-js": "^1.13.7",
     "lucide-react": "^1.23.0",
     "motion": "^12.42.2",
@@ -79,6 +81,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
     "@biomejs/biome": "2.5.2",
+    "@mux/mux-node": "^14.1.1",
     "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@trigger.dev/build": "4.5.0",

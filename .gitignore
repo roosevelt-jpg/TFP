@@ -68,3 +68,4 @@ docs/*
 .trigger
 /lighthouse-report
 /.lighthouseci
+.local-assets/

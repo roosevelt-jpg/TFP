@@ -2,7 +2,7 @@ import { FeatureColumn } from "@/components/brand/FeatureColumn";
 import { Reveal } from "@/components/brand/Reveal";
 import { SectionHeader } from "@/components/brand/SectionHeader";
 import { Section } from "@/components/layout/Section";
-import { outcomes } from "@/content/marketing";
+import { benchmarks, outcomes } from "@/content/marketing";
 
 export function OutcomeSection() {
   return (
@@ -21,6 +21,24 @@ export function OutcomeSection() {
           </Reveal>
         ))}
       </div>
+      <Reveal delayMs={240}>
+        <div className="border-hairline mt-11 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 border-t pt-7">
+          <p className="text-muted max-w-[46ch] leading-[1.6]">
+            Measured, not guessed: we test four benchmarks in week one and
+            re-test them in week eight, from your own starting point.
+          </p>
+          <ul className="flex flex-wrap gap-2.5">
+            {benchmarks.map((benchmark) => (
+              <li
+                key={benchmark}
+                className="border-hairline-strong rounded-full border px-4 py-2.25 text-[0.82rem]"
+              >
+                {benchmark}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </Reveal>
     </Section>
   );
 }

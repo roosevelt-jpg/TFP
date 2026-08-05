@@ -8,10 +8,12 @@ import { AboutSection } from "@/components/sections/AboutSection";
 import { FaqSection } from "@/components/sections/FaqSection";
 import { FeaturesSection } from "@/components/sections/FeaturesSection";
 import { FinalCtaSection } from "@/components/sections/FinalCtaSection";
+import { FounderOfferSection } from "@/components/sections/FounderOfferSection";
 import { HeroSection } from "@/components/sections/HeroSection";
-import { MeasuredProgressSection } from "@/components/sections/MeasuredProgressSection";
 import { OutcomeSection } from "@/components/sections/OutcomeSection";
 import { PricingSection } from "@/components/sections/PricingSection";
+import { TransformationsSection } from "@/components/sections/TransformationsSection";
+import { VslSection } from "@/components/sections/VslSection";
 import { SIGNUP_HREF } from "@/lib/launch";
 import { launchCopy } from "@/content/launch-copy";
 
@@ -60,10 +62,12 @@ export default function Home() {
 
       <main id="main" className="relative z-10">
         <HeroSection />
+        <VslSection />
         <AboutSection />
+        <TransformationsSection />
         <OutcomeSection />
         <FeaturesSection />
-        <MeasuredProgressSection />
+        <FounderOfferSection />
         <PricingSection />
         <FaqSection />
         <FinalCtaSection />

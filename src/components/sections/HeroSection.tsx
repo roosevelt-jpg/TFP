@@ -52,12 +52,11 @@ export function HeroSection() {
             <Reveal delayMs={180}>
               <div className="flex flex-wrap items-center justify-center gap-[13px] min-[940px]:justify-start">
                 <CtaButton href={SIGNUP_HREF}>{launchCopy.cta}</CtaButton>
-                <CtaButton
-                  href="/how-it-works"
-                  variant="ghost"
-                  withShine={false}
-                >
-                  See how it works
+                {/* Scrolls to the VSL rather than routing to /how-it-works:
+                    the video directly below answers the same question without
+                    sending anyone off the page. */}
+                <CtaButton href="#watch" variant="ghost" withShine={false}>
+                  Watch Kane explain it
                 </CtaButton>
               </div>
             </Reveal>

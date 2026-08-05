@@ -1,3 +1,4 @@
+import { LAUNCH_PROMOTION_CODE } from "@/lib/pricing";
 import { env } from "@/env";
 
 // Single switch for pre-launch (waitlist) vs. live (payments running) behaviour.
@@ -13,4 +14,10 @@ export const PAYMENTS_LIVE =
 
 // Where "start / finish signing up" CTAs point: the waitlist form pre-launch,
 // the paid checkout once payments are live. Keeps label and destination in sync.
-export const SIGNUP_HREF = PAYMENTS_LIVE ? "/checkout" : "/join";
+// Live CTAs carry the founder promo so the discount is already in the form: the
+// offer is public now, and a buyer who never sees the code still gets it.
+// Stripe remains the authority — it caps redemptions at 50 and rejects the code
+// once they are gone, so the link can't over-promise.
+export const SIGNUP_HREF = PAYMENTS_LIVE
+  ? `/checkout?promo=${LAUNCH_PROMOTION_CODE}`
+  : "/join";

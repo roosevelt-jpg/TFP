@@ -52,27 +52,12 @@ export const benchmarks: string[] = [
 
 // Community section (landing). Trimmed to the client's three labels, one
 // short line each.
-export const community: Benefit[] = [
-  {
-    title: "Same Standard",
-    body: "Everyone trains to the level Kane sets. No shortcuts.",
-  },
-  {
-    title: "Accountability",
-    body: "People notice when you don’t show up.",
-  },
-  {
-    title: "Shared Journey",
-    body: "Eight weeks, start together, finish together.",
-  },
-];
 
 // Pricing card feature list (landing).
 export const pricingFeatures: string[] = [
   "Full 8-week training + nutrition programme, yours to keep",
   "Personal Performance Coach in WhatsApp, in Kane’s voice, for 8 weeks",
-  "Proactive weekly check-ins & accountability",
-  "Form & nutrition Q&A, any hour",
+  "Weekly check-ins, plus answers whenever you need them",
 ];
 
 // Outcome pillars (landing, OutcomeSection). Sells the result, not the
@@ -98,18 +83,18 @@ export const outcomes: Benefit[] = [
 export const features: Benefit[] = [
   {
     title: "It messages you first",
-    body: "You won’t need to remember to log in. Your coach opens the conversation, most days before you’ve had your coffee.",
+    body: "Your coach opens the conversation, most days before you’ve had your coffee.",
   },
   {
     title: "Ask it literally anything",
-    body: "Stuck on a lift, tempted by a takeaway, unsure what to swap dinner for: type the question and get a real answer back within the minute.",
+    body: "Stuck on a lift, tempted by a takeaway, unsure what to swap dinner for: ask and get a straight answer in seconds.",
   },
   {
     title: "It moves with your week",
-    body: "Train four days instead of five, sleep badly, travel for work: your targets shift to match, rather than you falling behind a fixed schedule.",
+    body: "Train four days instead of five, sleep badly, travel for work: your targets shift to match.",
   },
   {
     title: "There’s nowhere to hide",
-    body: "Skip a session and it’s flagged the same day. No shame about it, just a straight nudge back on track before the week gets away from you.",
+    body: "Skip a session and it’s flagged the same day. No shame, just a nudge back on track.",
   },
 ];

@@ -38,9 +38,11 @@ export type IntakePrefill = {
 export function IntakeForm({
   waitlistToken,
   prefill,
+  initialPromoCode,
 }: {
   waitlistToken?: string;
   prefill?: IntakePrefill;
+  initialPromoCode?: string;
 }) {
   const turnstileRef = useRef<TurnstileInstance | undefined>(undefined);
   const serverErrorRef = useRef<HTMLDivElement>(null);
@@ -54,7 +56,7 @@ export function IntakeForm({
       email: prefill?.email ?? "",
       whatsapp: prefill?.whatsapp ?? "",
       consent: false,
-      promoCode: "",
+      promoCode: initialPromoCode ?? "",
       turnstileToken: "",
     },
   });

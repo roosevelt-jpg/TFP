@@ -234,10 +234,12 @@ body {
     letter-spacing: -0.018em;
     line-height: 1.04;
   }
+}
 
-  em {
-    font-style: normal;
-  }
+/* Outside @layer base on purpose: shadcn's imported base layer re-applies the
+   browser default italic, so a layered rule here loses to it. */
+em {
+  font-style: normal;
 }
 
 @media (prefers-reduced-motion: reduce) {

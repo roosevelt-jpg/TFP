@@ -12,6 +12,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SkipLink } from "@/components/layout/SkipLink";
 import { loadCheckoutSearchParams } from "@/lib/payments/search-params";
+import { promoCodeField } from "@/lib/validation/checkout/schema";
 import { IntakeForm } from "@/features/checkout/IntakeForm";
 import { IntakeFormSkeleton } from "@/features/checkout/IntakeFormSkeleton";
 import { OrderSummary } from "@/features/checkout/OrderSummary";
@@ -34,9 +35,18 @@ async function Intake({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const { t } = await loadCheckoutSearchParams(searchParams);
+  const { t, promo } = await loadCheckoutSearchParams(searchParams);
+  // The promo param is attacker-controllable, so it goes through the same
+  // schema the form field uses before it is ever rendered back. An invalid
+  // code is dropped rather than shown; Stripe validates the real thing later.
+  const promoCode = promoCodeField.safeParse(promo ?? undefined);
 
-  return <IntakeForm waitlistToken={t ?? undefined} />;
+  return (
+    <IntakeForm
+      waitlistToken={t ?? undefined}
+      initialPromoCode={promoCode.success ? promoCode.data : undefined}
+    />
+  );
 }
 
 export default function CheckoutPage({

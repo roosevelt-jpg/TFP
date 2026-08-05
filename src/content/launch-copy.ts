@@ -92,9 +92,7 @@ const live = {
   // announcing it costs nothing. The code itself still isn't printed here,
   // since the banner links to the founder section rather than naming it.
   announcement: "Founder launch: the first 50 members get 50% off",
-  // Targets #pricing until Phase 4 ships FounderOfferSection; flip to
-  // #founder-offer once that anchor exists.
-  announcementHref: "#pricing",
+  announcementHref: "#founder-offer",
   heroTrust: "Real coaching. Real accountability. Real results.",
   pricingLock: "Secure checkout, cancel anytime",
   howItWorksDescription:
