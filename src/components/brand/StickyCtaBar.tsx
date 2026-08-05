@@ -25,7 +25,8 @@ export function StickyCtaBar({
   const [shown, setShown] = useState(false);
 
   useMotionValueEvent(scrollY, "change", (latest) => {
-    setShown(latest > showAfter);
+    const next = latest > showAfter;
+    setShown((prev) => (prev === next ? prev : next));
   });
 
   return (

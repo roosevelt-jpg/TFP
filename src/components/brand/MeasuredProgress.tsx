@@ -1,10 +1,3 @@
-"use client";
-
-import { useRef } from "react";
-
-import { useReducedMotion, useScroll, useSpring } from "motion/react";
-import * as m from "motion/react-m";
-
 import { Eyebrow } from "./Eyebrow";
 
 type MeasuredProgressProps = {
@@ -12,21 +5,6 @@ type MeasuredProgressProps = {
 };
 
 export function MeasuredProgress({ benchmarks }: MeasuredProgressProps) {
-  const reduce = useReducedMotion();
-  const barRef = useRef<HTMLDivElement>(null);
-  // Fill tracks scroll position through the bar, so it grows and shrinks as the
-  // section moves across the viewport — mirroring the design's scroll-driven bar.
-  // A wider offset range makes it fill more gradually; the spring smooths it.
-  const { scrollYProgress } = useScroll({
-    target: barRef,
-    offset: ["start 0.95", "center 0.5"],
-  });
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 60,
-    damping: 22,
-    restDelta: 0.001,
-  });
-
   return (
     <div className="border-hairline mt-[clamp(46px,6vw,70px)] border-t pt-[clamp(30px,4vw,44px)] text-center">
       <Eyebrow align="center" className="mb-3.5">
@@ -39,7 +17,7 @@ export function MeasuredProgress({ benchmarks }: MeasuredProgressProps) {
         We test four benchmarks in week one and re-test them in week eight, so
         your progress is measured from your own starting point, never guessed.
       </p>
-      <div className="mb-[30px] flex flex-wrap justify-center gap-2.5">
+      <div className="mb-6.5 flex flex-wrap justify-center gap-2.5">
         {benchmarks.map((benchmark) => (
           <span
             key={benchmark}
@@ -49,17 +27,9 @@ export function MeasuredProgress({ benchmarks }: MeasuredProgressProps) {
           </span>
         ))}
       </div>
-      <div
-        ref={barRef}
-        className="bg-surface-2 border-hairline relative mx-auto h-1.5 max-w-[720px] overflow-hidden rounded-xs border"
-      >
-        <m.div
-          className="bg-red absolute inset-0 origin-left rounded-xs"
-          style={{ scaleX: reduce ? 1 : scaleX }}
-        />
-      </div>
-      <div className="text-dim mx-auto mt-[11px] flex max-w-[720px] items-center justify-between gap-3.5 text-[0.7rem] font-semibold tracking-[0.14em] uppercase">
+      <div className="text-dim mx-auto flex max-w-105 items-center justify-center gap-3.5 text-[0.7rem] font-semibold tracking-[0.14em] uppercase">
         <span>Week 01 · Baseline</span>
+        <span aria-hidden className="bg-hairline-strong h-px w-8" />
         <span>Week 08 · Re-test</span>
       </div>
     </div>

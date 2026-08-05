@@ -235,9 +235,8 @@ body {
     line-height: 1.04;
   }
 
-  h1 em,
-  h2 em {
-    font-style: italic;
+  em {
+    font-style: normal;
   }
 }
 

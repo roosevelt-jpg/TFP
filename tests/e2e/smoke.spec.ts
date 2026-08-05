@@ -32,13 +32,21 @@ for (const path of PAGES) {
 test("the home page routes to the sign-up form", async ({ page }) => {
   await page.goto("/");
 
-  await page
-    .locator(`a[href="${SIGNUP}"]`)
+  // Prefix match: live CTAs carry the founder promo (/checkout?promo=...).
+  const cta = page
+    .locator(`a[href^="${SIGNUP}"]`)
     .filter({ visible: true })
-    .first()
-    .click();
+    .first();
+  // useInnerText: the header CTA carries both a short mobile label and the full
+  // desktop one, and only one is visible at a time.
+  if (process.env.PAYMENTS_LIVE === "true")
+    await expect(cta).toHaveText(/Claim (My Founder Place|my place)/, {
+      useInnerText: true,
+    });
+  await cta.click();
 
-  await expect(page).toHaveURL(new RegExp(`${SIGNUP}$`));
+  // Not anchored to the end: the live CTA appends the founder promo.
+  await expect(page).toHaveURL(new RegExp(`${SIGNUP}(\\?|$)`));
   // Landing on the page is not enough: the form has to be there to submit.
   await expect(
     page.getByRole("button", {

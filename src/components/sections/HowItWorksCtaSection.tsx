@@ -11,9 +11,7 @@ export function HowItWorksCtaSection() {
     <section className="relative py-(--space-section) text-center">
       <Container width="narrow" className="max-w-[760px]">
         <Reveal>
-          <SectionHeading align="center">
-            {launchCopy.heading} <em>today.</em>
-          </SectionHeading>
+          <SectionHeading align="center">{launchCopy.heading}</SectionHeading>
         </Reveal>
         <Reveal delayMs={80}>
           <p className="text-muted text-lead mx-auto mt-4 max-w-[42ch] leading-[1.6]">

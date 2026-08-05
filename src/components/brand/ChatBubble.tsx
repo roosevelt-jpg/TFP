@@ -31,7 +31,7 @@ export function ChatBubble({
       >
         {typing ? <TypingDots /> : children}
         {time && !typing && (
-          <span className="text-dim mt-0.5 block text-right text-[0.6rem]">
+          <span className="text-muted mt-0.5 block text-right text-[0.65rem]">
             {time}
           </span>
         )}

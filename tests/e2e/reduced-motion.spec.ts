@@ -24,7 +24,7 @@ function defineRevealSpecs() {
   test("the hero reveals on load", async ({ page }) => {
     await page.goto("/");
 
-    await expect(revealWrapperOf(page, "The 8-week programme that")).toHaveCSS(
+    await expect(revealWrapperOf(page, "Lose fat. Build muscle.")).toHaveCSS(
       "opacity",
       "1",
     );
@@ -58,7 +58,7 @@ test.describe("with JavaScript disabled", () => {
   test("the hero still reveals", async ({ page }) => {
     await page.goto("/");
 
-    await expect(revealWrapperOf(page, "The 8-week programme that")).toHaveCSS(
+    await expect(revealWrapperOf(page, "Lose fat. Build muscle.")).toHaveCSS(
       "opacity",
       "1",
       { timeout: 10_000 },

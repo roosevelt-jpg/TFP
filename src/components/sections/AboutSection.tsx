@@ -24,7 +24,7 @@ export function AboutSection() {
             heading="Coached by someone who’s been in the fight."
             headingChars={15}
             leadChars={48}
-            lead="I fought professionally in Bellator, so I know the plan was never the hard part. Turning up when you don’t feel like it is. I built The Formula on that discipline, and I’ve spent years coaching real people through it. This programme points all of that at your next eight weeks."
+            lead="I fought pro MMA in Bellator, then spent 20+ years coaching. I founded The Formula and built the accountability system behind it myself."
           />
           <Reveal delayMs={120}>
             <div className="mt-8 grid gap-6 min-[500px]:grid-cols-3">

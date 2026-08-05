@@ -55,7 +55,10 @@ export function BrandChat({
         className={cn(
           "flex flex-col",
           compact ? "gap-1.5 p-[11px]" : "gap-2.5 p-[15px]",
-          fixedHeight && "h-[172px] justify-end overflow-hidden",
+          fixedHeight &&
+            (compact
+              ? "h-[172px] justify-end overflow-hidden"
+              : "h-[252px] justify-end overflow-hidden"),
         )}
       >
         {shown.map((m) =>

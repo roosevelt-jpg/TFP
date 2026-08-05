@@ -31,7 +31,7 @@ export function SiteHeader({
           "flex items-center gap-4 min-[900px]:justify-between",
           // Logo + cta both visible on mobile → pin them to the edges so the
           // logo lines up with the content gutter below; otherwise centre.
-          variant === "minimal" && ctaOnMobile
+          variant === "full" || ctaOnMobile
             ? "justify-between"
             : "justify-center",
         )}
@@ -59,21 +59,23 @@ export function SiteHeader({
             )}
           </div>
         ) : (
-          <nav
-            aria-label="Main"
-            className="hidden items-center gap-[30px] text-[0.92rem] min-[900px]:flex"
-          >
-            {nav?.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="text-muted hover:text-text transition-colors"
-              >
-                {item.label}
-              </Link>
-            ))}
+          <div className="flex items-center gap-4">
+            <nav
+              aria-label="Main"
+              className="hidden items-center gap-[30px] text-[0.92rem] min-[900px]:flex"
+            >
+              {nav?.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="text-muted hover:text-text transition-colors"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
             {cta}
-          </nav>
+          </div>
         )}
       </Container>
     </header>

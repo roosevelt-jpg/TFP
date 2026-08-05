@@ -60,16 +60,16 @@ const waiting = {
 } as const;
 
 const live = {
-  cta: "Start the Programme",
-  ctaLower: "Start the programme",
-  ctaShort: "Start now",
+  cta: "Claim My Founder Place",
+  ctaLower: "Claim My Founder Place",
+  ctaShort: "Claim my place",
   heading: "Start today",
   reassurance: `${CURRENCY}${PRICE_TODAY} today, then ${CURRENCY}${PRICE_MONTHLY} a month from week ${PROGRAMME_WEEKS}. Cancel anytime, no retention hoops.`,
   priceLead: "The programme is",
   finalCta:
     "Your programme and your coach are ready the moment you join. No waiting, no invite needed.",
-  stickyLabel: "Start the programme",
-  stickySecondary: `${CURRENCY}${PRICE_TODAY} today \u00b7 then ${CURRENCY}${PRICE_MONTHLY}/mo`,
+  stickyLabel: "Founder launch",
+  stickySecondary: "First 50 members only",
   trust: [
     `${CURRENCY}${PRICE_TODAY} today`,
     "cancel anytime",
@@ -88,12 +88,14 @@ const live = {
   howItWorksStepOneBody: `Tell us your goal and where to reach you. Takes under a minute, and you\u2019re training the same day.`,
   faqAccess: "As soon as you join,",
   faqDelivery: "as soon as you join",
-  // No promo code here: FORMULA50 goes to the waitlist and to people Kane
-  // chooses, so the header would hand it to every anonymous visitor and burn
-  // the 50 redemptions on strangers. No price either, since the pricing card
-  // says it better and a banner leading on money reads as a sales pitch.
-  announcement: "Doors are open \u00b7 your Performance Coach is ready today",
-  heroTrust: `${CURRENCY}${PRICE_TODAY} today \u00b7 cancel anytime`,
+  // The founder offer is public by design: it's auto-applied at checkout, so
+  // announcing it costs nothing. The code itself still isn't printed here,
+  // since the banner links to the founder section rather than naming it.
+  announcement: "Founder launch: the first 50 members get 50% off",
+  // Targets #pricing until Phase 4 ships FounderOfferSection; flip to
+  // #founder-offer once that anchor exists.
+  announcementHref: "#pricing",
+  heroTrust: "Real coaching. Real accountability. Real results.",
   pricingLock: "Secure checkout, cancel anytime",
   howItWorksDescription:
     "Kane\u2019s 8-week method, delivered by an AI Performance Coach in your WhatsApp. No new app. Join today, get the programme instantly, and show up.",

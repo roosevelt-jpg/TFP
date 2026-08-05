@@ -26,40 +26,7 @@ export const coachCapabilities: Benefit[] = [
   },
 ];
 
-// "What’s included" cards (landing).
-export const included: Benefit[] = [
-  {
-    title: "The 8-week programme",
-    body: "Progressive training (gym or home) and a flexible nutrition framework with targets and swaps. In your inbox the moment you’re in, yours to keep for good.",
-  },
-  {
-    title: "Weekly check-ins",
-    body: "Your coach reviews the week, banks the wins and resets your targets. Accountability that turns up, on the quiet weeks especially.",
-  },
-  {
-    title: "Form & nutrition Q&A",
-    body: "Send a form clip, ask for a meal swap, sanity-check a craving at 11pm. A straight, no-nonsense answer in seconds, any hour.",
-  },
-];
-
-// How-it-works steps (landing + How It Works).
-export const steps: Benefit[] = [
-  {
-    title: launchCopy.steps.one.title,
-    body: launchCopy.steps.one.body,
-  },
-  {
-    title: launchCopy.steps.two.title,
-    body: launchCopy.steps.two.body,
-  },
-  {
-    title: "Show up",
-    body: "Train the plan. Your coach handles the rest: check-ins, answers and the nudges that keep you honest.",
-  },
-];
-
-// How It Works page — the three-step walkthrough (distinct copy from the
-// landing's condensed `steps`).
+// How It Works page — the three-step walkthrough.
 export const howItWorksSteps: Benefit[] = [
   {
     title: launchCopy.steps.one.title,
@@ -83,19 +50,20 @@ export const benchmarks: string[] = [
   "Work capacity",
 ];
 
-// Community section (landing).
+// Community section (landing). Trimmed to the client's three labels, one
+// short line each.
 export const community: Benefit[] = [
   {
-    title: "Same standard",
-    body: "One system, one bar. Everyone training to the level Kane sets. No shortcuts.",
+    title: "Same Standard",
+    body: "Everyone trains to the level Kane sets. No shortcuts.",
   },
   {
-    title: "Real accountability",
-    body: "People who show up when you post your session, and notice when you don’t.",
+    title: "Accountability",
+    body: "People notice when you don’t show up.",
   },
   {
-    title: "Same fight",
-    body: "Eight weeks, shared. You start together, you finish together.",
+    title: "Shared Journey",
+    body: "Eight weeks, start together, finish together.",
   },
 ];
 
@@ -105,4 +73,43 @@ export const pricingFeatures: string[] = [
   "Personal Performance Coach in WhatsApp, in Kane’s voice, for 8 weeks",
   "Proactive weekly check-ins & accountability",
   "Form & nutrition Q&A, any hour",
+];
+
+// Outcome pillars (landing, OutcomeSection). Sells the result, not the
+// WhatsApp mechanism.
+export const outcomes: Benefit[] = [
+  {
+    title: "Lose fat",
+    body: "A nutrition framework with real targets and swaps, built to hold up against a takeaway on a Friday, not just a good week.",
+  },
+  {
+    title: "Build muscle",
+    body: "Progressive training, gym or home, that adds load week on week so eight weeks in you’re visibly, measurably stronger.",
+  },
+  {
+    title: "Perform better",
+    body: "More strength, more conditioning, more work capacity. The kind of fitness that shows up outside the gym too.",
+  },
+];
+
+// Consolidated WhatsApp coach feature block (landing, FeaturesSection). The
+// one place this mechanism is explained; replaces the repetition previously
+// spread across coachCapabilities/included/pricingFeatures on the landing page.
+export const features: Benefit[] = [
+  {
+    title: "It messages you first",
+    body: "You won’t need to remember to log in. Your coach opens the conversation, most days before you’ve had your coffee.",
+  },
+  {
+    title: "Ask it literally anything",
+    body: "Stuck on a lift, tempted by a takeaway, unsure what to swap dinner for: type the question and get a real answer back within the minute.",
+  },
+  {
+    title: "It moves with your week",
+    body: "Train four days instead of five, sleep badly, travel for work: your targets shift to match, rather than you falling behind a fixed schedule.",
+  },
+  {
+    title: "There’s nowhere to hide",
+    body: "Skip a session and it’s flagged the same day. No shame about it, just a straight nudge back on track before the week gets away from you.",
+  },
 ];

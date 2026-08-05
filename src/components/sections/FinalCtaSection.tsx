@@ -16,7 +16,7 @@ export function FinalCtaSection() {
       <Container width="narrow" className="relative z-10 max-w-[780px]">
         <Reveal>
           <SectionHeading size="display" align="center">
-            Your next eight weeks start <em>with one text.</em>
+            Your next eight weeks start with one decision.
           </SectionHeading>
         </Reveal>
         <Reveal delayMs={80}>
@@ -34,15 +34,10 @@ export function FinalCtaSection() {
         </Reveal>
         <Reveal delayMs={220}>
           <div className="text-dim mx-auto mt-[18px] flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 text-[0.85rem] min-[560px]:gap-x-3">
-            <span>{launchCopy.trust[0]}</span>
-            <span
-              aria-hidden
-              className="bg-hairline-strong size-[3px] rounded-full"
-            />
             <span>{launchCopy.trust[1]}</span>
             <span
               aria-hidden
-              className="bg-hairline-strong hidden size-[3px] rounded-full min-[560px]:inline-block"
+              className="bg-hairline-strong size-[3px] rounded-full"
             />
             <span>{launchCopy.trust[2]}</span>
           </div>

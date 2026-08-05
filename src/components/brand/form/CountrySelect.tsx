@@ -64,7 +64,7 @@ export function CountrySelect({
               <SearchIcon className="text-dim size-4 shrink-0" />
               <Combobox.Input
                 placeholder="Search countries"
-                className="text-text placeholder:text-dim w-full bg-transparent text-[0.95rem] outline-none"
+                className="text-text placeholder:text-muted w-full bg-transparent text-[0.95rem] outline-none"
               />
             </div>
 

@@ -69,11 +69,3 @@ export const waitlistChat: ChatMessage[] = [
     text: "You’re in 🙌 I’ll message you right here the moment your spot opens. Sit tight.",
   },
 ];
-
-// Hero headline typewriter fragments (landing <Typewriter>).
-export const heroTypewriter: string[] = [
-  "texts you back.",
-  "keeps you going.",
-  "won’t let you quit.",
-  "checks in daily.",
-];

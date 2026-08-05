@@ -8,6 +8,8 @@ import {
 } from "@/components/ui/accordion";
 import { faqs } from "@/content/faqs";
 
+const featuredFaqs = faqs.filter((faq) => faq.featured);
+
 export function FaqSection() {
   return (
     <Section id="faq" divided containerWidth="narrow">
@@ -17,7 +19,7 @@ export function FaqSection() {
         className="mb-[34px]"
       />
       <Accordion>
-        {faqs.map((faq) => (
+        {featuredFaqs.map((faq) => (
           <AccordionItem key={faq.q} value={faq.q}>
             <AccordionTrigger>{faq.q}</AccordionTrigger>
             <AccordionContent>{faq.a}</AccordionContent>
