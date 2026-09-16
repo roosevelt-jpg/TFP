@@ -30,15 +30,30 @@ const PERKS = [
   },
 ];
 
-export function FounderOfferSection() {
+export function FounderOfferSection({
+  seatsLeft,
+}: {
+  seatsLeft?: number | null;
+}) {
+  const heading =
+    seatsLeft === 0
+      ? "Founder places are sold out."
+      : seatsLeft != null
+        ? `${seatsLeft} founder seats left.`
+        : `Only the first ${LAUNCH_PROMOTION_LIMIT} members.`;
+
   return (
     <Section divided id="founder-offer">
       <SectionHeader
         eyebrow="Founder launch offer"
-        heading={`Only the first ${LAUNCH_PROMOTION_LIMIT} members.`}
+        heading={heading}
         headingChars={24}
         leadChars={50}
-        lead="Standard pricing returns once the founder places are gone."
+        lead={
+          seatsLeft === 0
+            ? "Join the waitlist for the next cohort."
+            : "Standard pricing returns once the founder places are gone."
+        }
       />
       <div className="mt-11 grid gap-3.5 md:grid-cols-3 md:grid-rows-[auto_1fr]">
         {PERKS.map((perk, i) => (

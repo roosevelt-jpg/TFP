@@ -1,5 +1,6 @@
 import { CtaButton } from "@/components/brand/CtaButton";
 import { StickyCtaBar } from "@/components/brand/StickyCtaBar";
+import { Testimonial } from "@/components/brand/Testimonial";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
@@ -14,8 +15,14 @@ import { OutcomeSection } from "@/components/sections/OutcomeSection";
 import { PricingSection } from "@/components/sections/PricingSection";
 import { TransformationsSection } from "@/components/sections/TransformationsSection";
 import { VslSection } from "@/components/sections/VslSection";
+import { Section } from "@/components/layout/Section";
 import { SIGNUP_HREF } from "@/lib/launch";
-import { launchCopy } from "@/content/launch-copy";
+import {
+  getFounderSeatsRemaining,
+  getLandingCopy,
+} from "@/lib/cms/landing";
+import { testimonials } from "@/content/testimonials";
+import { TrackCta } from "@/components/analytics/TrackCta";
 
 const NAV = [
   { label: "How it works", href: "/how-it-works" },
@@ -32,46 +39,67 @@ const FOOTER_LINKS = [
   { label: "Contact", href: "/support" },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const [copy, seatsLeft] = await Promise.all([
+    getLandingCopy(),
+    getFounderSeatsRemaining(),
+  ]);
+  const featured = testimonials.find((t) => t.featured) ?? testimonials[0];
+
   return (
     <>
       <SkipLink />
-      <AnnouncementBar
-        href={
-          "announcementHref" in launchCopy
-            ? launchCopy.announcementHref
-            : undefined
-        }
-      >
-        {launchCopy.announcement}
+      <AnnouncementBar href={SIGNUP_HREF}>
+        {copy.announcement}
+        {seatsLeft != null
+          ? ` · ${seatsLeft} founder seats left`
+          : null}
       </AnnouncementBar>
       <SiteHeader
         nav={NAV}
         ctaOnMobile={false}
         cta={
-          // Desktop only: on mobile the hero CTA and the sticky bar already
-          // cover it, and dropping it lets the logo sit centred.
-          <CtaButton
-            href={SIGNUP_HREF}
-            size="sm"
-            className="hidden whitespace-nowrap min-[900px]:inline-flex"
-          >
-            {launchCopy.cta}
-          </CtaButton>
+          <TrackCta placement="header">
+            <CtaButton
+              href={SIGNUP_HREF}
+              size="sm"
+              className="hidden whitespace-nowrap min-[900px]:inline-flex"
+            >
+              {copy.cta}
+            </CtaButton>
+          </TrackCta>
         }
       />
 
       <main id="main" className="relative z-10">
-        <HeroSection />
+        <HeroSection
+          headline={copy.heroHeadline}
+          subhead={copy.heroSubhead}
+          ctaLabel={copy.cta}
+          trust={copy.heroTrust}
+        />
         <VslSection />
         <AboutSection />
         <TransformationsSection />
         <OutcomeSection />
         <FeaturesSection />
-        <FounderOfferSection />
-        <PricingSection />
+        <FounderOfferSection seatsLeft={seatsLeft} />
+        <PricingSection
+          ctaLabel={copy.cta}
+          reassurance={copy.reassurance}
+        />
+        <Section id="social-proof" divided>
+          <div className="mx-auto max-w-[640px]">
+            <Testimonial
+              quote={featured.quote}
+              name={featured.name}
+              detail={featured.detail}
+              featured
+            />
+          </div>
+        </Section>
         <FaqSection />
-        <FinalCtaSection />
+        <FinalCtaSection body={copy.finalCta} ctaLabel={copy.cta} />
       </main>
 
       <SiteFooter
@@ -80,9 +108,13 @@ export default function Home() {
       />
 
       <StickyCtaBar
-        primary={launchCopy.stickyLabel}
-        secondary={launchCopy.stickySecondary}
-        cta={{ label: launchCopy.cta, href: SIGNUP_HREF }}
+        primary={copy.stickyLabel}
+        secondary={
+          seatsLeft != null
+            ? `${seatsLeft} founder seats left`
+            : copy.stickySecondary
+        }
+        cta={{ label: copy.cta, href: SIGNUP_HREF }}
       />
     </>
   );

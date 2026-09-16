@@ -35,6 +35,35 @@ export const env = createEnv({
     // Private store holding the master programme and each watermarked copy.
     FORMULA_BLOB_STORE_ID: z.string().min(1),
     BLOB_READ_WRITE_TOKEN: z.string().min(1),
+
+    // TFP Command (/admin) — Better Auth session secret (32+ chars).
+    BETTER_AUTH_SECRET: z.string().min(32),
+
+    // Telegram CTO channel. Optional until Phase 2; locked to Kane's chat.
+    TELEGRAM_BOT_TOKEN: z.string().min(1).optional(),
+    TELEGRAM_KANE_CHAT_ID: z.string().min(1).optional(),
+    TELEGRAM_LEAH_CHAT_ID: z.string().min(1).optional(),
+
+    // Phase 1+ read connectors (optional until Step 0 credentials land).
+    SHOPIFY_SHOP_DOMAIN: z.string().min(1).optional(),
+    SHOPIFY_ADMIN_TOKEN: z.string().min(1).optional(),
+    META_ACCESS_TOKEN: z.string().min(1).optional(),
+    META_AD_ACCOUNT_ID: z.string().min(1).optional(),
+    KLAVIYO_API_KEY: z.string().min(1).optional(),
+    CALENDLY_TOKEN: z.string().min(1).optional(),
+    N8N_API_URL: z.url().optional(),
+    N8N_API_KEY: z.string().min(1).optional(),
+    GMAIL_CLIENT_ID: z.string().min(1).optional(),
+    GMAIL_CLIENT_SECRET: z.string().min(1).optional(),
+    GMAIL_REFRESH_TOKEN: z.string().min(1).optional(),
+    REVOLUT_API_TOKEN: z.string().min(1).optional(),
+    FRAME_IO_TOKEN: z.string().min(1).optional(),
+    ANTHROPIC_API_KEY: z.string().min(1).optional(),
+
+    // Seed / bootstrap for the first Kane admin (dev + first deploy only).
+    ADMIN_BOOTSTRAP_EMAIL: z.email().optional(),
+    ADMIN_BOOTSTRAP_PASSWORD: z.string().min(12).optional(),
+    ADMIN_BOOTSTRAP_NAME: z.string().min(1).optional(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.url(),

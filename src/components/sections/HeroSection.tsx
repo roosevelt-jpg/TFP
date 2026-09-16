@@ -5,12 +5,19 @@ import { PhoneMockup } from "@/components/brand/PhoneMockup";
 import { Reveal } from "@/components/brand/Reveal";
 import { SectionHeading } from "@/components/brand/SectionHeading";
 import { TrustLine } from "@/components/brand/TrustLine";
+import { TrackCta } from "@/components/analytics/TrackCta";
 import { Container } from "@/components/layout/Container";
 import { SIGNUP_HREF } from "@/lib/launch";
 import { heroChat } from "@/content/chat-scripts";
-import { launchCopy } from "@/content/launch-copy";
 
-export function HeroSection() {
+type Props = {
+  headline: string;
+  subhead: string;
+  ctaLabel: string;
+  trust: string;
+};
+
+export function HeroSection({ headline, subhead, ctaLabel, trust }: Props) {
   return (
     <section
       id="top"
@@ -39,29 +46,26 @@ export function HeroSection() {
                 size="display"
                 className="text-balance text-[clamp(2rem,4.2vw,3.2rem)]"
               >
-                Lose fat. Build muscle. Become stronger, fitter and more
-                functional in 8 weeks.
+                {headline}
               </SectionHeading>
             </Reveal>
             <Reveal delayMs={120}>
               <p className="text-muted max-w-[33ch] text-lead leading-[1.6]">
-                An 8-week training system with your own Performance Coach inside
-                WhatsApp to keep you accountable every step of the way.
+                {subhead}
               </p>
             </Reveal>
             <Reveal delayMs={180}>
               <div className="flex flex-wrap items-center justify-center gap-[13px] min-[940px]:justify-start">
-                <CtaButton href={SIGNUP_HREF}>{launchCopy.cta}</CtaButton>
-                {/* Scrolls to the VSL rather than routing to /how-it-works:
-                    the video directly below answers the same question without
-                    sending anyone off the page. */}
+                <TrackCta placement="hero">
+                  <CtaButton href={SIGNUP_HREF}>{ctaLabel}</CtaButton>
+                </TrackCta>
                 <CtaButton href="#watch" variant="ghost" withShine={false}>
                   Watch Kane explain it
                 </CtaButton>
               </div>
             </Reveal>
             <Reveal delayMs={240}>
-              <TrustLine>{launchCopy.heroTrust}</TrustLine>
+              <TrustLine>{trust}</TrustLine>
             </Reveal>
           </div>
           <Reveal

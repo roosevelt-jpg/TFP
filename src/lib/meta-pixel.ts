@@ -113,3 +113,17 @@ export function trackLead(eventId: string): void {
     // Best-effort only.
   }
 }
+
+export function trackInitiateCheckout(eventId?: string): void {
+  try {
+    if (getTrackingConsent() !== "granted") return;
+    fbq?.(
+      "track",
+      "InitiateCheckout",
+      {},
+      eventId ? { eventID: eventId } : undefined,
+    );
+  } catch {
+    // Best-effort only.
+  }
+}

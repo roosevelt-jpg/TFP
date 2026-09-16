@@ -1,15 +1,22 @@
 import { PricingCard } from "@/components/brand/PricingCard";
 import { Reveal } from "@/components/brand/Reveal";
 import { SectionHeader } from "@/components/brand/SectionHeader";
+import { TrackCta } from "@/components/analytics/TrackCta";
+import { TrackPricingView } from "@/components/analytics/TrackPricingView";
 import { Section } from "@/components/layout/Section";
 import { SIGNUP_HREF } from "@/lib/launch";
 import { CURRENCY, PRICE_MONTHLY, PRICE_TODAY } from "@/lib/pricing";
-import { launchCopy } from "@/content/launch-copy";
 import { pricingFeatures } from "@/content/marketing";
 
-export function PricingSection() {
+type Props = {
+  ctaLabel: string;
+  reassurance: string;
+};
+
+export function PricingSection({ ctaLabel, reassurance }: Props) {
   return (
     <Section id="pricing" divided>
+      <TrackPricingView />
       <SectionHeader
         align="center"
         eyebrow="Simple, honest pricing"
@@ -17,13 +24,16 @@ export function PricingSection() {
       />
       <Reveal delayMs={120}>
         <div className="mt-10">
-          <PricingCard
-            priceToday={PRICE_TODAY}
-            priceMonthly={PRICE_MONTHLY}
-            currency={CURRENCY}
-            features={pricingFeatures}
-            cta={{ label: launchCopy.cta, href: SIGNUP_HREF }}
-          />
+          <TrackCta placement="pricing">
+            <PricingCard
+              priceToday={PRICE_TODAY}
+              priceMonthly={PRICE_MONTHLY}
+              currency={CURRENCY}
+              features={pricingFeatures}
+              cta={{ label: ctaLabel, href: SIGNUP_HREF }}
+              reassurance={reassurance}
+            />
+          </TrackCta>
         </div>
       </Reveal>
     </Section>

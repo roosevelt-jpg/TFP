@@ -9,25 +9,49 @@ export function proxy(request: NextRequest) {
   const live = process.env.PAYMENTS_LIVE === "true";
   const { pathname, search } = request.nextUrl;
 
+  // /admin auth is enforced in the AdminShell / Better Auth session layer.
+  // Proxy only keeps marketing waitlist/checkout gates.
+
   if (WAITLIST_ROUTES.includes(pathname)) {
     if (!live) return NextResponse.next();
 
-    // Redirected rather than 404'd: every waitlist email links here, and those
-    // people are precisely the launch audience. The token rides along so a
-    // launch-email link still prefills checkout.
     return NextResponse.redirect(new URL(`/checkout${search}`, request.url));
+  }
+
+  if (
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/telegram") ||
+    pathname.startsWith("/api/frame") ||
+    pathname.startsWith("/api/admin")
+  ) {
+    return NextResponse.next();
   }
 
   if (live) return NextResponse.next();
 
-  // Rewrite to a path that matches no route, which renders the 404 page. The
-  // segment is arbitrary; it just has to not exist.
-  return NextResponse.rewrite(new URL("/_payments-not-live", request.url));
+  if (
+    pathname === "/checkout" ||
+    pathname === "/checkout-cancelled" ||
+    pathname === "/success"
+  ) {
+    return NextResponse.rewrite(new URL("/_payments-not-live", request.url));
+  }
+
+  return NextResponse.next();
 }
 
-// Must be literal: Next analyses this statically at build time, so a spread or
-// a reference to the const above fails the build. Keep it in sync with
-// WAITLIST_ROUTES — a route missing here is reachable in both states.
 export const config = {
-  matcher: ["/checkout", "/checkout-cancelled", "/success", "/join", "/joined"],
+  matcher: [
+    "/checkout",
+    "/checkout-cancelled",
+    "/success",
+    "/join",
+    "/joined",
+    "/admin/:path*",
+    "/api/auth/:path*",
+    "/api/telegram/:path*",
+    "/api/frame/:path*",
+    "/api/admin/:path*",
+  ],
 };

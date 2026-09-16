@@ -1,0 +1,1538 @@
+/* TFP Command tokens — scoped under .tfp-command so marketing :root stays intact. */
+.tfp-command {
+  --cmd-bg: #0a0a0a;
+  --cmd-bg-raised: #111110;
+  --cmd-surface: #161514;
+  --cmd-surface-2: #1c1b19;
+  --cmd-border: #2a2825;
+  --cmd-border-soft: #201f1c;
+  --cmd-text: #f1efe8;
+  --cmd-text-muted: #9c988d;
+  --cmd-text-dim: #67635a;
+  --cmd-accent: #e3a63e;
+  --cmd-accent-soft: #3a2f18;
+  --cmd-accent-text: #0a0a0a;
+  --cmd-green: #5aab7e;
+  --cmd-green-soft: #16261e;
+  --cmd-red: #e0554a;
+  --cmd-red-soft: #2a1815;
+  --cmd-amber: #d8a542;
+  --cmd-amber-soft: #2a2114;
+  --cmd-blue: #6f93c9;
+  --cmd-radius-sm: 4px;
+  --cmd-radius: 8px;
+  --cmd-font-display: var(--cmd-font-display-next), "Barlow Condensed", sans-serif;
+  --cmd-font-body: var(--cmd-font-body-next), Inter, sans-serif;
+  --cmd-font-mono: var(--cmd-font-mono-next), "JetBrains Mono", monospace;
+  --cmd-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35),
+    0 8px 24px -12px rgba(0, 0, 0, 0.5);
+  --cmd-shadow-raised: 0 4px 10px rgba(0, 0, 0, 0.4),
+    0 16px 40px -16px rgba(0, 0, 0, 0.6);
+  --cmd-gloss: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.035),
+    rgba(255, 255, 255, 0) 40%
+  );
+
+  background:
+    radial-gradient(
+      1100px 560px at 14% -8%,
+      color-mix(in srgb, var(--cmd-accent) 7%, transparent),
+      transparent 60%
+    ),
+    var(--cmd-bg);
+  color: var(--cmd-text);
+  font-family: var(--cmd-font-body);
+  font-size: 13.5px;
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.tfp-command[data-theme="light"] {
+  --cmd-bg: #f4f2ec;
+  --cmd-bg-raised: #ffffff;
+  --cmd-surface: #ffffff;
+  --cmd-surface-2: #f1efe7;
+  --cmd-border: #e3ded1;
+  --cmd-border-soft: #ebe7db;
+  --cmd-text: #1c1a15;
+  --cmd-text-muted: #6b665a;
+  --cmd-text-dim: #9a9484;
+  --cmd-accent: #b9791f;
+  --cmd-accent-soft: #f7e8cc;
+  --cmd-accent-text: #ffffff;
+  --cmd-green: #2f8558;
+  --cmd-green-soft: #e3f2e9;
+  --cmd-red: #c8453a;
+  --cmd-red-soft: #fbe6e3;
+  --cmd-amber: #b98526;
+  --cmd-amber-soft: #f8ecd4;
+  --cmd-blue: #3e6bad;
+  --cmd-shadow-card: 0 1px 2px rgba(30, 25, 10, 0.04),
+    0 8px 20px -14px rgba(30, 25, 10, 0.18);
+  --cmd-shadow-raised: 0 4px 10px rgba(30, 25, 10, 0.06),
+    0 20px 40px -20px rgba(30, 25, 10, 0.22);
+  --cmd-gloss: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.6),
+    rgba(255, 255, 255, 0) 40%
+  );
+}
+
+.tfp-command * {
+  box-sizing: border-box;
+}
+
+.tfp-command ::selection {
+  background: var(--cmd-accent);
+  color: var(--cmd-accent-text);
+}
+
+.tfp-command a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.tfp-command button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.tfp-command h1,
+.tfp-command h2,
+.tfp-command h3,
+.tfp-command h4 {
+  font-family: var(--cmd-font-display);
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 0.2px;
+}
+
+.tfp-command .cmd-num {
+  font-family: var(--cmd-font-display);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.tfp-command .cmd-mono {
+  font-family: var(--cmd-font-mono);
+}
+
+.tfp-command.cms-on [data-cms] {
+  outline: 1px dashed color-mix(in srgb, var(--cmd-accent) 55%, transparent);
+  outline-offset: 2px;
+  border-radius: 3px;
+  cursor: text;
+}
+
+.tfp-command.cms-on [data-cms]:hover {
+  background: color-mix(in srgb, var(--cmd-accent) 10%, transparent);
+}
+
+.tfp-command.cms-on [data-cms]:focus {
+  outline: 1.5px solid var(--cmd-accent);
+  background: color-mix(in srgb, var(--cmd-accent) 14%, transparent);
+}
+
+.tfp-command .cmd-app {
+  display: grid;
+  grid-template-columns: 236px 1fr;
+  min-height: 100vh;
+}
+
+.tfp-command .cmd-sidebar {
+  background: var(--cmd-bg-raised);
+  border-right: 1px solid var(--cmd-border-soft);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.tfp-command .cmd-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--cmd-border-soft);
+}
+
+.tfp-command .cmd-sidebar-logo {
+  height: 28px;
+  width: auto;
+  max-width: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+.tfp-command .cmd-brand-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--cmd-accent) 100%, white 15%),
+    var(--cmd-accent) 60%,
+    color-mix(in srgb, var(--cmd-accent) 100%, black 20%)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cmd-accent-text);
+  font-family: var(--cmd-font-display);
+  font-weight: 700;
+  font-size: 16px;
+  flex: none;
+}
+
+.tfp-command .cmd-brand-name {
+  font-family: var(--cmd-font-display);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.tfp-command .cmd-brand-sub {
+  font-size: 10.5px;
+  color: var(--cmd-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 2px;
+}
+
+.tfp-command .cmd-nav {
+  padding: 10px 10px 14px;
+  flex: 1;
+}
+
+.tfp-command .cmd-nav-group {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--cmd-text-dim);
+  padding: 14px 10px 6px;
+  text-transform: uppercase;
+}
+
+.tfp-command .cmd-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--cmd-radius-sm);
+  color: var(--cmd-text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 1px;
+  border: 1px solid transparent;
+}
+
+.tfp-command .cmd-nav-item svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  opacity: 0.85;
+}
+
+.tfp-command .cmd-nav-item:hover {
+  background: var(--cmd-surface);
+  color: var(--cmd-text);
+}
+
+.tfp-command .cmd-nav-item.active {
+  background: var(--cmd-surface-2);
+  color: var(--cmd-text);
+  border-color: var(--cmd-border);
+}
+
+.tfp-command .cmd-nav-item.active svg {
+  color: var(--cmd-accent);
+  opacity: 1;
+}
+
+.tfp-command .cmd-nav-item .count {
+  margin-left: auto;
+  font-size: 10.5px;
+  font-family: var(--cmd-font-mono);
+  color: var(--cmd-text-dim);
+  background: var(--cmd-surface-2);
+  padding: 1px 6px;
+  border-radius: 20px;
+}
+
+.tfp-command .cmd-nav-item.has-p1 .count {
+  background: var(--cmd-red-soft);
+  color: var(--cmd-red);
+}
+
+.tfp-command .cmd-sidebar-foot {
+  padding: 12px;
+  border-top: 1px solid var(--cmd-border-soft);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.tfp-command .cmd-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--cmd-surface-2);
+  border: 1px solid var(--cmd-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cmd-accent);
+  flex: none;
+  overflow: hidden;
+}
+
+.tfp-command .cmd-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tfp-command .cmd-avatar-lg {
+  width: 56px;
+  height: 56px;
+  font-size: 14px;
+}
+
+.tfp-command .cmd-success {
+  color: var(--cmd-green);
+  font-size: 12px;
+}
+
+.tfp-command .cmd-cms-save-status {
+  font-size: 11px;
+  color: var(--cmd-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.tfp-command .cmd-cms-save-status[data-state="saving"] {
+  color: var(--cmd-amber);
+}
+
+.tfp-command .cmd-cms-save-status[data-state="saved"] {
+  color: var(--cmd-green);
+}
+
+.tfp-command .cmd-cms-save-status[data-state="error"] {
+  color: var(--cmd-red);
+}
+
+.tfp-command .cmd-sf-name {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.tfp-command .cmd-sf-role {
+  font-size: 10.5px;
+  color: var(--cmd-text-dim);
+}
+
+.tfp-command .cmd-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tfp-command .cmd-topbar {
+  height: 56px;
+  flex: none;
+  border-bottom: 1px solid var(--cmd-border-soft);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 22px;
+  position: sticky;
+  top: 0;
+  background: color-mix(in srgb, var(--cmd-bg) 90%, transparent);
+  backdrop-filter: blur(6px);
+  z-index: 20;
+}
+
+.tfp-command .cmd-crumb {
+  font-size: 11px;
+  color: var(--cmd-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.tfp-command .cmd-page-title {
+  font-family: var(--cmd-font-display);
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.tfp-command .cmd-topbar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tfp-command .cmd-topbar-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--cmd-surface);
+  border: 1px solid var(--cmd-border);
+  border-radius: var(--cmd-radius-sm);
+  padding: 6px 10px;
+  width: 190px;
+  color: var(--cmd-text-dim);
+  font-size: 12px;
+}
+
+.tfp-command .cmd-topbar-search svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.tfp-command .cmd-topbar-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--cmd-border);
+  background: var(--cmd-surface);
+  border-radius: 20px;
+  padding: 5px 5px 5px 11px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cmd-text-muted);
+}
+
+.tfp-command .cmd-switch {
+  width: 30px;
+  height: 17px;
+  border-radius: 20px;
+  background: var(--cmd-surface-2);
+  border: 1px solid var(--cmd-border);
+  position: relative;
+  flex: none;
+}
+
+.tfp-command .cmd-switch::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--cmd-text-dim);
+}
+
+.tfp-command .cmd-switch.on {
+  background: color-mix(in srgb, var(--cmd-accent) 35%, var(--cmd-surface-2));
+  border-color: var(--cmd-accent);
+}
+
+.tfp-command .cmd-switch.on::after {
+  transform: translateX(13px);
+  background: var(--cmd-accent);
+}
+
+.tfp-command .cmd-topbar-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--cmd-radius-sm);
+  border: 1px solid var(--cmd-border);
+  background: var(--cmd-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cmd-text-muted);
+  position: relative;
+}
+
+.tfp-command .cmd-topbar-icon-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.tfp-command .cmd-dot-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--cmd-red);
+  color: #fff;
+  font-size: 9px;
+  font-family: var(--cmd-font-mono);
+  min-width: 14px;
+  height: 14px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  border: 2px solid var(--cmd-bg);
+}
+
+.tfp-command .cmd-notif {
+  position: relative;
+}
+
+.tfp-command .cmd-notif-live {
+  position: absolute;
+  left: 2px;
+  bottom: 2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cmd-text-dim);
+}
+
+.tfp-command .cmd-notif-live.on {
+  background: var(--cmd-green);
+  box-shadow: 0 0 0 2px var(--cmd-surface);
+}
+
+.tfp-command .cmd-notif-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(360px, calc(100vw - 32px));
+  max-height: min(420px, 70vh);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--cmd-surface);
+  border: 1px solid var(--cmd-border);
+  border-radius: var(--cmd-radius);
+  box-shadow: var(--cmd-shadow-raised);
+  z-index: 40;
+}
+
+.tfp-command .cmd-notif-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 12px 10px;
+  border-bottom: 1px solid var(--cmd-border-soft);
+}
+
+.tfp-command .cmd-notif-title {
+  font-family: var(--cmd-font-display);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.tfp-command .cmd-notif-sub {
+  font-size: 10.5px;
+  color: var(--cmd-text-dim);
+  margin-top: 2px;
+}
+
+.tfp-command .cmd-notif-list {
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.tfp-command .cmd-notif-empty {
+  padding: 18px 10px;
+  text-align: center;
+  color: var(--cmd-text-muted);
+  font-size: 12.5px;
+}
+
+.tfp-command .cmd-notif-item {
+  display: block;
+  padding: 10px 10px;
+  border-radius: var(--cmd-radius-sm);
+  border: 1px solid transparent;
+  color: inherit;
+  text-decoration: none;
+}
+
+.tfp-command .cmd-notif-item:hover {
+  background: var(--cmd-surface-2);
+  border-color: var(--cmd-border-soft);
+}
+
+.tfp-command .cmd-notif-item.p1 {
+  border-left: 2px solid var(--cmd-red);
+}
+
+.tfp-command .cmd-notif-item.p2 {
+  border-left: 2px solid var(--cmd-amber);
+}
+
+.tfp-command .cmd-notif-item.p3,
+.tfp-command .cmd-notif-item.info {
+  border-left: 2px solid var(--cmd-blue);
+}
+
+.tfp-command .cmd-notif-item-kind {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cmd-text-dim);
+  margin-bottom: 2px;
+}
+
+.tfp-command .cmd-notif-item-title {
+  font-size: 12.5px;
+  line-height: 1.35;
+}
+
+.tfp-command .cmd-notif-item-meta {
+  font-size: 10.5px;
+  color: var(--cmd-text-dim);
+  margin-top: 4px;
+}
+
+.tfp-command .cmd-content {
+  padding: 22px 26px 60px;
+  max-width: 1400px;
+}
+
+.tfp-command .cmd-page-lead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 20px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.tfp-command .cmd-page-lead-line {
+  font-size: 13.5px;
+  color: var(--cmd-text-muted);
+  max-width: 640px;
+}
+
+.tfp-command .cmd-page-lead-line strong {
+  color: var(--cmd-text);
+  font-weight: 600;
+}
+
+.tfp-command .cmd-freshness {
+  font-size: 10px;
+  color: var(--cmd-text-dim);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.tfp-command .cmd-section-note {
+  font-size: 11.5px;
+  color: var(--cmd-text-dim);
+  background: var(--cmd-surface-2);
+  border-left: 2px solid var(--cmd-accent);
+  padding: 9px 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.tfp-command .cmd-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.tfp-command .cmd-kpi-card {
+  background: var(--cmd-surface) var(--cmd-gloss);
+  border: 1px solid var(--cmd-border);
+  border-radius: var(--cmd-radius);
+  padding: 14px 16px;
+  box-shadow: var(--cmd-shadow-card);
+}
+
+.tfp-command .cmd-kpi-label {
+  font-size: 11.5px;
+  color: var(--cmd-text-muted);
+  margin-bottom: 8px;
+}
+
+.tfp-command .cmd-kpi-value {
+  font-family: var(--cmd-font-display);
+  font-size: 27px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.tfp-command .cmd-kpi-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.tfp-command .cmd-kpi-delta {
+  font-size: 11.5px;
+  font-weight: 600;
+  font-family: var(--cmd-font-mono);
+}
+
+.tfp-command .cmd-kpi-delta.up {
+  color: var(--cmd-green);
+}
+
+.tfp-command .cmd-kpi-delta.down {
+  color: var(--cmd-red);
+}
+
+.tfp-command .cmd-kpi-delta.flat {
+  color: var(--cmd-text-dim);
+}
+
+.tfp-command .cmd-kpi-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.tfp-command .cmd-badge {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.tfp-command .cmd-badge::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
+.tfp-command .cmd-badge-verified {
+  background: var(--cmd-green-soft);
+  color: var(--cmd-green);
+}
+
+.tfp-command .cmd-badge-recorded {
+  background: #1a2230;
+  color: var(--cmd-blue);
+}
+
+.tfp-command .cmd-badge-calculated {
+  background: var(--cmd-accent-soft);
+  color: var(--cmd-accent);
+}
+
+.tfp-command .cmd-badge-p1 {
+  background: var(--cmd-red-soft);
+  color: var(--cmd-red);
+}
+
+.tfp-command .cmd-badge-p2 {
+  background: var(--cmd-amber-soft);
+  color: var(--cmd-amber);
+}
+
+.tfp-command .cmd-badge-p3 {
+  background: var(--cmd-surface-2);
+  color: var(--cmd-text-muted);
+}
+
+.tfp-command .cmd-badge-live {
+  background: var(--cmd-green-soft);
+  color: var(--cmd-green);
+}
+
+.tfp-command .cmd-badge-paused {
+  background: var(--cmd-surface-2);
+  color: var(--cmd-text-dim);
+}
+
+.tfp-command .cmd-badge-issue {
+  background: var(--cmd-red-soft);
+  color: var(--cmd-red);
+}
+
+.tfp-command .cmd-panel {
+  background: var(--cmd-surface) var(--cmd-gloss);
+  border: 1px solid var(--cmd-border);
+  border-radius: var(--cmd-radius);
+  margin-bottom: 16px;
+  overflow: hidden;
+  box-shadow: var(--cmd-shadow-card);
+}
+
+.tfp-command .cmd-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--cmd-border-soft);
+  flex-wrap: wrap;
+}
+
+.tfp-command .cmd-panel-title {
+  font-family: var(--cmd-font-display);
+  font-size: 15.5px;
+  font-weight: 600;
+}
+
+.tfp-command .cmd-panel-sub {
+  font-size: 11px;
+  color: var(--cmd-text-dim);
+  margin-top: 1px;
+}
+
+.tfp-command .cmd-panel-body {
+  padding: 6px 16px 14px;
+}
+
+.tfp-command .cmd-panel-body.flush {
+  padding: 0;
+}
+
+.tfp-command .cmd-two-col {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.tfp-command .cmd-three-col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.tfp-command table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.tfp-command thead th {
+  text-align: left;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--cmd-text-dim);
+  font-weight: 600;
+  padding: 9px 8px;
+  border-bottom: 1px solid var(--cmd-border-soft);
+  white-space: nowrap;
+}
+
+.tfp-command tbody td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--cmd-border-soft);
+  white-space: nowrap;
+}
+
+.tfp-command tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tfp-command tbody tr:hover {
+  background: var(--cmd-surface-2);
+}
+
+.tfp-command td.num,
+.tfp-command th.num {
+  text-align: right;
+  font-family: var(--cmd-font-mono);
+}
+
+.tfp-command .cell-muted {
+  color: var(--cmd-text-dim);
+}
+
+.tfp-command .cell-strong {
+  font-weight: 600;
+  color: var(--cmd-text);
+}
+
+.tfp-command .cmd-btn {
+  border-radius: var(--cmd-radius-sm);
+  padding: 7px 13px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--cmd-border);
+  background: var(--cmd-surface-2);
+  color: var(--cmd-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tfp-command .cmd-btn-primary {
+  background: var(--cmd-accent);
+  color: var(--cmd-accent-text);
+  border-color: var(--cmd-accent);
+}
+
+.tfp-command .cmd-btn-danger {
+  background: transparent;
+  color: var(--cmd-red);
+  border-color: var(--cmd-red-soft);
+}
+
+.tfp-command .cmd-btn-sm {
+  padding: 5px 10px;
+  font-size: 11px;
+}
+
+.tfp-command .cmd-btn:disabled,
+.tfp-command .cmd-btn.is-done {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.tfp-command .cmd-btn.is-done {
+  background: var(--cmd-green-soft);
+  color: var(--cmd-green);
+  border-color: transparent;
+  opacity: 1;
+}
+
+.tfp-command .cmd-list-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--cmd-border-soft);
+}
+
+.tfp-command .cmd-list-row:last-child {
+  border-bottom: none;
+}
+
+.tfp-command .cmd-list-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: var(--cmd-surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  color: var(--cmd-text-muted);
+}
+
+.tfp-command .cmd-list-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.tfp-command .cmd-list-title {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.tfp-command .cmd-list-sub {
+  font-size: 11px;
+  color: var(--cmd-text-dim);
+  margin-top: 1px;
+}
+
+.tfp-command .cmd-alert-card {
+  display: flex;
+  gap: 12px;
+  padding: 13px 14px;
+  border: 1px solid var(--cmd-border);
+  border-radius: var(--cmd-radius);
+  background: var(--cmd-surface);
+  margin-bottom: 9px;
+  align-items: flex-start;
+}
+
+.tfp-command .cmd-alert-card.p1 {
+  border-left: 3px solid var(--cmd-red);
+}
+
+.tfp-command .cmd-alert-card.p2 {
+  border-left: 3px solid var(--cmd-amber);
+}
+
+.tfp-command .cmd-alert-card.p3 {
+  border-left: 3px solid var(--cmd-text-dim);
+}
+
+.tfp-command .cmd-alert-id {
+  font-family: var(--cmd-font-mono);
+  font-size: 10px;
+  color: var(--cmd-text-dim);
+}
+
+.tfp-command .cmd-alert-what {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 2px 0 4px;
+}
+
+.tfp-command .cmd-alert-meta {
+  font-size: 11px;
+  color: var(--cmd-text-dim);
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tfp-command .cmd-alert-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+  flex: none;
+}
+
+.tfp-command .cmd-approval-card {
+  border: 1px solid var(--cmd-border);
+  border-radius: var(--cmd-radius);
+  background: var(--cmd-surface);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+
+.tfp-command .cmd-approval-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.tfp-command .cmd-approval-what {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.tfp-command .cmd-approval-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  font-size: 11.5px;
+  margin: 10px 0;
+  background: var(--cmd-surface-2);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.tfp-command .cmd-approval-grid div span {
+  display: block;
+  color: var(--cmd-text-dim);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 2px;
+}
+
+.tfp-command .cmd-approval-check {
+  font-size: 11.5px;
+  color: var(--cmd-text-muted);
+  background: var(--cmd-accent-soft);
+  border-radius: 6px;
+  padding: 9px 12px;
+  margin-bottom: 10px;
+  border: 1px dashed var(--cmd-accent);
+}
+
+.tfp-command .cmd-approval-foot {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.tfp-command .cmd-progress {
+  height: 5px;
+  border-radius: 4px;
+  background: var(--cmd-surface-2);
+  overflow: hidden;
+}
+
+.tfp-command .cmd-progress > div {
+  height: 100%;
+  background: var(--cmd-accent);
+  border-radius: 4px;
+}
+
+.tfp-command .cmd-progress.green > div {
+  background: var(--cmd-green);
+}
+
+.tfp-command .cmd-progress.red > div {
+  background: var(--cmd-red);
+}
+
+.tfp-command .cmd-kpi-mini {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--cmd-border-soft);
+}
+
+.tfp-command .cmd-kpi-mini:last-child {
+  border: none;
+}
+
+.tfp-command .cmd-kpi-mini .l {
+  color: var(--cmd-text-muted);
+}
+
+.tfp-command .cmd-kpi-mini .v {
+  font-family: var(--cmd-font-mono);
+  font-weight: 600;
+}
+
+.tfp-command .status-ok {
+  color: var(--cmd-green);
+}
+
+.tfp-command .status-warn {
+  color: var(--cmd-amber);
+}
+
+.tfp-command .status-bad {
+  color: var(--cmd-red);
+}
+
+.tfp-command .cmd-person-card {
+  border: 1px solid var(--cmd-border);
+  background: var(--cmd-surface) var(--cmd-gloss);
+  border-radius: var(--cmd-radius);
+  padding: 15px 16px;
+  box-shadow: var(--cmd-shadow-card);
+}
+
+.tfp-command .cmd-person-top {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  margin-bottom: 11px;
+}
+
+.tfp-command .cmd-person-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--cmd-surface-2);
+  border: 1px solid var(--cmd-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--cmd-font-display);
+  font-weight: 600;
+  color: var(--cmd-accent);
+  font-size: 15px;
+}
+
+.tfp-command .cmd-person-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.tfp-command .cmd-person-role {
+  font-size: 11px;
+  color: var(--cmd-text-dim);
+}
+
+.tfp-command .cmd-pipe-cols {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.tfp-command .cmd-pipe-col {
+  background: var(--cmd-surface-2);
+  border-radius: 8px;
+  padding: 10px;
+  min-height: 120px;
+}
+
+.tfp-command .cmd-pipe-col h4 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--cmd-text-dim);
+  margin-bottom: 9px;
+  font-family: var(--cmd-font-body);
+  font-weight: 600;
+}
+
+.tfp-command .cmd-pipe-card {
+  background: var(--cmd-surface);
+  border: 1px solid var(--cmd-border);
+  border-radius: 6px;
+  padding: 9px 10px;
+  margin-bottom: 7px;
+  font-size: 11.5px;
+}
+
+.tfp-command .cmd-pipe-card .pc-title {
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.tfp-command .cmd-pipe-card .pc-meta {
+  color: var(--cmd-text-dim);
+  font-size: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.tfp-command .cmd-int-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(255px, 1fr));
+  gap: 12px;
+}
+
+.tfp-command .cmd-integration-card {
+  border: 1px solid var(--cmd-border);
+  border-radius: var(--cmd-radius);
+  background: var(--cmd-surface) var(--cmd-gloss);
+  padding: 14px 15px;
+  box-shadow: var(--cmd-shadow-card);
+}
+
+.tfp-command .cmd-int-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tfp-command .cmd-int-name {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.tfp-command .cmd-int-id {
+  font-family: var(--cmd-font-mono);
+  font-size: 10px;
+  color: var(--cmd-text-dim);
+}
+
+.tfp-command .cmd-int-desc {
+  font-size: 11.5px;
+  color: var(--cmd-text-muted);
+  margin-bottom: 10px;
+  min-height: 32px;
+}
+
+.tfp-command .cmd-int-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--cmd-text-dim);
+  border-top: 1px solid var(--cmd-border-soft);
+  padding-top: 8px;
+}
+
+.tfp-command .cmd-role-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 110px;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--cmd-border-soft);
+  align-items: center;
+  font-size: 12px;
+}
+
+.tfp-command .cmd-role-row:last-child {
+  border: none;
+}
+
+.tfp-command .cmd-footer-note {
+  color: var(--cmd-text-dim);
+  font-size: 11px;
+  text-align: center;
+  margin-top: 30px;
+  padding-top: 16px;
+  border-top: 1px solid var(--cmd-border-soft);
+}
+
+.tfp-command .cmd-tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--cmd-surface-2);
+  padding: 3px;
+  border-radius: var(--cmd-radius-sm);
+  width: fit-content;
+  margin-bottom: 16px;
+}
+
+.tfp-command .cmd-tab {
+  padding: 5px 11px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--cmd-text-muted);
+  border-radius: 3px;
+  border: none;
+  background: transparent;
+}
+
+.tfp-command .cmd-tab.active {
+  background: var(--cmd-surface);
+  color: var(--cmd-text);
+}
+
+.tfp-command .cmd-divider {
+  height: 1px;
+  background: var(--cmd-border-soft);
+  margin: 14px 0;
+}
+
+.tfp-command .cmd-cms-banner {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  background: var(--cmd-accent-soft);
+  border: 1px solid color-mix(in srgb, var(--cmd-accent) 45%, transparent);
+  color: var(--cmd-accent);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 9px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.tfp-command.cms-on .cmd-cms-banner {
+  display: flex;
+}
+
+.tfp-command .cmd-hamburger {
+  display: none;
+}
+
+.tfp-command .cmd-sidebar-backdrop {
+  display: none;
+}
+
+/* Same-element selector: login/setup-2fa use `tfp-command cmd-auth-shell`. */
+.tfp-command.cmd-auth-shell {
+  --cmd-accent: #d8231c;
+  --cmd-accent-soft: #3a1614;
+  --cmd-accent-text: #ffffff;
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      900px 480px at 50% 40%,
+      color-mix(in srgb, var(--cmd-accent) 12%, transparent),
+      transparent 62%
+    ),
+    #0a0a0a;
+}
+
+.tfp-command.cmd-auth-shell::before {
+  content: "";
+  position: absolute;
+  inset: -8%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.07;
+  background-image: url("/logo.svg");
+  background-size: 280px auto;
+  background-repeat: repeat;
+  transform: rotate(-18deg);
+  filter: grayscale(1) brightness(1.35);
+}
+
+.tfp-command.cmd-auth-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.tfp-command .cmd-auth-card {
+  width: min(420px, 100%);
+  background: color-mix(in srgb, var(--cmd-surface) 92%, transparent)
+    var(--cmd-gloss);
+  border: 1px solid var(--cmd-border);
+  border-radius: var(--cmd-radius);
+  padding: 28px 24px;
+  box-shadow: var(--cmd-shadow-raised);
+  backdrop-filter: blur(10px);
+  text-align: center;
+}
+
+.tfp-command .cmd-auth-card h1 {
+  font-size: 28px;
+  margin-bottom: 6px;
+}
+
+.tfp-command .cmd-auth-card p {
+  color: var(--cmd-text-muted);
+  margin: 0 0 18px;
+}
+
+.tfp-command .cmd-auth-card .cmd-field,
+.tfp-command .cmd-auth-card .cmd-error {
+  text-align: left;
+}
+
+.tfp-command .cmd-auth-card .cmd-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.tfp-command .cmd-auth-logo {
+  height: 28px;
+  width: auto;
+  max-width: min(260px, 100%);
+  display: block;
+  margin-inline: auto;
+  object-fit: contain;
+}
+
+.tfp-command .cmd-auth-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  width: 100%;
+}
+
+.tfp-command .cmd-auth-brand .cmd-brand-sub {
+  margin: 0;
+  text-align: center;
+}
+
+.tfp-command .cmd-field {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.tfp-command .cmd-field label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--cmd-text-dim);
+  font-weight: 600;
+}
+
+.tfp-command .cmd-field input,
+.tfp-command .cmd-field textarea,
+.tfp-command .cmd-field select {
+  border: 1px solid var(--cmd-border);
+  background: var(--cmd-bg-raised);
+  color: var(--cmd-text);
+  border-radius: var(--cmd-radius-sm);
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.tfp-command .cmd-error {
+  color: var(--cmd-red);
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+@media (max-width: 1100px) {
+  .tfp-command .cmd-two-col,
+  .tfp-command .cmd-three-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1200px) {
+  .tfp-command .cmd-pipe-cols {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1050px) {
+  .tfp-command .cmd-topbar-search {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .tfp-command .cmd-app {
+    grid-template-columns: 1fr;
+  }
+
+  .tfp-command .cmd-sidebar {
+    position: fixed;
+    left: -260px;
+    top: 0;
+    bottom: 0;
+    width: 236px;
+    z-index: 40;
+    transition: left 0.2s ease;
+  }
+
+  .tfp-command .cmd-sidebar.open {
+    left: 0;
+  }
+
+  .tfp-command .cmd-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 35;
+    border: none;
+  }
+
+  .tfp-command .cmd-hamburger {
+    display: flex;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 45;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--cmd-radius-sm);
+    border: 1px solid var(--cmd-border);
+    background: var(--cmd-surface);
+    align-items: center;
+    justify-content: center;
+    color: var(--cmd-text-muted);
+  }
+
+  .tfp-command .cmd-hamburger svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .tfp-command .cmd-topbar {
+    padding-left: 56px;
+  }
+
+  .tfp-command .cmd-content {
+    padding: 16px;
+  }
+
+  .tfp-command .cmd-kpi-value {
+    font-size: 22px;
+  }
+
+  .tfp-command .cmd-pipe-cols {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tfp-command .cmd-approval-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tfp-command .cmd-role-row {
+    grid-template-columns: 1fr;
+  }
+}

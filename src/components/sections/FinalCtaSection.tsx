@@ -2,11 +2,17 @@ import { CtaButton } from "@/components/brand/CtaButton";
 import { GridBackdrop } from "@/components/brand/GridBackdrop";
 import { Reveal } from "@/components/brand/Reveal";
 import { SectionHeading } from "@/components/brand/SectionHeading";
+import { TrackCta } from "@/components/analytics/TrackCta";
 import { Container } from "@/components/layout/Container";
 import { SIGNUP_HREF } from "@/lib/launch";
 import { launchCopy } from "@/content/launch-copy";
 
-export function FinalCtaSection() {
+type Props = {
+  body: string;
+  ctaLabel: string;
+};
+
+export function FinalCtaSection({ body, ctaLabel }: Props) {
   return (
     <section
       id="final"
@@ -21,15 +27,17 @@ export function FinalCtaSection() {
         </Reveal>
         <Reveal delayMs={80}>
           <p className="text-muted mx-auto mt-5 max-w-[46ch] text-lead leading-[1.6]">
-            {launchCopy.finalCta} The hardest part was always starting. This
-            time, you won’t do it alone.
+            {body} The hardest part was always starting. This time, you won&apos;t
+            do it alone.
           </p>
         </Reveal>
         <Reveal delayMs={160}>
           <div className="mt-[30px] flex justify-center">
-            <CtaButton href={SIGNUP_HREF} size="lg">
-              {launchCopy.cta}
-            </CtaButton>
+            <TrackCta placement="final">
+              <CtaButton href={SIGNUP_HREF} size="lg">
+                {ctaLabel}
+              </CtaButton>
+            </TrackCta>
           </div>
         </Reveal>
         <Reveal delayMs={220}>

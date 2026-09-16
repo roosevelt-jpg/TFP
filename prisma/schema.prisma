@@ -279,3 +279,740 @@ model Waitlist {
 
   @@index([createdAt])
 }
+
+// =============================================================================
+// TFP Command — warehouse, auth, CMS (Roosevelt build pack Part 01 §4)
+// Admin UI lives at /admin. Marketing landing stays on / and is CMS-driven.
+// =============================================================================
+
+enum StaffRole {
+  kane
+  leah
+  lemoni
+  indigo
+  viewer
+}
+
+enum DataLabel {
+  verified
+  recorded
+  calculated
+}
+
+enum BusinessLine {
+  supplements
+  coaching
+  training
+  shared
+}
+
+enum AlertSeverity {
+  p1
+  p2
+  p3
+}
+
+enum AlertStatus {
+  open
+  acknowledged
+  resolved
+}
+
+enum ApprovalStatus {
+  pending
+  approved
+  rejected
+  executed
+  expired
+  voided
+}
+
+enum ConnectorStatus {
+  idle
+  running
+  healthy
+  stale
+  error
+  pending_audit
+  phased
+}
+
+enum ContentAssetState {
+  uploaded
+  tagged
+  editing
+  review
+  compliance
+  awaiting_kane
+  scheduled
+  posted
+  archived
+  rejected
+}
+
+enum ProgrammeLine {
+  coaching
+  training
+}
+
+enum EnrolmentStatus {
+  active
+  paused
+  completed
+  cancelled
+  pending_onboarding
+}
+
+enum LeadChannel {
+  instagram
+  whatsapp
+  email
+  other
+}
+
+enum CallOutcome {
+  booked
+  held
+  no_show
+  closed
+  cancelled
+  rescheduled
+}
+
+enum PaymentDueStatus {
+  due
+  awaiting_kane
+  paid
+  cancelled
+}
+
+model User {
+  id               String    @id @default(cuid())
+  name             String
+  email            String    @unique
+  emailVerified    Boolean   @default(false)
+  image            String?
+  createdAt        DateTime  @default(now()) @db.Timestamptz
+  updatedAt        DateTime  @updatedAt @db.Timestamptz
+  role             StaffRole @default(viewer)
+  twoFactorEnabled Boolean   @default(false)
+
+  sessions  Session[]
+  accounts  Account[]
+  twoFactor TwoFactor?
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime @db.Timestamptz
+  token     String   @unique
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime? @db.Timestamptz
+  refreshTokenExpiresAt DateTime? @db.Timestamptz
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @db.Timestamptz
+  updatedAt             DateTime  @updatedAt @db.Timestamptz
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime @db.Timestamptz
+  createdAt  DateTime @default(now()) @db.Timestamptz
+  updatedAt  DateTime @updatedAt @db.Timestamptz
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model TwoFactor {
+  id                      String    @id @default(cuid())
+  secret                  String
+  backupCodes             String
+  userId                  String    @unique
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verified                Boolean   @default(true)
+  failedVerificationCount Int       @default(0)
+  lockedUntil             DateTime? @db.Timestamptz
+
+  @@map("twoFactor")
+}
+
+model CmsDocument {
+  id        String   @id @default(cuid())
+  namespace String
+  key       String
+  value     String
+  version   Int      @default(1)
+  updatedBy String?
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  @@unique([namespace, key])
+  @@index([namespace])
+}
+
+model PersonCustomer {
+  id         String  @id @default(cuid())
+  email      String  @unique
+  phone      String?
+  name       String?
+  shopifyId  String? @unique
+  stripeId   String? @unique
+  ghlId      String? @unique
+  igHandle   String?
+
+  orders       WarehouseOrder[]
+  payments     WarehousePayment[]
+  enrolments   ProgrammeEnrolment[]
+  calls        Call[]
+  leadThreads  LeadThread[]
+  fulfilments  Fulfilment[]
+
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  @@index([phone])
+}
+
+model WarehouseOrder {
+  id             String       @id @default(cuid())
+  shopifyOrderId String       @unique
+  personId       String?
+  person         PersonCustomer? @relation(fields: [personId], references: [id], onDelete: SetNull)
+  businessLine   BusinessLine @default(supplements)
+  orderName      String?
+  grossPence     Int
+  discountPence  Int          @default(0)
+  netPence       Int
+  cogsPence      Int          @default(0)
+  shippingPence  Int          @default(0)
+  refundedPence  Int          @default(0)
+  isSubscription Boolean      @default(false)
+  isStack        Boolean      @default(false)
+  isNewCustomer  Boolean      @default(false)
+  paidAt         DateTime?    @db.Timestamptz
+  currency       String       @default("gbp")
+  label          DataLabel    @default(verified)
+  sourceFreshAt  DateTime?    @db.Timestamptz
+
+  lines       OrderLine[]
+  fulfilment  Fulfilment?
+
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  @@index([paidAt])
+  @@index([personId])
+  @@index([businessLine, paidAt])
+}
+
+model OrderLine {
+  id        String         @id @default(cuid())
+  orderId   String
+  order     WarehouseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  sku       String
+  title     String
+  quantity  Int
+  netPence  Int
+  cogsPence Int            @default(0)
+
+  @@index([orderId])
+  @@index([sku])
+}
+
+model SubscriptionMirror {
+  id               String   @id @default(cuid())
+  contractId       String   @unique
+  product          String
+  interval         String
+  status           String
+  nextBillingAt    DateTime? @db.Timestamptz
+  personEmail      String?
+  label            DataLabel @default(recorded)
+  sourceFreshAt    DateTime? @db.Timestamptz
+  createdAt        DateTime @default(now()) @db.Timestamptz
+  updatedAt        DateTime @updatedAt @db.Timestamptz
+}
+
+model ProgrammeEnrolment {
+  id            String          @id @default(cuid())
+  personId      String
+  person        PersonCustomer  @relation(fields: [personId], references: [id], onDelete: Cascade)
+  line          ProgrammeLine
+  tier          String?
+  pricePence    Int
+  startDate     DateTime        @db.Timestamptz
+  currentWeek   Int             @default(1)
+  endDate       DateTime?       @db.Timestamptz
+  status        EnrolmentStatus @default(active)
+  paymentStatus String?
+  label         DataLabel       @default(verified)
+  sourceFreshAt DateTime?       @db.Timestamptz
+  createdAt     DateTime        @default(now()) @db.Timestamptz
+  updatedAt     DateTime        @updatedAt @db.Timestamptz
+
+  @@index([personId])
+  @@index([line, status])
+}
+
+model WarehousePayment {
+  id              String          @id @default(cuid())
+  stripeChargeId  String?         @unique
+  personId        String?
+  person          PersonCustomer? @relation(fields: [personId], references: [id], onDelete: SetNull)
+  amountPence     Int
+  currency        String          @default("gbp")
+  productTier     String?
+  businessLine    BusinessLine
+  status          String
+  disputeFlag     Boolean         @default(false)
+  label           DataLabel       @default(verified)
+  paidAt          DateTime?       @db.Timestamptz
+  sourceFreshAt   DateTime?       @db.Timestamptz
+  createdAt       DateTime        @default(now()) @db.Timestamptz
+  updatedAt       DateTime        @updatedAt @db.Timestamptz
+
+  @@index([personId])
+  @@index([businessLine, paidAt])
+}
+
+model Call {
+  id            String         @id @default(cuid())
+  calendlyEventId String?      @unique
+  personId      String?
+  person        PersonCustomer? @relation(fields: [personId], references: [id], onDelete: SetNull)
+  inviteeName   String?
+  inviteeEmail  String?
+  eventType     String?
+  scheduledAt   DateTime       @db.Timestamptz
+  outcome       CallOutcome    @default(booked)
+  setter        String?
+  cashCollectedPence Int       @default(0)
+  label         DataLabel      @default(verified)
+  sourceFreshAt DateTime?      @db.Timestamptz
+  createdAt     DateTime       @default(now()) @db.Timestamptz
+  updatedAt     DateTime       @updatedAt @db.Timestamptz
+
+  @@index([scheduledAt])
+  @@index([setter])
+}
+
+model LeadThread {
+  id            String      @id @default(cuid())
+  channel       LeadChannel
+  externalId    String
+  personId      String?
+  person        PersonCustomer? @relation(fields: [personId], references: [id], onDelete: SetNull)
+  contactName   String?
+  snippet       String?
+  intentScore   Int         @default(0)
+  lastInboundAt DateTime?   @db.Timestamptz
+  lastReplyAt   DateTime?   @db.Timestamptz
+  highIntent    Boolean     @default(false)
+  label         DataLabel   @default(verified)
+  sourceFreshAt DateTime?   @db.Timestamptz
+  createdAt     DateTime    @default(now()) @db.Timestamptz
+  updatedAt     DateTime    @updatedAt @db.Timestamptz
+
+  @@unique([channel, externalId])
+  @@index([lastInboundAt])
+}
+
+model Affiliate {
+  id              String   @id @default(cuid())
+  name            String
+  email           String?
+  channel         String?
+  agreementSigned Boolean  @default(false)
+  lastPostLink    String?
+  createdAt       DateTime @default(now()) @db.Timestamptz
+  updatedAt       DateTime @updatedAt @db.Timestamptz
+
+  codes AffiliateCode[]
+}
+
+model AffiliateCode {
+  id           String    @id @default(cuid())
+  affiliateId  String
+  affiliate    Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  code         String    @unique
+  ordersCount  Int       @default(0)
+  commissionPence Int    @default(0)
+  createdAt    DateTime  @default(now()) @db.Timestamptz
+  updatedAt    DateTime  @updatedAt @db.Timestamptz
+
+  @@index([affiliateId])
+}
+
+model StockItem {
+  id              String    @id @default(cuid())
+  sku             String    @unique
+  title           String
+  onHand          Int       @default(0)
+  runRate7d       Float     @default(0)
+  daysOfCover     Float?
+  stackOrdersCover Float?
+  label           DataLabel @default(verified)
+  sourceFreshAt   DateTime? @db.Timestamptz
+  createdAt       DateTime  @default(now()) @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @db.Timestamptz
+}
+
+model Fulfilment {
+  id                String         @id @default(cuid())
+  orderId           String         @unique
+  order             WarehouseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  personId          String?
+  person            PersonCustomer? @relation(fields: [personId], references: [id], onDelete: SetNull)
+  paidAt            DateTime?      @db.Timestamptz
+  fulfilledAt       DateTime?      @db.Timestamptz
+  trackingComplete  Boolean        @default(false)
+  componentGaps     Int            @default(0)
+  hoursToDispatch   Float?
+  carrier           String?
+  region            String         @default("UK")
+  label             DataLabel      @default(verified)
+  sourceFreshAt     DateTime?      @db.Timestamptz
+  createdAt         DateTime       @default(now()) @db.Timestamptz
+  updatedAt         DateTime       @updatedAt @db.Timestamptz
+
+  @@index([fulfilledAt])
+  @@index([region])
+}
+
+model AdDaily {
+  id                String    @id @default(cuid())
+  date              DateTime  @db.Date
+  campaignId        String?
+  campaignName      String?
+  adSetId           String
+  adSetName         String
+  adId              String?
+  adName            String?
+  spendPence        Int       @default(0)
+  impressions       Int       @default(0)
+  clicks            Int       @default(0)
+  purchases7d       Int       @default(0)
+  purchaseValue7dPence Int    @default(0)
+  purchasesIncr     Int       @default(0)
+  purchaseValueIncrPence Int  @default(0)
+  ctr               Float?
+  cpm               Float?
+  frequency         Float?
+  reviewStatus      String?
+  label             DataLabel @default(verified)
+  sourceFreshAt     DateTime? @db.Timestamptz
+  createdAt         DateTime  @default(now()) @db.Timestamptz
+  updatedAt         DateTime  @updatedAt @db.Timestamptz
+
+  @@unique([date, adSetId, adId])
+  @@index([date])
+  @@index([adSetId, date])
+}
+
+model EmailDaily {
+  id              String    @id @default(cuid())
+  date            DateTime  @db.Date
+  name            String
+  kind            String
+  recipients      Int       @default(0)
+  revenuePence    Int       @default(0)
+  opens           Int       @default(0)
+  clicks          Int       @default(0)
+  bounceRate      Float?
+  spamRate        Float?
+  status          String?
+  label           DataLabel @default(verified)
+  sourceFreshAt   DateTime? @db.Timestamptz
+  createdAt       DateTime  @default(now()) @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @db.Timestamptz
+
+  @@index([date])
+  @@index([name, date])
+}
+
+model FinanceTxn {
+  id          String       @id @default(cuid())
+  date        DateTime     @db.Date
+  category    String
+  subcategory String?
+  description String
+  amountPence Int
+  currency    String       @default("gbp")
+  account     String?
+  businessLine BusinessLine @default(shared)
+  rowNumber   Int?
+  uploadBatch String?
+  label       DataLabel    @default(recorded)
+  createdAt   DateTime     @default(now()) @db.Timestamptz
+  updatedAt   DateTime     @updatedAt @db.Timestamptz
+
+  @@index([date])
+  @@index([uploadBatch])
+}
+
+model PaymentDue {
+  id          String           @id @default(cuid())
+  payee       String
+  amountPence Int
+  currency    String           @default("gbp")
+  dueDate     DateTime         @db.Date
+  category    String
+  status      PaymentDueStatus @default(due)
+  isTeamPay   Boolean          @default(false)
+  approvedBy  String?
+  label       DataLabel        @default(recorded)
+  createdAt   DateTime         @default(now()) @db.Timestamptz
+  updatedAt   DateTime         @updatedAt @db.Timestamptz
+
+  @@index([dueDate])
+  @@index([status])
+}
+
+model Alert {
+  id           String        @id @default(cuid())
+  ruleId       String
+  severity     AlertSeverity
+  status       AlertStatus   @default(open)
+  title        String
+  payload      Json
+  firedAt      DateTime      @default(now()) @db.Timestamptz
+  acknowledgedAt DateTime?   @db.Timestamptz
+  resolvedAt   DateTime?     @db.Timestamptz
+  threadKey    String?
+  telegramMsgId String?
+  createdAt    DateTime      @default(now()) @db.Timestamptz
+  updatedAt    DateTime      @updatedAt @db.Timestamptz
+
+  @@index([status, severity])
+  @@index([threadKey])
+  @@index([ruleId, firedAt])
+}
+
+model ApprovalRequest {
+  id                 String         @id @default(cuid())
+  token              String         @unique
+  action             String
+  objectIds          Json
+  beforeState        Json?
+  afterState         Json?
+  reach              String?
+  reversible         Boolean        @default(true)
+  specialistVerdict  String?
+  status             ApprovalStatus @default(pending)
+  approvedAt         DateTime?      @db.Timestamptz
+  rejectedAt         DateTime?      @db.Timestamptz
+  executedAt         DateTime?      @db.Timestamptz
+  verificationResult String?
+  expiresAt          DateTime       @db.Timestamptz
+  payloadHash        String
+  createdBy          String?
+  createdAt          DateTime       @default(now()) @db.Timestamptz
+  updatedAt          DateTime       @updatedAt @db.Timestamptz
+
+  @@index([status, expiresAt])
+}
+
+model KpiValue {
+  id        String    @id @default(cuid())
+  personKey String
+  kpiId     String
+  date      DateTime  @db.Date
+  value     String
+  source    String?
+  label     DataLabel @default(calculated)
+  createdAt DateTime  @default(now()) @db.Timestamptz
+  updatedAt DateTime  @updatedAt @db.Timestamptz
+
+  @@unique([personKey, kpiId, date])
+  @@index([personKey, date])
+}
+
+model ChangeEvent {
+  id        String   @id @default(cuid())
+  objectType String
+  objectId  String
+  changeType String
+  occurredAt DateTime @db.Timestamptz
+  meta      Json?
+  createdAt DateTime @default(now()) @db.Timestamptz
+
+  @@index([objectType, objectId, occurredAt])
+}
+
+model ContentAsset {
+  id             String            @id @default(cuid())
+  hubAssetId     String?           @unique
+  uploader       String
+  tags           Json?
+  creatorLicence Boolean           @default(false)
+  state          ContentAssetState @default(uploaded)
+  brief          String?
+  filmingDay     DateTime?         @db.Date
+  title          String
+  createdAt      DateTime          @default(now()) @db.Timestamptz
+  updatedAt      DateTime          @updatedAt @db.Timestamptz
+
+  postCards PostCard[]
+}
+
+model PostCard {
+  id               String            @id @default(cuid())
+  assetId          String
+  asset            ContentAsset      @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  platform         String
+  account          String
+  scheduledAt      DateTime?         @db.Timestamptz
+  caption          String?
+  coverUrl         String?
+  complianceResult String?
+  compliancePass   Boolean           @default(false)
+  paidBoostFlag    Boolean           @default(false)
+  approvalId       String?
+  postUrl          String?
+  status           ContentAssetState @default(awaiting_kane)
+  createdAt        DateTime          @default(now()) @db.Timestamptz
+  updatedAt        DateTime          @updatedAt @db.Timestamptz
+
+  metrics PostMetric[]
+
+  @@index([status, scheduledAt])
+  @@index([assetId])
+}
+
+model PostMetric {
+  id          String   @id @default(cuid())
+  postCardId  String
+  postCard    PostCard @relation(fields: [postCardId], references: [id], onDelete: Cascade)
+  checkpoint  String
+  views       Int      @default(0)
+  likes       Int      @default(0)
+  comments    Int      @default(0)
+  shares      Int      @default(0)
+  capturedAt  DateTime @default(now()) @db.Timestamptz
+
+  @@unique([postCardId, checkpoint])
+}
+
+model Channel {
+  id              String    @id @default(cuid())
+  brand           String    @default("TFP")
+  platform        String
+  account         String
+  tokenExpiresAt  DateTime? @db.Timestamptz
+  publishingLimit Int?
+  approvalMode    String    @default("every_post")
+  paused          Boolean   @default(false)
+  createdAt       DateTime  @default(now()) @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @db.Timestamptz
+
+  @@unique([platform, account])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actor      String
+  action     String
+  entityType String?
+  entityId   String?
+  before     Json?
+  after      Json?
+  meta       Json?
+  createdAt  DateTime @default(now()) @db.Timestamptz
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+}
+
+model ConnectorRun {
+  id           String          @id @default(cuid())
+  sourceId     String
+  name         String
+  status       ConnectorStatus @default(idle)
+  lastRunAt    DateTime?       @db.Timestamptz
+  lastSuccessAt DateTime?      @db.Timestamptz
+  lastError    String?
+  scheduleNote String?
+  writeGated   Boolean         @default(false)
+  createdAt    DateTime        @default(now()) @db.Timestamptz
+  updatedAt    DateTime        @updatedAt @db.Timestamptz
+
+  @@unique([sourceId])
+}
+
+model AlertThreshold {
+  id        String   @id @default(cuid())
+  ruleId    String   @unique
+  label     String
+  value     Float
+  unit      String?
+  enabled   Boolean  @default(true)
+  updatedBy String?
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+}
+
+model DailySnapshot {
+  id                String    @id @default(cuid())
+  date              DateTime  @unique @db.Date
+  revenuePence      Int       @default(0)
+  adSpendPence      Int       @default(0)
+  contributionPence Int       @default(0)
+  cashBalancePence  Int?
+  amer              Float?
+  newLeads          Int       @default(0)
+  label             DataLabel @default(calculated)
+  payload           Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz
+  updatedAt         DateTime  @updatedAt @db.Timestamptz
+}
+
+model CashBalance {
+  id          String    @id @default(cuid())
+  account     String    @unique
+  currency    String
+  balanceMinor Int
+  label       DataLabel @default(recorded)
+  recordedAt  DateTime  @db.Timestamptz
+  createdAt   DateTime  @default(now()) @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @db.Timestamptz
+}
+
+model TelegramMessageLog {
+  id        String   @id @default(cuid())
+  chatId    String
+  direction String
+  kind      String
+  payload   Json?
+  createdAt DateTime @default(now()) @db.Timestamptz
+
+  @@index([chatId, createdAt])
+}
+

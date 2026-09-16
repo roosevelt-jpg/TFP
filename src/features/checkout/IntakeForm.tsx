@@ -20,6 +20,7 @@ import { WhatsAppNumberField } from "@/components/brand/form/WhatsAppNumberField
 import { SecureBadge } from "@/components/brand/SecureBadge";
 import { Spinner } from "@/components/ui/spinner";
 import { trackEvent } from "@/lib/analytics";
+import { trackInitiateCheckout } from "@/lib/meta-pixel";
 import { firstNameOf } from "@/lib/name";
 import { ROLLOVER_DISCLOSURE } from "@/lib/pricing";
 import {
@@ -118,6 +119,7 @@ export function IntakeForm({
     }
 
     trackEvent("checkout_started");
+    trackInitiateCheckout();
 
     // Full navigation, not router.push: Stripe is a different origin. The toast
     // and pending state stay up until the browser leaves.
