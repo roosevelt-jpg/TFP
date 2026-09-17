@@ -1,12 +1,27 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminIcons } from "@/components/admin/icons";
 import { formatGbp } from "@/lib/admin/format";
 import { getCommandPageData } from "@/lib/admin/queries/command";
+import { homePathForRole } from "@/lib/admin/staff";
+import { requireAdminSession } from "@/lib/auth/session";
 import { getCmsMap } from "@/lib/cms/store";
 
 export default async function AdminCommandPage() {
+  const session = await requireAdminSession([
+    "kane",
+    "leah",
+    "lemoni",
+    "indigo",
+    "asim",
+    "viewer",
+  ]);
+  if (session.user.role !== "kane") {
+    redirect(homePathForRole(session.user.role));
+  }
+
   const [data, cms] = await Promise.all([
     getCommandPageData(),
     getCmsMap("admin"),

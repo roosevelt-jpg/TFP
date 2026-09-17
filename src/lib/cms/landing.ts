@@ -6,6 +6,8 @@ import {
   LANDING_CMS_NAMESPACE,
 } from "@/lib/cms/store";
 import { launchCopy } from "@/content/launch-copy";
+import { LAUNCH_PROMOTION_CODE } from "@/lib/pricing";
+import { resolveSecret } from "@/lib/secrets/store";
 
 export async function getLandingCopy() {
   const [
@@ -55,9 +57,11 @@ export async function getFounderSeatsRemaining(): Promise<number | null> {
   // Stripe promo redemption count when payments are live; otherwise null.
   if (!env.PAYMENTS_LIVE) return null;
   try {
+    const key = await resolveSecret("STRIPE_SECRET_KEY");
+    if (!key) return null;
     const res = await fetch(
-      "https://api.stripe.com/v1/promotion_codes?code=FOUNDER&limit=1",
-      { headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` } },
+      `https://api.stripe.com/v1/promotion_codes?code=${encodeURIComponent(LAUNCH_PROMOTION_CODE)}&limit=1`,
+      { headers: { Authorization: `Bearer ${key}` } },
     );
     if (!res.ok) return null;
     const json = (await res.json()) as {

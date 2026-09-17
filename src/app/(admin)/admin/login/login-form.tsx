@@ -11,8 +11,11 @@ export default function AdminLoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const [error, setError] = useState<string | null>(
-    params.get("error") === "role" ? "Your account has no admin access." : null,
+    params.get("error") === "role"
+      ? "Your account has no admin access."
+      : null,
   );
+  const invited = params.get("invited") === "1";
   const [pending, startTransition] = useTransition();
   const [needs2fa, setNeeds2fa] = useState(false);
 
@@ -83,6 +86,12 @@ export default function AdminLoginForm() {
             ? "Enter the code from your authenticator app."
             : "Email and password. Invite-only staff accounts."}
         </p>
+        {invited ? (
+          <div className="cmd-success">
+            Profile created — check Resend welcome email, then sign in to open
+            your desk.
+          </div>
+        ) : null}
         {error ? <div className="cmd-error">{error}</div> : null}
         {!needs2fa ? (
           <>

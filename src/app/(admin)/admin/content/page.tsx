@@ -2,6 +2,7 @@ import { ContentApprovals } from "@/components/admin/ContentApprovals";
 import { ContentUploadForm } from "@/components/admin/ContentUploadForm";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getContentPageData } from "@/lib/admin/queries/pages";
+import { requireAdminSession } from "@/lib/auth/session";
 import { getCmsMap } from "@/lib/cms/store";
 
 const STATES = [
@@ -13,6 +14,7 @@ const STATES = [
 ] as const;
 
 export default async function ContentPage() {
+  await requireAdminSession(["kane", "lemoni"]);
   const [data, cms] = await Promise.all([
     getContentPageData(),
     getCmsMap("admin"),

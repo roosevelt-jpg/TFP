@@ -1,8 +1,9 @@
 import "server-only";
 
-import { env } from "@/env";
 import { db } from "@/db";
 import { createApprovalRequest } from "@/lib/admin/approvals";
+import { getTeamMonitorSnapshot } from "@/lib/admin/team-monitor";
+import { resolveSecret } from "@/lib/secrets/store";
 
 type ToolCall = {
   name: string;
@@ -11,10 +12,11 @@ type ToolCall = {
 
 /**
  * CTO agent — Claude tool-use loop.
- * Reads warehouse context, drafts actions, never executes writes.
+ * Reads warehouse + team desks, drafts actions, never executes writes.
  */
 export async function runCtoAgent(prompt: string) {
-  if (!env.ANTHROPIC_API_KEY) {
+  const apiKey = await resolveSecret("ANTHROPIC_API_KEY");
+  if (!apiKey) {
     return {
       text: "ANTHROPIC_API_KEY not configured — CTO agent idle.",
       approvals: [] as string[],
@@ -27,6 +29,7 @@ export async function runCtoAgent(prompt: string) {
     orderBy: { firedAt: "desc" },
   });
   const snap = await db.dailySnapshot.findFirst({ orderBy: { date: "desc" } });
+  const team = await getTeamMonitorSnapshot();
 
   const context = {
     snap,
@@ -35,24 +38,25 @@ export async function runCtoAgent(prompt: string) {
       severity: a.severity,
       title: a.title,
     })),
+    teamDesks: team,
   };
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      "x-api-key": env.ANTHROPIC_API_KEY,
+      "x-api-key": apiKey,
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
       model: "claude-opus-4-20250514",
       max_tokens: 1200,
       system:
-        "You are the TFP CTO operator for Kane. UK English. Short, decision-led. Numbers first. Never move money. Never touch subscriptions. Draft only — writes need Kane approval.",
+        "You are the TFP CTO operator for Kane. UK English. Short, decision-led. Numbers first. Review each person's desk (KPIs, open/overdue todos, pending reports). Flag anyone skipping responsibilities. Never move money. Never touch subscriptions. Draft only — writes need Kane approval.",
       messages: [
         {
           role: "user",
-          content: `${prompt}\n\nWarehouse context:\n${JSON.stringify(context)}`,
+          content: `${prompt}\n\nWarehouse + team context:\n${JSON.stringify(context)}`,
         },
       ],
       tools: [

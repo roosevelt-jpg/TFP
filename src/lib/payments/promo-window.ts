@@ -1,6 +1,6 @@
 import "server-only";
 
-import { stripe } from "@/lib/clients/stripe";
+import { getStripe } from "@/lib/clients/stripe";
 import { logger } from "@/lib/logger";
 import { LAUNCH_PROMOTION_CODE, LAUNCH_PROMOTION_LIMIT } from "@/lib/pricing";
 
@@ -17,6 +17,7 @@ const PROGRAMME_COUPON_ID = "formula_programme_50";
 // The point is that Stripe enforces the deadline, so what the email promises is
 // exactly what Checkout applies, with nothing to remember to switch off.
 export async function openPromoWindow(): Promise<Date | null> {
+  const stripe = await getStripe();
   const { data } = await stripe.promotionCodes.list({
     code: LAUNCH_PROMOTION_CODE,
     limit: 1,

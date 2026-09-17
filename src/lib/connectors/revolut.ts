@@ -1,11 +1,12 @@
 import "server-only";
 
-import { env } from "@/env";
 import { db } from "@/db";
+import { resolveSecret } from "@/lib/secrets/store";
 
 /** Revolut Business balances — Phase 5 read-only cash feed. */
 export async function pullRevolutBalances() {
-  if (!env.REVOLUT_API_TOKEN) {
+  const token = await resolveSecret("REVOLUT_API_TOKEN");
+  if (!token) {
     await db.connectorRun.update({
       where: { sourceId: "S12" },
       data: {
@@ -19,7 +20,7 @@ export async function pullRevolutBalances() {
 
   const res = await fetch("https://b2b.revolut.com/api/1.0/accounts", {
     headers: {
-      Authorization: `Bearer ${env.REVOLUT_API_TOKEN}`,
+      Authorization: `Bearer ${token}`,
       Accept: "application/json",
     },
   });

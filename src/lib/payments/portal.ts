@@ -1,6 +1,6 @@
 import "server-only";
 
-import { stripe } from "@/lib/clients/stripe";
+import { getStripe } from "@/lib/clients/stripe";
 import { env } from "@/env";
 
 // Cached per instance: the URL only changes when the bootstrap runs.
@@ -11,6 +11,7 @@ let loginUrl: string | null = null;
 // a one-time passcode. prefilled_email skips a step when we know who they are.
 export async function portalLoginUrl(email?: string): Promise<string | null> {
   if (!loginUrl) {
+    const stripe = await getStripe();
     const { data } = await stripe.billingPortal.configurations
       .list({ limit: 10 })
       .catch(() => ({ data: [] }));
@@ -35,6 +36,7 @@ export async function createPortalSession(
   stripeCustomerId: string,
   returnPath: string,
 ): Promise<string | null> {
+  const stripe = await getStripe();
   const session = await stripe.billingPortal.sessions
     .create({
       customer: stripeCustomerId,

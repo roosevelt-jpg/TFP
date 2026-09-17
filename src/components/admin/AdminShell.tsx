@@ -1,21 +1,19 @@
-import type { ReactNode } from "react";
-
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminTopbar } from "@/components/admin/AdminTopbar";
 import { requireAdminSession } from "@/lib/auth/session";
-import { getNotificationFeed } from "@/lib/admin/notifications";
+import { getNotificationFeedSafe } from "@/lib/admin/notifications";
 import { ADMIN_TITLES } from "@/lib/admin/nav";
 import { commandBody, commandDisplay, commandMono } from "@/app/(admin)/fonts";
 import "@/app/(admin)/admin.css";
 
 type Props = {
-  children: ReactNode;
+  children: React.ReactNode;
   titleKey: keyof typeof ADMIN_TITLES | string;
 };
 
 export async function AdminShell({ children, titleKey }: Props) {
   const session = await requireAdminSession();
-  const notifications = await getNotificationFeed();
+  const notifications = await getNotificationFeedSafe();
   const title = ADMIN_TITLES[titleKey] ?? titleKey;
   const roleLabel =
     session.user.role === "kane"
@@ -31,6 +29,7 @@ export async function AdminShell({ children, titleKey }: Props) {
         <AdminSidebar
           userName={session.user.name}
           userRole={roleLabel}
+          staffRole={session.user.role}
           openAlertCount={notifications.total}
           image={session.user.image}
         />

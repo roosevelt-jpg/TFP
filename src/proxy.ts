@@ -35,7 +35,7 @@ export function proxy(request: NextRequest) {
     pathname === "/checkout-cancelled" ||
     pathname === "/success"
   ) {
-    return NextResponse.rewrite(new URL("/_payments-not-live", request.url));
+    return NextResponse.rewrite(new URL("/payments-not-live", request.url));
   }
 
   return NextResponse.next();

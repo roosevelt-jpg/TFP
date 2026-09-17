@@ -21,39 +21,47 @@ export type NotificationFeed = {
   updatedAt: string;
 };
 
+export const EMPTY_NOTIFICATION_FEED: NotificationFeed = {
+  total: 0,
+  openAlerts: 0,
+  pendingApprovals: 0,
+  connectorIssues: 0,
+  contentAwaiting: 0,
+  items: [],
+  updatedAt: new Date(0).toISOString(),
+};
+
+/**
+ * Keep queries sequential — local DB_POOL_MAX defaults to 1, and parallel
+ * Prisma calls queue until connectionTimeoutMillis then throw.
+ */
 export async function getNotificationFeed(): Promise<NotificationFeed> {
-  const [openAlerts, pendingApprovals, connectorIssues, contentAwaiting, alerts, approvals, connectors, posts] =
-    await Promise.all([
-      db.alert.count({ where: { status: "open" } }),
-      db.approvalRequest.count({ where: { status: "pending" } }),
-      db.connectorRun.count({
-        where: { status: { in: ["error", "stale"] } },
-      }),
-      db.postCard.count({
-        where: { status: { in: ["awaiting_kane", "compliance"] } },
-      }),
-      db.alert.findMany({
-        where: { status: { in: ["open", "acknowledged"] } },
-        orderBy: [{ severity: "asc" }, { firedAt: "desc" }],
-        take: 8,
-      }),
-      db.approvalRequest.findMany({
-        where: { status: "pending" },
-        orderBy: { createdAt: "desc" },
-        take: 8,
-      }),
-      db.connectorRun.findMany({
-        where: { status: { in: ["error", "stale"] } },
-        orderBy: { updatedAt: "desc" },
-        take: 5,
-      }),
-      db.postCard.findMany({
-        where: { status: { in: ["awaiting_kane", "compliance"] } },
-        include: { asset: true },
-        orderBy: { updatedAt: "desc" },
-        take: 5,
-      }),
-    ]);
+  const alerts = await db.alert.findMany({
+    where: { status: { in: ["open", "acknowledged"] } },
+    orderBy: [{ severity: "asc" }, { firedAt: "desc" }],
+    take: 12,
+  });
+  const approvals = await db.approvalRequest.findMany({
+    where: { status: "pending" },
+    orderBy: { createdAt: "desc" },
+    take: 12,
+  });
+  const connectors = await db.connectorRun.findMany({
+    where: { status: { in: ["error", "stale"] } },
+    orderBy: { updatedAt: "desc" },
+    take: 8,
+  });
+  const posts = await db.postCard.findMany({
+    where: { status: { in: ["awaiting_kane", "compliance"] } },
+    include: { asset: true },
+    orderBy: { updatedAt: "desc" },
+    take: 8,
+  });
+
+  const openAlerts = alerts.filter((a) => a.status === "open").length;
+  const pendingApprovals = approvals.length;
+  const connectorIssues = connectors.length;
+  const contentAwaiting = posts.length;
 
   const items: NotificationItem[] = [
     ...alerts.map((a) => ({
@@ -92,11 +100,8 @@ export async function getNotificationFeed(): Promise<NotificationFeed> {
     .sort((a, b) => b.at.localeCompare(a.at))
     .slice(0, 20);
 
-  const total =
-    openAlerts + pendingApprovals + connectorIssues + contentAwaiting;
-
   return {
-    total,
+    total: openAlerts + pendingApprovals + connectorIssues + contentAwaiting,
     openAlerts,
     pendingApprovals,
     connectorIssues,
@@ -107,36 +112,21 @@ export async function getNotificationFeed(): Promise<NotificationFeed> {
 }
 
 export async function getNotificationFingerprint(): Promise<string> {
-  const [openAlerts, pendingApprovals, connectorIssues, contentAwaiting, latestAlert, latestApproval] =
-    await Promise.all([
-      db.alert.count({ where: { status: "open" } }),
-      db.approvalRequest.count({ where: { status: "pending" } }),
-      db.connectorRun.count({
-        where: { status: { in: ["error", "stale"] } },
-      }),
-      db.postCard.count({
-        where: { status: { in: ["awaiting_kane", "compliance"] } },
-      }),
-      db.alert.findFirst({
-        where: { status: { in: ["open", "acknowledged"] } },
-        orderBy: { firedAt: "desc" },
-        select: { id: true, firedAt: true },
-      }),
-      db.approvalRequest.findFirst({
-        where: { status: "pending" },
-        orderBy: { createdAt: "desc" },
-        select: { id: true, createdAt: true },
-      }),
-    ]);
-
+  const feed = await getNotificationFeed();
   return [
-    openAlerts,
-    pendingApprovals,
-    connectorIssues,
-    contentAwaiting,
-    latestAlert?.id ?? "",
-    latestAlert?.firedAt.toISOString() ?? "",
-    latestApproval?.id ?? "",
-    latestApproval?.createdAt.toISOString() ?? "",
+    feed.openAlerts,
+    feed.pendingApprovals,
+    feed.connectorIssues,
+    feed.contentAwaiting,
+    feed.items[0]?.id ?? "",
+    feed.items[0]?.at ?? "",
   ].join("|");
+}
+
+export async function getNotificationFeedSafe(): Promise<NotificationFeed> {
+  try {
+    return await getNotificationFeed();
+  } catch {
+    return EMPTY_NOTIFICATION_FEED;
+  }
 }

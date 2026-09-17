@@ -38,6 +38,13 @@ vi.mock("@/lib/logger", () => ({
 vi.mock("@/lib/analytics-server", () => ({
   trackServerEvent: mocks.trackServerEvent,
 }));
+vi.mock("@/lib/funnel/records", () => ({
+  recordConsent: vi.fn().mockResolvedValue(undefined),
+  recordFunnelEvent: vi.fn().mockResolvedValue("evt"),
+}));
+vi.mock("@/lib/funnel/enqueue", () => ({
+  enqueueWaitlistNurture: vi.fn().mockResolvedValue(undefined),
+}));
 
 const validInput = {
   name: "  Jane   Doe  ",
@@ -63,6 +70,7 @@ const minimalInput = {
 } as const;
 
 const newLead: UpsertResult = {
+  id: "waitlist_test_id",
   publicToken: "public-token",
   ref: "WL-TESTREF1",
   firstName: "Jane",

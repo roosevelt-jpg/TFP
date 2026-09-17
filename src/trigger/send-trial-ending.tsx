@@ -1,22 +1,18 @@
 import { AbortTaskRunError, logger, schemaTask } from "@trigger.dev/sdk";
 import { z } from "zod";
 
-import { resend } from "@/lib/clients/resend";
-import { isPermanentSendError } from "@/lib/clients/resend-error";
 import { firstNameOf } from "@/lib/name";
 import { portalLoginUrl } from "@/lib/payments/portal";
 import { CURRENCY, PRICE_MONTHLY } from "@/lib/pricing";
 import { db } from "@/db";
 import { TrialEndingEmail } from "@/emails/trial-ending";
 import { env } from "@/env";
+import { emailLogoSrc } from "@/lib/mail/logo";
+import { isPermanentMailError, sendMail } from "@/lib/mail/send";
 
 import { emailQueue } from "./queues";
 
 const SUPPORT_URL = `${env.NEXT_PUBLIC_APP_URL}/support`;
-
-const senderFrom = env.RESEND_FROM.includes("<")
-  ? env.RESEND_FROM
-  : `The Formula Programme <${env.RESEND_FROM}>`;
 
 // Three days before the first membership charge, from Stripe's own
 // trial_will_end. An unannounced charge eight weeks after purchase is the
@@ -80,9 +76,9 @@ export const sendTrialEnding = schemaTask({
       return { skipped: true };
     }
 
-    const result = await resend.emails.send(
-      {
-        from: senderFrom,
+    try {
+      await sendMail({
+        channel: "client",
         to: subscription.customer.email,
         subject: "Your membership starts soon",
         react: (
@@ -94,41 +90,40 @@ export const sendTrialEnding = schemaTask({
               month: "long",
             })}
             billingUrl={await portalLoginUrl(subscription.customer.email)}
-            logoUrl={env.EMAIL_LOGO_URL}
+            logoUrl={emailLogoSrc()}
             supportUrl={SUPPORT_URL}
           />
         ),
-      },
-      { idempotencyKey: `trial-ending/${payload.stripeSubscriptionId}` },
-    );
+        idempotencyKey: `trial-ending/${payload.stripeSubscriptionId}`,
+      });
 
-    if (result.error) {
-      // Release the claim, or a transient Resend failure means nobody ever
+      logger.info("Trial heads-up sent", {
+        stripeSubscriptionId: payload.stripeSubscriptionId,
+        chargeDate: subscription.trialEnd,
+      });
+
+      return { skipped: false };
+    } catch (error) {
+      // Release the claim, or a transient failure means nobody ever
       // gets the warning.
       await db.subscription.updateMany({
         where: { id: subscription.id },
         data: { trialEndingEmailAt: null },
       });
 
-      const detail = `${result.error.name}: ${result.error.message} (${result.error.statusCode})`;
-      if (isPermanentSendError(result.error)) {
+      const detail =
+        error instanceof Error ? error.message : "trial ending failed";
+      if (isPermanentMailError(error)) {
         throw new AbortTaskRunError(detail);
       }
 
-      logger.warn("Resend rejected the trial heads-up; retrying", {
+      logger.warn("Trial heads-up failed; retrying", {
         stripeSubscriptionId: payload.stripeSubscriptionId,
         attempt: ctx.attempt.number,
-        message: result.error.message,
+        message: detail,
       });
-      throw new Error(detail);
+      throw error instanceof Error ? error : new Error(detail);
     }
-
-    logger.info("Trial heads-up sent", {
-      stripeSubscriptionId: payload.stripeSubscriptionId,
-      chargeDate: subscription.trialEnd,
-    });
-
-    return { skipped: false };
   },
   onFailure: async ({ payload, error }) => {
     // The charge still lands in three days. Nobody warned them, so this is

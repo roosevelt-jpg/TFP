@@ -11,7 +11,9 @@ import { SecureBadge } from "@/components/brand/SecureBadge";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SkipLink } from "@/components/layout/SkipLink";
+import { resolveOffer } from "@/lib/offers/resolve";
 import { loadCheckoutSearchParams } from "@/lib/payments/search-params";
+import { LAUNCH_PROMOTION_CODE } from "@/lib/pricing";
 import { promoCodeField } from "@/lib/validation/checkout/schema";
 import { IntakeForm } from "@/features/checkout/IntakeForm";
 import { IntakeFormSkeleton } from "@/features/checkout/IntakeFormSkeleton";
@@ -28,17 +30,12 @@ const FOOTER_LINKS = [
   { label: "Support", href: "/support" },
 ];
 
-// Async only to read the search param; the form is three fields so there's
-// nothing to prefill from the database.
 async function Intake({
   searchParams,
 }: {
   searchParams: Promise<SearchParams>;
 }) {
   const { t, promo } = await loadCheckoutSearchParams(searchParams);
-  // The promo param is attacker-controllable, so it goes through the same
-  // schema the form field uses before it is ever rendered back. An invalid
-  // code is dropped rather than shown; Stripe validates the real thing later.
   const promoCode = promoCodeField.safeParse(promo ?? undefined);
 
   return (
@@ -47,6 +44,22 @@ async function Intake({
       initialPromoCode={promoCode.success ? promoCode.data : undefined}
     />
   );
+}
+
+async function Summary({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const { promo } = await loadCheckoutSearchParams(searchParams);
+  const promoCode = promoCodeField.safeParse(promo ?? undefined);
+  // Prefer the URL promo (usually FORMULA50 from live CTAs); otherwise resolve
+  // with no code so the summary never invents a discount.
+  const offer = await resolveOffer(
+    promoCode.success ? promoCode.data : LAUNCH_PROMOTION_CODE,
+  );
+
+  return <OrderSummary offer={offer} />;
 }
 
 export default function CheckoutPage({
@@ -102,7 +115,15 @@ export default function CheckoutPage({
             </Reveal>
 
             <aside className="grid content-start gap-4 min-[900px]:sticky min-[900px]:top-6">
-              <OrderSummary />
+              <Suspense
+                fallback={
+                  <div className="border-hairline rounded-xs border p-6 text-muted text-sm">
+                    Loading order…
+                  </div>
+                }
+              >
+                <Summary searchParams={searchParams} />
+              </Suspense>
               <p className="text-muted text-[0.85rem] leading-[1.6]">
                 Questions before you start?{" "}
                 <Link href="/support" className="text-text underline">

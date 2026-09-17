@@ -26,11 +26,10 @@ export function AccountSettingsForm({ name, email, image }: Props) {
     setProfileMsg(null);
     const form = new FormData(event.currentTarget);
     const nextName = String(form.get("name") ?? "").trim();
-    const imageUrl = String(form.get("imageUrl") ?? "").trim();
     const file = form.get("imageFile");
 
     startTransition(async () => {
-      let imageValue: string | undefined = imageUrl || undefined;
+      let imageValue: string | undefined;
 
       if (file instanceof File && file.size > 0) {
         if (file.size > 1_500_000) {
@@ -46,7 +45,7 @@ export function AccountSettingsForm({ name, email, image }: Props) {
 
       const result = await authClient.updateUser({
         name: nextName,
-        ...(imageValue !== undefined ? { image: imageValue || null } : {}),
+        ...(imageValue !== undefined ? { image: imageValue } : {}),
       });
 
       if (result.error) {
@@ -120,8 +119,8 @@ export function AccountSettingsForm({ name, email, image }: Props) {
                 )}
               </div>
               <div className="cell-muted" style={{ fontSize: 12 }}>
-                Upload a square photo or paste an image URL. Saved to your
-                account.
+                Upload a square photo from your device (max 1.5MB). No URL
+                paste — direct upload only.
               </div>
             </div>
             <div className="cmd-field">
@@ -140,16 +139,6 @@ export function AccountSettingsForm({ name, email, image }: Props) {
                   if (!f) return;
                   void fileToDataUrl(f).then(setPreview);
                 }}
-              />
-            </div>
-            <div className="cmd-field">
-              <label htmlFor="imageUrl">Or image URL</label>
-              <input
-                id="imageUrl"
-                name="imageUrl"
-                type="url"
-                placeholder="https://…"
-                defaultValue={image?.startsWith("http") ? image : ""}
               />
             </div>
             {profileErr ? <div className="cmd-error">{profileErr}</div> : null}

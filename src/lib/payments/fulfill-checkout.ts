@@ -2,7 +2,9 @@ import "server-only";
 
 import { randomBytes } from "node:crypto";
 
-import { stripe } from "@/lib/clients/stripe";
+import { getStripe } from "@/lib/clients/stripe";
+import { enqueueOnboardingCheck } from "@/lib/funnel/enqueue";
+import { recordFunnelEvent } from "@/lib/funnel/records";
 import { logger } from "@/lib/logger";
 import { firstNameOf } from "@/lib/name";
 import { generateRef } from "@/lib/waitlist/ref";
@@ -41,6 +43,7 @@ export async function fulfillCheckout(
 ): Promise<FulfillResult> {
   // discounts.promotion_code is the human code (FORMULA50); unexpanded it is
   // an opaque promo_… id nobody can trace back to a campaign.
+  const stripe = await getStripe();
   const session = await stripe.checkout.sessions
     .retrieve(sessionId, {
       expand: [
@@ -154,6 +157,30 @@ async function writeFulfillment(
   // the welcome email, so this one enqueue covers both.
   await enqueueMembershipPurchase({ purchaseRef: ref, customerId });
   await enqueueProgrammePdf({ purchaseRef: ref, customerId });
+  await enqueueOnboardingCheck({ customerId, purchaseRef: ref });
+
+  await recordFunnelEvent({
+    eventName: "payment_succeeded",
+    customerId,
+    source: "stripe",
+    properties: {
+      purchaseRef: ref,
+      amountTotal: details.amountTotal,
+      currency: details.currency,
+    },
+    eventId: `payment:${details.sessionId}`,
+  });
+
+  // Link warehouse CRM hub so Client 360 can open this buyer immediately.
+  try {
+    const { ensurePersonForCustomer } = await import("@/lib/admin/clients");
+    await ensurePersonForCustomer(customerId);
+  } catch (error) {
+    logger.warn("Could not link PersonCustomer after fulfill", {
+      customerId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 
   return {
     state: "fulfilled",

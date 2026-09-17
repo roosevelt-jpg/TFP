@@ -52,7 +52,7 @@ on the Trigger side fails the first task run rather than failing the deploy.
       Optional in code, but without it the dead-man's switch is inert and a
       reconcile that stops running alerts nobody.
 - [ ] `DATABASE_URL` and `DIRECT_URL` — production Supabase
-- [ ] `RESEND_API_KEY`, `RESEND_FROM`, `EMAIL_LOGO_URL`, `EMAIL_COMMUNITY_URL`
+- [ ] `RESEND_API_KEY`, `RESEND_FROM`, `EMAIL_COMMUNITY_URL`; Performance logo uploaded under Admin → Integrations
 - [ ] `GHL_INTEGRATION_TOKEN`, `GHL_LOCATION_ID`, `GHL_SYNC_ENABLED=true`
 - [ ] `BLOB_READ_WRITE_TOKEN`, `FORMULA_BLOB_STORE_ID`
 - [ ] `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`
@@ -87,7 +87,30 @@ on the Trigger side fails the first task run rather than failing the deploy.
 - [ ] Rollover copy on `/checkout` approved by the client. It must stay above
       the pay button.
 
-## 7. Final verification
+## 7. Funnel recovery & channels
+
+- [ ] Smoke-test abandoned checkout recovery in **test mode** (flag defaults
+      on): expire a Checkout Session, confirm the 30m email, then pay and
+      confirm later steps stop.
+- [ ] Confirm ChannelEligibility suppresses opted-out / purchased contacts.
+- [ ] Set Complete Stack storefront URLs (`COMPLETE_STACK_URL` /
+      `_MALE_` / `_FEMALE_`) before announcing founder stack pricing.
+- [ ] Telegram customer activation: set `TELEGRAM_BOT_USERNAME` and webhook
+      still reaches `/api/telegram/webhook`.
+- [ ] Instagram inbound: Meta app webhook → `/api/webhooks/meta`, verify token
+      + app secret set.
+- [ ] Funnel metrics visible at `/admin/growth/funnel`.
+- [ ] Apply funnel CRM + Client 360 migrations if not already deployed.
+
+## 7b. GDPR Step 0 (Roosevelt — before live bank/customer pulls)
+
+- [ ] Contractor agreement with confidentiality + data-processing clauses signed.
+- [ ] Access register sent to Kane (every system access + reason).
+- [ ] Named, scoped, revocable credentials only (enter in `/admin/integrations`).
+- [ ] Secrets only in Vercel / Trigger / Integrations secret store — never chat.
+- [ ] Confirm UK/EU Postgres region for customer PII.
+
+## 8. Final verification
 
 - [ ] Full CI matrix green, including both E2E jobs.
 - [ ] A **live-mode** test purchase with a real card, refunded afterwards.
@@ -97,7 +120,7 @@ on the Trigger side fails the first task run rather than failing the deploy.
       the live events as `processed`.
 - [ ] Whoever is on call has read `docs/payments-runbook.md`.
 
-## 8. Flip
+## 9. Flip
 
 - [ ] `PAYMENTS_LIVE=true` in Vercel production. **The client's call, launch
       day.**

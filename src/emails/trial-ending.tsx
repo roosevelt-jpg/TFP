@@ -170,6 +170,6 @@ TrialEndingEmail.PreviewProps = {
   monthlyPrice: "£79",
   chargeDate: "22 September",
   billingUrl: "https://billing.stripe.com/p/login/test",
-  logoUrl: "https://example.com/logo.png",
+  logoUrl: "/email/logo.png",
   supportUrl: "https://example.com/support",
 } satisfies TrialEndingEmailProps;

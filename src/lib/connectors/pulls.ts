@@ -1,8 +1,8 @@
 import "server-only";
 
-import { env } from "@/env";
 import { db } from "@/db";
 import { resolvePersonCustomer } from "@/lib/identity/resolve";
+import { resolveSecret } from "@/lib/secrets/store";
 
 async function markRun(
   sourceId: string,
@@ -22,7 +22,9 @@ async function markRun(
 
 /** Shopify Admin GraphQL pull — read-only orders into warehouse. */
 export async function pullShopifyOrders() {
-  if (!env.SHOPIFY_SHOP_DOMAIN || !env.SHOPIFY_ADMIN_TOKEN) {
+  const shop = await resolveSecret("SHOPIFY_SHOP_DOMAIN");
+  const token = await resolveSecret("SHOPIFY_ADMIN_TOKEN");
+  if (!shop || !token) {
     await markRun("S1", false, "SHOPIFY_* credentials not configured");
     return { skipped: true as const };
   }
@@ -58,12 +60,12 @@ export async function pullShopifyOrders() {
   `;
 
   const res = await fetch(
-    `https://${env.SHOPIFY_SHOP_DOMAIN}/admin/api/2024-10/graphql.json`,
+    `https://${shop}/admin/api/2024-10/graphql.json`,
     {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "X-Shopify-Access-Token": env.SHOPIFY_ADMIN_TOKEN,
+        "X-Shopify-Access-Token": token,
       },
       body: JSON.stringify({ query }),
     },
@@ -161,12 +163,14 @@ export async function pullShopifyOrders() {
 
 /** Meta Insights pull — ad set daily rows with 7d click + incremental. */
 export async function pullMetaAdInsights() {
-  if (!env.META_ACCESS_TOKEN || !env.META_AD_ACCOUNT_ID) {
+  const accessToken = await resolveSecret("META_ACCESS_TOKEN");
+  const adAccountId = await resolveSecret("META_AD_ACCOUNT_ID");
+  if (!accessToken || !adAccountId) {
     await markRun("S3", false, "META_* credentials not configured");
     return { skipped: true as const };
   }
 
-  const accountId = env.META_AD_ACCOUNT_ID.replace(/^act_/, "");
+  const accountId = adAccountId.replace(/^act_/, "");
   const since = new Date();
   since.setUTCDate(since.getUTCDate() - 7);
   const until = new Date();
@@ -183,7 +187,7 @@ export async function pullMetaAdInsights() {
       "7d_click",
       "1d_view",
     ]),
-    access_token: env.META_ACCESS_TOKEN,
+    access_token: accessToken,
   });
 
   const res = await fetch(
@@ -272,7 +276,11 @@ export async function pullMetaAdInsights() {
 
 /** Stripe balance + recent charges into warehouse payments. */
 export async function pullStripeMoney() {
-  const key = env.STRIPE_SECRET_KEY;
+  const key = await resolveSecret("STRIPE_SECRET_KEY");
+  if (!key) {
+    await markRun("S2", false, "STRIPE_SECRET_KEY not configured");
+    return { skipped: true as const };
+  }
   const balRes = await fetch("https://api.stripe.com/v1/balance", {
     headers: { Authorization: `Bearer ${key}` },
   });

@@ -16,6 +16,7 @@ export const TAGS = {
   paused: "paused",
   cancelled: "cancelled",
   intakeStalled: "intake-stalled",
+  checkoutAbandoned: "checkout-abandoned",
   programmeActive: "programme-active",
 } as const;
 

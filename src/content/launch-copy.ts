@@ -60,15 +60,15 @@ const waiting = {
 } as const;
 
 const live = {
-  cta: "Claim My Founder Place",
-  ctaLower: "Claim My Founder Place",
-  ctaShort: "Claim my place",
+  cta: "Start My Eight-Week Programme",
+  ctaLower: "Start my eight-week programme",
+  ctaShort: "Start today",
   heading: "Start today",
   reassurance: `${CURRENCY}${PRICE_TODAY} today, then ${CURRENCY}${PRICE_MONTHLY} a month from week ${PROGRAMME_WEEKS}. Cancel anytime, no retention hoops.`,
   priceLead: "The programme is",
   finalCta:
     "Your programme and your coach are ready the moment you join. No waiting, no invite needed.",
-  stickyLabel: "Founder launch",
+  stickyLabel: "Start My Eight-Week Programme",
   stickySecondary: "First 50 members only",
   trust: [
     `${CURRENCY}${PRICE_TODAY} today`,
@@ -88,17 +88,13 @@ const live = {
   howItWorksStepOneBody: `Tell us your goal and where to reach you. Takes under a minute, and you\u2019re training the same day.`,
   faqAccess: "As soon as you join,",
   faqDelivery: "as soon as you join",
-  // The founder offer is public by design: it's auto-applied at checkout, so
-  // announcing it costs nothing. The code itself still isn't printed here,
-  // since the banner links to the founder section rather than naming it.
+  // The founder offer is public by design: CTA carries FORMULA50 into checkout.
   announcement: "Founder launch: the first 50 members get 50% off",
   announcementHref: "#founder-offer",
-  heroTrust: "Real coaching. Real accountability. Real results.",
+  heroTrust: `${CURRENCY}${PRICE_TODAY} today · then ${CURRENCY}${PRICE_MONTHLY}/mo after week ${PROGRAMME_WEEKS}`,
   pricingLock: "Secure checkout, cancel anytime",
   howItWorksDescription:
     "Kane\u2019s 8-week method, delivered by an AI Performance Coach in your WhatsApp. No new app. Join today, get the programme instantly, and show up.",
-  // The portal does this itself: self-serve, cancels at period end, no
-  // retention survey. Telling people to email would be slower and untrue.
   faqCancel:
     "In two taps, yourself. Open the billing link in your welcome email, hit cancel, and that\u2019s it. No phone calls, no retention hoops, no guilt trips. You keep access until the end of the month you\u2019ve paid for, you keep the programme files, and the door\u2019s always open if you want back in.",
   faqSpeed:

@@ -3,21 +3,27 @@ import Link from "next/link";
 import {
   CURRENCY,
   PRICE_MONTHLY,
-  PRICE_TODAY,
   PROGRAMME_WEEKS,
+  formatGbpAmount,
+  gbp,
 } from "@/lib/pricing";
 
 import { ManageBillingButton } from "./ManageBillingButton";
 
-// After a £149 charge, not restating what was bought is the biggest trust gap
+// After a charge, not restating what was bought is the biggest trust gap
 // on the page, and an unrestated rollover is the most common cause of refunds.
 export function PaidReceipt({
   orderRef,
   sessionId,
+  /** Stripe amount_total in major units (pounds), after discounts. */
+  amountPaid,
 }: {
   orderRef: string;
   sessionId: string;
+  amountPaid: number;
 }) {
+  const paidLabel = gbp(amountPaid);
+
   return (
     <div className="border-hairline rounded-md border bg-bg p-[clamp(22px,4vw,30px)]">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
@@ -32,7 +38,7 @@ export function PaidReceipt({
           </dt>
           <dd className="font-semibold">
             {CURRENCY}
-            {PRICE_TODAY}
+            {formatGbpAmount(amountPaid)}
           </dd>
         </div>
         <div className="border-hairline flex items-baseline justify-between gap-4 border-t pt-2.5">
@@ -47,8 +53,7 @@ export function PaidReceipt({
       </dl>
 
       <p className="text-muted mt-4 text-[0.85rem] leading-[1.6]">
-        Your {CURRENCY}
-        {PRICE_TODAY} covers the first {PROGRAMME_WEEKS} weeks. After that your
+        Your {paidLabel} covers the first {PROGRAMME_WEEKS} weeks. After that your
         membership continues at {CURRENCY}
         {PRICE_MONTHLY} a month unless you cancel, and we will remind you before
         that first payment.

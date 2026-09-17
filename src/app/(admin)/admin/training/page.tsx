@@ -1,8 +1,10 @@
 import { AdminShell } from "@/components/admin/AdminShell";
 import { formatGbp, getTrainingPageData } from "@/lib/admin/queries/pages";
+import { requireAdminSession } from "@/lib/auth/session";
 import { getCmsMap } from "@/lib/cms/store";
 
 export default async function TrainingPage() {
+  await requireAdminSession(["kane", "lemoni"]);
   const [data, cms] = await Promise.all([
     getTrainingPageData(),
     getCmsMap("admin"),

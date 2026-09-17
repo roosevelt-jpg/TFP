@@ -1,6 +1,6 @@
 import "server-only";
 
-import { stripe } from "@/lib/clients/stripe";
+import { getStripe } from "@/lib/clients/stripe";
 
 import { customerIdempotencyKey } from "./idempotency";
 
@@ -19,6 +19,7 @@ export async function ensureStripeCustomer({
   email: string;
   whatsapp: string;
 }): Promise<string> {
+  const stripe = await getStripe();
   if (existingId) {
     // Falls through to create if the stored id has been deleted in Stripe:
     // a stale reference must never be the reason someone can't pay.

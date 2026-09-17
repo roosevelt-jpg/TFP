@@ -175,7 +175,7 @@ SupportNotificationEmail.PreviewProps = {
   fromEmail: "ahmed@example.com",
   whatsapp: "+447700900123",
   message: "Hey, quick question about when the WhatsApp coach goes live.",
-  logoUrl: "https://theformulaperformance.com/email/logo.png",
+  logoUrl: "/email/logo.png",
 } satisfies SupportNotificationEmailProps;
 
 export default SupportNotificationEmail;

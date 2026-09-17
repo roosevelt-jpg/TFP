@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/admin/AdminShell";
 import { formatGbp, getMetaPageData } from "@/lib/admin/queries/pages";
+import { requireAdminSession } from "@/lib/auth/session";
 import { getCmsMap } from "@/lib/cms/store";
 import {
   calculateBreakEvenAmer,
@@ -7,6 +8,7 @@ import {
 } from "@/lib/metrics/economics";
 
 export default async function MetaPage() {
+  await requireAdminSession(["kane", "indigo"]);
   const [data, economics, gate, cms] = await Promise.all([
     getMetaPageData(),
     calculateBreakEvenAmer(),

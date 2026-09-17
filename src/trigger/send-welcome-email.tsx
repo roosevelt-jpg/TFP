@@ -1,20 +1,16 @@
 import { AbortTaskRunError, logger, schemaTask } from "@trigger.dev/sdk";
 import { z } from "zod";
 
-import { resend } from "@/lib/clients/resend";
-import { isPermanentSendError } from "@/lib/clients/resend-error";
 import { siteConfig } from "@/config/site";
 import { WaitlistWelcomeEmail } from "@/emails/waitlist-welcome";
 import { env } from "@/env";
+import { emailLogoSrc } from "@/lib/mail/logo";
+import { isPermanentMailError, sendMail } from "@/lib/mail/send";
 
 import { emailQueue } from "./queues";
 
 const INSTAGRAM_URL = "https://instagram.com/kanem14";
 const UNSUBSCRIBE_MAILTO = `mailto:${siteConfig.contactEmail}?subject=${encodeURIComponent("Leave the waitlist")}`;
-
-const senderFrom = env.RESEND_FROM.includes("<")
-  ? env.RESEND_FROM
-  : `${siteConfig.name} <${env.RESEND_FROM}>`;
 
 export const sendWelcomeEmail = schemaTask({
   id: "send-welcome-email",
@@ -39,60 +35,53 @@ export const sendWelcomeEmail = schemaTask({
     logger.info("Sending welcome email", {
       ref,
       to: email,
-      from: senderFrom,
       attempt: ctx.attempt.number,
     });
 
-    const result = await resend.emails.send(
-      {
-        from: senderFrom,
+    try {
+      const result = await sendMail({
+        channel: "client",
         to: email,
         subject: "You're on the list - The Formula Programme",
         react: (
           <WaitlistWelcomeEmail
             firstName={firstName}
             waitlistRef={ref}
-            logoUrl={env.EMAIL_LOGO_URL}
+            logoUrl={emailLogoSrc()}
             communityImageUrl={env.EMAIL_COMMUNITY_URL}
             instagramUrl={INSTAGRAM_URL}
             unsubscribeUrl={UNSUBSCRIBE_MAILTO}
           />
         ),
         headers: { "List-Unsubscribe": `<${UNSUBSCRIBE_MAILTO}>` },
-      },
-      // Task retries make delivery at-least-once; Resend dedupes by this key
-      // (24h TTL) so a retry after an accepted-but-lost response can't send
-      // the welcome twice.
-      { idempotencyKey: `welcome/${ref}` },
-    );
+        idempotencyKey: `welcome/${ref}`,
+      });
 
-    if (result.error) {
-      const detail = `${result.error.name}: ${result.error.message} (${result.error.statusCode})`;
+      logger.info("Welcome email sent", {
+        ref,
+        to: email,
+        emailId: result.id,
+        driver: result.driver,
+      });
 
-      if (isPermanentSendError(result.error)) {
+      return { id: result.id, driver: result.driver };
+    } catch (error) {
+      const detail =
+        error instanceof Error ? error.message : "welcome email failed";
+
+      if (isPermanentMailError(error)) {
         throw new AbortTaskRunError(detail);
       }
 
-      logger.warn("Resend rejected the send; retrying", {
+      logger.warn("Welcome send failed; retrying", {
         ref,
         to: email,
         attempt: ctx.attempt.number,
-        message: result.error.message,
-        name: result.error.name,
-        statusCode: result.error.statusCode,
+        message: detail,
       });
 
-      throw new Error(detail);
+      throw error instanceof Error ? error : new Error(detail);
     }
-
-    logger.info("Welcome email sent", {
-      ref,
-      to: email,
-      from: senderFrom,
-      emailId: result.data?.id,
-    });
-
-    return { id: result.data?.id };
   },
   onFailure: async ({ payload, error }) => {
     logger.error("Welcome email permanently failed", {

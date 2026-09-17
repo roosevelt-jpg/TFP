@@ -3,7 +3,7 @@ import { launchCopy } from "@/content/launch-copy";
 import { CtaButton } from "./CtaButton";
 
 type PricingCardProps = {
-  priceToday: number;
+  priceToday: number | string;
   priceMonthly: number;
   currency?: string;
   features: string[];

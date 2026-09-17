@@ -1,6 +1,6 @@
 import "server-only";
 
-import { env } from "@/env";
+import { resolveSecret } from "@/lib/secrets/store";
 
 const BASE_URL = "https://services.leadconnectorhq.com";
 const API_VERSION = "2021-07-28";
@@ -56,23 +56,33 @@ function parseRetryAfter(header: string | null): number | undefined {
   return Math.max(0, dateMs - Date.now());
 }
 
+async function ghlAuth() {
+  const token = await resolveSecret("GHL_INTEGRATION_TOKEN");
+  const locationId = await resolveSecret("GHL_LOCATION_ID");
+  if (!token || !locationId) {
+    throw new Error("GHL_INTEGRATION_TOKEN / GHL_LOCATION_ID not configured");
+  }
+  return { token, locationId };
+}
+
 // Upsert matches by email/phone per the location's "Allow Duplicate Contact"
 // setting, so re-submits update rather than duplicate.
 export async function upsertGhlContact(
   input: UpsertContactInput,
 ): Promise<UpsertContactResult> {
+  const { token, locationId } = await ghlAuth();
   const res = await fetch(`${BASE_URL}/contacts/upsert`, {
     method: "POST",
     // A hung socket won't trip Trigger's maxDuration (CPU time), so bound it here.
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     headers: {
-      Authorization: `Bearer ${env.GHL_INTEGRATION_TOKEN}`,
+      Authorization: `Bearer ${token}`,
       Version: API_VERSION,
       "Content-Type": "application/json",
       Accept: "application/json",
     },
     body: JSON.stringify({
-      locationId: env.GHL_LOCATION_ID,
+      locationId,
       name: input.name,
       email: input.email,
       phone: input.phone,
@@ -104,11 +114,12 @@ async function ghlFetch(
   path: string,
   init: { method: string; body?: unknown },
 ): Promise<Response> {
+  const { token } = await ghlAuth();
   const res = await fetch(`${BASE_URL}${path}`, {
     method: init.method,
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     headers: {
-      Authorization: `Bearer ${env.GHL_INTEGRATION_TOKEN}`,
+      Authorization: `Bearer ${token}`,
       Version: API_VERSION,
       "Content-Type": "application/json",
       Accept: "application/json",

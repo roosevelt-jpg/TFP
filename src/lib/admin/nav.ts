@@ -17,6 +17,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     group: "Overview",
     items: [
       { id: "command", label: "Command", href: "/admin", icon: "command" },
+      { id: "clients", label: "Clients", href: "/admin/clients", icon: "clients" },
     ],
   },
   {
@@ -48,8 +49,32 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     items: [
       { id: "meta", label: "Meta", href: "/admin/meta", icon: "meta" },
       {
+        id: "funnel",
+        label: "Funnel",
+        href: "/admin/growth/funnel",
+        icon: "meta",
+      },
+      {
+        id: "whatsapp",
+        label: "WhatsApp",
+        href: "/admin/growth/whatsapp",
+        icon: "whatsapp",
+      },
+      {
+        id: "instagram",
+        label: "Instagram",
+        href: "/admin/growth/instagram",
+        icon: "instagram",
+      },
+      {
+        id: "telegram",
+        label: "Telegram",
+        href: "/admin/growth/telegram",
+        icon: "telegram",
+      },
+      {
         id: "email",
-        label: "Email + DMs",
+        label: "Email",
         href: "/admin/email",
         icon: "email",
       },
@@ -107,12 +132,19 @@ export const ADMIN_NAV: AdminNavGroup[] = [
 
 export const ADMIN_TITLES: Record<string, string> = {
   command: "Command",
+  me: "My Desk",
+  clients: "Clients",
+  funnel: "Funnel metrics",
   money: "Money",
   supplements: "Supplements",
   coaching: "Coaching programme",
   training: "Training programme",
   meta: "Meta",
-  email: "Email + DMs",
+  whatsapp: "WhatsApp",
+  instagram: "Instagram",
+  telegram: "Telegram",
+  "email-inbox": "Email inbox",
+  email: "Email",
   fulfilment: "Fulfilment",
   team: "Team",
   alerts: "Alerts + approvals log",
@@ -122,4 +154,5 @@ export const ADMIN_TITLES: Record<string, string> = {
   cms: "Landing CMS",
   login: "Sign in",
   "setup-2fa": "Set up 2FA",
+  "accept-invite": "Accept invite",
 };

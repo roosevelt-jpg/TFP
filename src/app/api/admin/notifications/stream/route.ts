@@ -1,18 +1,17 @@
+import { connection } from "next/server";
+
 import { getAdminSession } from "@/lib/auth/session";
 import {
-  getNotificationFeed,
+  getNotificationFeedSafe,
   getNotificationFingerprint,
 } from "@/lib/admin/notifications";
 
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
-
 /**
  * Server-Sent Events stream for the admin notification bell.
- * Polls the warehouse every few seconds and pushes when the feed changes
- * (cron-created alerts, approvals, connector failures, content gates).
+ * Polls the warehouse every few seconds and pushes when the feed changes.
  */
 export async function GET(request: Request) {
+  await connection();
   const session = await getAdminSession();
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
@@ -37,7 +36,7 @@ export async function GET(request: Request) {
           const fingerprint = await getNotificationFingerprint();
           if (fingerprint !== lastFingerprint) {
             lastFingerprint = fingerprint;
-            const feed = await getNotificationFeed();
+            const feed = await getNotificationFeedSafe();
             send("notifications", feed);
           } else {
             send("ping", { t: Date.now() });

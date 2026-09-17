@@ -45,6 +45,7 @@ type CreateOnlyFields = {
 };
 
 export type UpsertResult = {
+  id: string;
   publicToken: string;
   ref: string;
   firstName: string;
@@ -75,6 +76,7 @@ export async function upsertWaitlistLead(
         },
         update: definedDetails,
         select: {
+          id: true,
           publicToken: true,
           ref: true,
           name: true,
@@ -83,6 +85,7 @@ export async function upsertWaitlistLead(
         },
       });
       return {
+        id: lead.id,
         publicToken: lead.publicToken,
         ref: lead.ref,
         firstName: firstNameOf(lead.name),

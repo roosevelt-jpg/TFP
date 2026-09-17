@@ -1,6 +1,6 @@
 import "server-only";
 
-import { stripe } from "@/lib/clients/stripe";
+import { getStripe } from "@/lib/clients/stripe";
 import { logger } from "@/lib/logger";
 import { db } from "@/db";
 
@@ -23,6 +23,7 @@ export async function syncStripeSubscriptionState(
   stripeSubscriptionId: string,
   eventCreated: number,
 ): Promise<SyncOutcome> {
+  const stripe = await getStripe();
   const subscription = await stripe.subscriptions
     .retrieve(stripeSubscriptionId)
     .catch((error: unknown) => {

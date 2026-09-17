@@ -1,8 +1,10 @@
 import { AdminShell } from "@/components/admin/AdminShell";
 import { formatGbp, getEmailPageData } from "@/lib/admin/queries/pages";
+import { requireAdminSession } from "@/lib/auth/session";
 import { getCmsMap } from "@/lib/cms/store";
 
 export default async function EmailPage() {
+  await requireAdminSession(["kane", "leah", "lemoni"]);
   const [data, cms] = await Promise.all([
     getEmailPageData(),
     getCmsMap("admin"),
@@ -13,7 +15,7 @@ export default async function EmailPage() {
       <div className="cmd-page-lead">
         <div className="cmd-page-lead-line" data-cms="email.lead">
           {cms["email.lead"] ??
-            "Klaviyo campaigns and high-intent DM threads waiting for a reply."}
+            "Klaviyo campaigns. For WhatsApp / Instagram / Telegram inboxes, use Growth in the sidebar."}
         </div>
       </div>
 

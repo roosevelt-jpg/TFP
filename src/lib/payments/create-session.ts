@@ -2,7 +2,7 @@ import "server-only";
 
 import type Stripe from "stripe";
 
-import { stripe } from "@/lib/clients/stripe";
+import { getStripe } from "@/lib/clients/stripe";
 import { logger } from "@/lib/logger";
 
 // Stripe rejects a reused idempotency key whose parameters have changed rather
@@ -23,6 +23,7 @@ export async function createCheckoutSessionForBuyer({
   params: Stripe.Checkout.SessionCreateParams;
   idempotencyKey: string;
 }): Promise<Stripe.Checkout.Session> {
+  const stripe = await getStripe();
   try {
     return await stripe.checkout.sessions.create(params, { idempotencyKey });
   } catch (error) {

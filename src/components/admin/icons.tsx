@@ -17,9 +17,17 @@ const PATHS: Record<string, string> = {
   meta: '<path d="M4 18V9a2 2 0 0 1 2-2h2l2-3h4l2 3h2a2 2 0 0 1 2 2v9"/><path d="M3 18h18"/><path d="M9 13a3 3 0 0 0 6 0"/>',
   email:
     '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  whatsapp:
+    '<path d="M4 19l1.5-4A7.5 7.5 0 1 1 12 19.5H7l-3 1.5z"/><path d="M9 11h.01M12 11h.01M15 11h.01"/>',
+  instagram:
+    '<rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="12" cy="12" r="3.5"/><circle cx="17.2" cy="6.8" r="1"/>',
+  telegram:
+    '<path d="M21 5L3 11.5l6 2L17 8l-6 7 0 3 3-2.5 4 2.5 3-13z"/>',
   fulfilment:
     '<rect x="3" y="8" width="18" height="12" rx="1.5"/><path d="M3 8l3-5h12l3 5"/><line x1="3" y1="13" x2="21" y2="13"/>',
   team: '<circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6"/><circle cx="18" cy="8" r="2.4"/><path d="M22 20c0-2.6-1.7-4.6-4-5.4"/>',
+  clients:
+    '<circle cx="9" cy="8" r="3"/><circle cx="16" cy="9" r="2.5"/><path d="M2 20c0-3.5 3-6 7-6"/><path d="M13 20c0-2.8 2-5 5-5.5"/>',
   alerts:
     '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
   content:

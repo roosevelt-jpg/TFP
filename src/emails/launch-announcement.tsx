@@ -220,6 +220,6 @@ LaunchAnnouncementEmail.PreviewProps = {
   discountedPrice: "£74.50",
   monthlyPrice: "£79",
   programmeWeeks: 8,
-  logoUrl: "https://example.com/logo.png",
+  logoUrl: "/email/logo.png",
   supportUrl: "https://example.com/support",
 } satisfies LaunchAnnouncementEmailProps;

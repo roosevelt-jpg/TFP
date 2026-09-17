@@ -1,19 +1,15 @@
 import { AbortTaskRunError, logger, retry, schemaTask } from "@trigger.dev/sdk";
 import { z } from "zod";
 
-import { resend } from "@/lib/clients/resend";
 import { siteConfig } from "@/config/site";
 import { SupportNotificationEmail } from "@/emails/support-notification";
 import { SupportReceivedEmail } from "@/emails/support-received";
-import { env } from "@/env";
+import { emailLogoSrc } from "@/lib/mail/logo";
+import { sendMail } from "@/lib/mail/send";
 
 import { emailQueue } from "./queues";
 
 const TEAM_INBOX = siteConfig.contactEmail;
-
-const senderFrom = env.RESEND_FROM.includes("<")
-  ? env.RESEND_FROM
-  : `${siteConfig.name} <${env.RESEND_FROM}>`;
 
 export const sendSupportEmails = schemaTask({
   id: "send-support-emails",
@@ -39,8 +35,8 @@ export const sendSupportEmails = schemaTask({
             requestType,
             attempt,
           });
-          const result = await resend.emails.send({
-            from: senderFrom,
+          return sendMail({
+            channel: "client",
             to: TEAM_INBOX,
             replyTo: email,
             subject: `New ${requestType} - ${name}`,
@@ -51,60 +47,45 @@ export const sendSupportEmails = schemaTask({
                 fromEmail={email}
                 whatsapp={whatsapp}
                 message={message}
-                logoUrl={env.EMAIL_LOGO_URL}
+                logoUrl={emailLogoSrc()}
               />
             ),
           });
-          if (result.error) {
-            lastError = `${result.error.name}: ${result.error.message} (${result.error.statusCode})`;
-            logger.warn("Resend rejected the team notification", {
-              requestType,
-              attempt,
-              message: result.error.message,
-              name: result.error.name,
-              statusCode: result.error.statusCode,
-            });
-            throw result.error;
-          }
-          return result.data;
         },
         { maxAttempts: 3, minTimeoutInMs: 1000, factor: 2 },
       )
-      .catch(() => {
+      .catch((cause) => {
+        lastError =
+          cause instanceof Error ? cause.message : lastError;
         throw new AbortTaskRunError(lastError);
       });
 
-    const ack = await resend.emails
-      .send({
-        from: senderFrom,
+    let ackId: string | undefined;
+    try {
+      const ack = await sendMail({
+        channel: "client",
         to: email,
         subject: "We've got your request - The Formula Programme",
         react: (
           <SupportReceivedEmail
             firstName={firstName}
             requestType={requestType}
-            logoUrl={env.EMAIL_LOGO_URL}
+            logoUrl={emailLogoSrc()}
           />
         ),
-      })
-      .catch((cause) => ({
-        data: null,
-        error: {
-          message: cause instanceof Error ? cause.message : "send failed",
-        },
-      }));
-
-    if (ack.error) {
+      });
+      ackId = ack.id;
+    } catch (cause) {
       logger.warn("Support acknowledgement not sent", {
         to: email,
-        message: ack.error.message,
+        message: cause instanceof Error ? cause.message : "send failed",
       });
     }
 
     logger.info("Support emails processed", {
       requestType,
-      ackId: ack.data?.id,
+      ackId,
     });
-    return { ackId: ack.data?.id };
+    return { ackId };
   },
 });

@@ -1,8 +1,10 @@
 import { AdminShell } from "@/components/admin/AdminShell";
 import { formatGbp, getSupplementsPageData } from "@/lib/admin/queries/pages";
+import { requireAdminSession } from "@/lib/auth/session";
 import { getCmsMap } from "@/lib/cms/store";
 
 export default async function SupplementsPage() {
+  await requireAdminSession(["kane"]);
   const [data, cms] = await Promise.all([
     getSupplementsPageData(),
     getCmsMap("admin"),

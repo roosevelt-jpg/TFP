@@ -1,6 +1,6 @@
 import "server-only";
 
-import { stripe } from "@/lib/clients/stripe";
+import { getStripe } from "@/lib/clients/stripe";
 import { AppError, ERROR_CODES } from "@/lib/errors/app-error";
 import { LOOKUP_KEYS } from "@/lib/payments/prices";
 
@@ -13,6 +13,7 @@ let cached: { programmePriceId: string; membershipPriceId: string } | null =
 export async function resolveProgrammePrices() {
   if (cached) return cached;
 
+  const stripe = await getStripe();
   const { data } = await stripe.prices.list({
     lookup_keys: [LOOKUP_KEYS.programme, LOOKUP_KEYS.membership],
     active: true,

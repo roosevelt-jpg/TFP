@@ -4,6 +4,8 @@ import { tasks } from "@trigger.dev/sdk";
 import { returnValidationErrors } from "next-safe-action";
 
 import { trackServerEvent } from "@/lib/analytics-server";
+import { enqueueWaitlistNurture } from "@/lib/funnel/enqueue";
+import { recordConsent, recordFunnelEvent } from "@/lib/funnel/records";
 import { logger } from "@/lib/logger";
 import { actionClient } from "@/lib/safe-action";
 import { cleanEmail } from "@/lib/sanitize/email";
@@ -88,6 +90,43 @@ export const joinWaitlist = actionClient
       });
 
       try {
+        const { ensurePersonForWaitlist } = await import("@/lib/admin/clients");
+        await ensurePersonForWaitlist(lead.id);
+      } catch (error) {
+        logger.warn("Could not create CRM person for waitlist lead", {
+          waitlistId: lead.id,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+
+      await recordConsent({
+        waitlistId: lead.id,
+        channel: "email",
+        purpose: "waitlist_updates",
+        source: "join_form",
+        policyVersion: POLICY_VERSION,
+        ipAddress: await clientIp(),
+      });
+      await recordConsent({
+        waitlistId: lead.id,
+        channel: "whatsapp",
+        purpose: "programme_delivery",
+        source: "join_form",
+        policyVersion: POLICY_VERSION,
+        ipAddress: await clientIp(),
+      });
+      await recordFunnelEvent({
+        eventName: "lead_submitted",
+        waitlistId: lead.id,
+        source: "web",
+        properties: {
+          goal: parsedInput.goal,
+          level: parsedInput.level,
+        },
+        eventId: `lead:${lead.ref}`,
+      });
+
+      try {
         await tasks.trigger<typeof sendWelcomeEmail>(
           "send-welcome-email",
           { email, firstName: lead.firstName, ref: lead.ref },
@@ -96,6 +135,12 @@ export const joinWaitlist = actionClient
       } catch (error) {
         logger.error("Failed to enqueue welcome email", error);
       }
+
+      await enqueueWaitlistNurture({
+        waitlistId: lead.id,
+        email,
+        name,
+      });
 
       if (env.GHL_SYNC_ENABLED) {
         try {

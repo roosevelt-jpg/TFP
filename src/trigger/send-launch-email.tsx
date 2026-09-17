@@ -1,8 +1,6 @@
 import { AbortTaskRunError, logger, schemaTask } from "@trigger.dev/sdk";
 import { z } from "zod";
 
-import { resend } from "@/lib/clients/resend";
-import { isPermanentSendError } from "@/lib/clients/resend-error";
 import { firstNameOf } from "@/lib/name";
 import {
   CURRENCY,
@@ -15,14 +13,12 @@ import {
 import { db } from "@/db";
 import { LaunchAnnouncementEmail } from "@/emails/launch-announcement";
 import { env } from "@/env";
+import { emailLogoSrc } from "@/lib/mail/logo";
+import { isPermanentMailError, sendMail } from "@/lib/mail/send";
 
 import { emailQueue } from "./queues";
 
 const SUPPORT_URL = `${env.NEXT_PUBLIC_APP_URL}/support`;
-
-const senderFrom = env.RESEND_FROM.includes("<")
-  ? env.RESEND_FROM
-  : `The Formula Programme <${env.RESEND_FROM}>`;
 
 // One recipient, one run. Split from the parent so each person gets their own
 // entry in the dashboard, their own retries, and so the email queue's
@@ -73,9 +69,9 @@ export const sendLaunchEmail = schemaTask({
       return { sent: false };
     }
 
-    const result = await resend.emails.send(
-      {
-        from: senderFrom,
+    try {
+      await sendMail({
+        channel: "client",
         to: person.email,
         subject: "Doors are open",
         react: (
@@ -97,15 +93,15 @@ export const sendLaunchEmail = schemaTask({
             discountedPrice={`${CURRENCY}${(PRICE_TODAY / 2).toFixed(2)}`}
             monthlyPrice={`${CURRENCY}${PRICE_MONTHLY}`}
             programmeWeeks={PROGRAMME_WEEKS}
-            logoUrl={env.EMAIL_LOGO_URL}
+            logoUrl={emailLogoSrc()}
             supportUrl={SUPPORT_URL}
           />
         ),
-      },
-      { idempotencyKey: `launch/${person.id}` },
-    );
+        idempotencyKey: `launch/${person.id}`,
+      });
 
-    if (result.error) {
+      return { sent: true };
+    } catch (error) {
       // Release the claim, or a transient failure means this person never
       // hears from us at all.
       await db.waitlist.updateMany({
@@ -113,14 +109,13 @@ export const sendLaunchEmail = schemaTask({
         data: { launchEmailAt: null },
       });
 
-      const detail = `${result.error.name}: ${result.error.message}`;
-      if (isPermanentSendError(result.error)) {
+      const detail =
+        error instanceof Error ? error.message : "launch email failed";
+      if (isPermanentMailError(error)) {
         throw new AbortTaskRunError(detail);
       }
-      throw new Error(detail);
+      throw error instanceof Error ? error : new Error(detail);
     }
-
-    return { sent: true };
   },
   onFailure: async ({ payload, error }) => {
     logger.error("Launch email never reached this person", {

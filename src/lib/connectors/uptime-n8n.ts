@@ -3,11 +3,15 @@ import "server-only";
 import { env } from "@/env";
 import { db } from "@/db";
 import { siteConfig } from "@/config/site";
+import { resolveSecret } from "@/lib/secrets/store";
 
 const CHECK_PATHS = [
   "/",
   "/checkout",
   "/how-it-works",
+  "/join",
+  "/stack",
+  "/support",
 ] as const;
 
 export async function runUptimeChecks() {
@@ -70,7 +74,9 @@ export async function runUptimeChecks() {
 }
 
 export async function pullN8nStatus() {
-  if (!env.N8N_API_URL || !env.N8N_API_KEY) {
+  const apiUrl = await resolveSecret("N8N_API_URL");
+  const apiKey = await resolveSecret("N8N_API_KEY");
+  if (!apiUrl || !apiKey) {
     await db.connectorRun.update({
       where: { sourceId: "S6" },
       data: {
@@ -83,9 +89,9 @@ export async function pullN8nStatus() {
   }
 
   const res = await fetch(
-    new URL("/api/v1/executions?limit=20", env.N8N_API_URL),
+    new URL("/api/v1/executions?limit=20", apiUrl),
     {
-      headers: { "X-N8N-API-KEY": env.N8N_API_KEY },
+      headers: { "X-N8N-API-KEY": apiKey },
     },
   );
 

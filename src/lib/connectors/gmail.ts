@@ -1,9 +1,9 @@
 import "server-only";
 
-import { env } from "@/env";
 import { db } from "@/db";
 import { createApprovalRequest } from "@/lib/admin/approvals";
 import { runSpecialistCheck } from "@/lib/cto/specialist";
+import { resolveSecret } from "@/lib/secrets/store";
 
 type GmailMessage = {
   id: string;
@@ -16,11 +16,10 @@ type GmailMessage = {
  * Gmail triage — read + draft only. Sending is gated by Kane approval.
  */
 export async function triageGmailInbox() {
-  if (
-    !env.GMAIL_CLIENT_ID ||
-    !env.GMAIL_CLIENT_SECRET ||
-    !env.GMAIL_REFRESH_TOKEN
-  ) {
+  const clientId = await resolveSecret("GMAIL_CLIENT_ID");
+  const clientSecret = await resolveSecret("GMAIL_CLIENT_SECRET");
+  const refreshToken = await resolveSecret("GMAIL_REFRESH_TOKEN");
+  if (!clientId || !clientSecret || !refreshToken) {
     await db.connectorRun.update({
       where: { sourceId: "S7" },
       data: {
@@ -32,7 +31,11 @@ export async function triageGmailInbox() {
     return { skipped: true as const };
   }
 
-  const token = await refreshGmailAccessToken();
+  const token = await refreshGmailAccessToken({
+    clientId,
+    clientSecret,
+    refreshToken,
+  });
   const listRes = await fetch(
     "https://gmail.googleapis.com/gmail/v1/users/me/messages?q=is:unread newer_than:2d&maxResults=20",
     { headers: { Authorization: `Bearer ${token}` } },
@@ -132,14 +135,18 @@ export async function triageGmailInbox() {
   return { drafted };
 }
 
-async function refreshGmailAccessToken() {
+async function refreshGmailAccessToken(creds: {
+  clientId: string;
+  clientSecret: string;
+  refreshToken: string;
+}) {
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "content-type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
-      client_id: env.GMAIL_CLIENT_ID!,
-      client_secret: env.GMAIL_CLIENT_SECRET!,
-      refresh_token: env.GMAIL_REFRESH_TOKEN!,
+      client_id: creds.clientId,
+      client_secret: creds.clientSecret,
+      refresh_token: creds.refreshToken,
       grant_type: "refresh_token",
     }),
   });

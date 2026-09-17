@@ -18,6 +18,8 @@ type BuildParams = {
   // Resolved from a code the buyer typed on our page. Stripe's own field is a
   // collapsed link that buyers miss, so when we have one we apply it for them.
   promotionCodeId?: string;
+  /** Human-readable code (e.g. FORMULA50) for recovery messaging. */
+  promotionCode?: string;
 };
 
 // Random suffix required by the dahlia integration_identifier convention.
@@ -43,6 +45,7 @@ export function buildCheckoutSessionParams({
   waitlistId,
   stripeCustomerId,
   promotionCodeId,
+  promotionCode,
 }: BuildParams): Stripe.Checkout.SessionCreateParams {
   const metadata = {
     name,
@@ -52,6 +55,7 @@ export function buildCheckoutSessionParams({
     // Shared with the client-side pixel so Meta can dedup the Purchase.
     eventId,
     ...(waitlistId ? { waitlistId } : {}),
+    ...(promotionCode ? { promoCode: promotionCode } : {}),
   };
 
   return {

@@ -10,8 +10,11 @@ import {
   buildAffiliateMondayPrompt,
   buildMondayContentPlan,
 } from "@/lib/content/social-manager";
-import { sendTelegramMessage } from "@/lib/telegram/client";
-import { env } from "@/env";
+import {
+  getKaneTelegramChatId,
+  sendTelegramMessage,
+} from "@/lib/telegram/client";
+import { ensureAccountabilityTodos } from "@/lib/admin/team-monitor";
 
 export const evaluateAlertsTask = schemaTask({
   id: "command.evaluate-alerts",
@@ -29,10 +32,11 @@ export const dailyTodoTask = schedules.task({
   id: "command.daily-todo",
   cron: { pattern: "30 3 * * *", environments: ["PRODUCTION"] },
   run: async () => {
-    if (!env.TELEGRAM_KANE_CHAT_ID) return;
+    const kaneChatId = await getKaneTelegramChatId();
+    if (!kaneChatId) return;
     const text = await buildDailyTodo();
     await sendTelegramMessage({
-      chatId: env.TELEGRAM_KANE_CHAT_ID,
+      chatId: kaneChatId,
       text,
     });
   },
@@ -42,10 +46,11 @@ export const dailyReportTask = schedules.task({
   id: "command.daily-report",
   cron: { pattern: "0 4 * * *", environments: ["PRODUCTION"] },
   run: async () => {
-    if (!env.TELEGRAM_KANE_CHAT_ID) return;
+    const kaneChatId = await getKaneTelegramChatId();
+    if (!kaneChatId) return;
     const text = await buildDailyReport();
     await sendTelegramMessage({
-      chatId: env.TELEGRAM_KANE_CHAT_ID,
+      chatId: kaneChatId,
       text,
     });
   },
@@ -91,9 +96,10 @@ export const draftMetaPauseTask = schemaTask({
       createdBy: "cto-agent",
     });
 
-    if (env.TELEGRAM_KANE_CHAT_ID) {
+    const kaneChatId = await getKaneTelegramChatId();
+    if (kaneChatId) {
       await sendTelegramMessage({
-        chatId: env.TELEGRAM_KANE_CHAT_ID,
+        chatId: kaneChatId,
         text: `<b>Approval needed</b>\n${approval.action}\n${check.verdict}\n${payload.reason}`,
         replyMarkup: {
           inline_keyboard: [
@@ -123,4 +129,10 @@ export const reconcileOpenApprovals = schemaTask({
     });
     return { expired: result.count };
   },
+});
+
+export const accountabilityTodosSchedule = schedules.task({
+  id: "command.accountability-todos",
+  cron: { pattern: "0 */6 * * *", environments: ["PRODUCTION"] },
+  run: async () => ensureAccountabilityTodos(),
 });

@@ -1,10 +1,11 @@
 import "server-only";
 
-import { env } from "@/env";
 import { db } from "@/db";
+import { resolveSecret } from "@/lib/secrets/store";
 
 export async function pullKlaviyoCampaigns() {
-  if (!env.KLAVIYO_API_KEY) {
+  const apiKey = await resolveSecret("KLAVIYO_API_KEY");
+  if (!apiKey) {
     await db.connectorRun.update({
       where: { sourceId: "S4" },
       data: {
@@ -21,7 +22,7 @@ export async function pullKlaviyoCampaigns() {
     {
       method: "POST",
       headers: {
-        Authorization: `Klaviyo-API-Key ${env.KLAVIYO_API_KEY}`,
+        Authorization: `Klaviyo-API-Key ${apiKey}`,
         revision: "2024-10-15",
         "content-type": "application/json",
       },
@@ -38,8 +39,47 @@ export async function pullKlaviyoCampaigns() {
     },
   );
 
-  // Klaviyo report shape varies by account metric ids — store a connector heartbeat
-  // and leave detailed rows to a configured metric id in env later.
+  // Klaviyo report shape varies — heartbeat + optional EmailDaily rows when stats present.
+  if (res.ok) {
+    try {
+      const body = (await res.json()) as {
+        data?: {
+          attributes?: {
+            results?: Array<{
+              campaign_id?: string;
+              campaign_name?: string;
+              recipients?: number;
+              opens?: number;
+              clicks?: number;
+              conversion_value?: number;
+            }>;
+          };
+        };
+      };
+      const results = body.data?.attributes?.results ?? [];
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      for (const row of results.slice(0, 20)) {
+        const name = row.campaign_name ?? row.campaign_id ?? "Klaviyo campaign";
+        await db.emailDaily.create({
+          data: {
+            date: today,
+            name,
+            kind: "campaign",
+            recipients: row.recipients ?? 0,
+            opens: row.opens ?? 0,
+            clicks: row.clicks ?? 0,
+            revenuePence: Math.round((row.conversion_value ?? 0) * 100),
+            label: "verified",
+            sourceFreshAt: new Date(),
+          },
+        });
+      }
+    } catch {
+      // Heartbeat still recorded below.
+    }
+  }
+
   await db.connectorRun.update({
     where: { sourceId: "S4" },
     data: {
@@ -55,11 +95,25 @@ export async function pullKlaviyoCampaigns() {
 
 /** GHL contacts/conversations — read-only. Never edit workflows. */
 export async function pullGhlLeadThreads() {
+  const token = await resolveSecret("GHL_INTEGRATION_TOKEN");
+  const locationId = await resolveSecret("GHL_LOCATION_ID");
+  if (!token || !locationId) {
+    await db.connectorRun.update({
+      where: { sourceId: "S5" },
+      data: {
+        lastRunAt: new Date(),
+        lastError: "GHL_* credentials not configured",
+        status: "error",
+      },
+    });
+    return { skipped: true as const };
+  }
+
   const res = await fetch(
-    `https://services.leadconnectorhq.com/conversations/search?locationId=${env.GHL_LOCATION_ID}&status=unread`,
+    `https://services.leadconnectorhq.com/conversations/search?locationId=${locationId}&status=unread`,
     {
       headers: {
-        Authorization: `Bearer ${env.GHL_INTEGRATION_TOKEN}`,
+        Authorization: `Bearer ${token}`,
         Version: "2021-07-28",
       },
     },

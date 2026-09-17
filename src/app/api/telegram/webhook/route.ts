@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 
 import { decideApproval, executeApprovedAction } from "@/lib/admin/approvals";
 import { db } from "@/db";
+import { env } from "@/env";
+import {
+  linkChannelIdentity,
+  recordFunnelEvent,
+} from "@/lib/funnel/records";
+import { parseTelegramActivationToken } from "@/lib/telegram/activation";
 import {
   isAllowedTelegramChat,
   sendTelegramMessage,
@@ -22,6 +28,71 @@ type TelegramUpdate = {
   };
 };
 
+async function handleCustomerStart(chatId: string, text: string) {
+  const enabled =
+    env.TELEGRAM_ACTIVATION_ENABLED === true ||
+    String(env.TELEGRAM_ACTIVATION_ENABLED) === "true";
+  if (!enabled) {
+    await sendTelegramMessage({
+      chatId,
+      text: "Telegram activation isn’t enabled yet. Use WhatsApp from your success page.",
+    });
+    return;
+  }
+
+  const payload = text.replace(/^\/start\s*/i, "").trim();
+  if (!payload) {
+    await sendTelegramMessage({
+      chatId,
+      text: "Welcome to The Formula Programme. Open the activation link from your success page to connect this chat.",
+    });
+    return;
+  }
+
+  const customerId = parseTelegramActivationToken(payload);
+  if (!customerId) {
+    await sendTelegramMessage({
+      chatId,
+      text: "That activation link isn’t valid. Use the button from your programme success page.",
+    });
+    return;
+  }
+
+  const customer = await db.customer.findUnique({
+    where: { id: customerId },
+    select: { id: true, name: true, email: true },
+  });
+  if (!customer) {
+    await sendTelegramMessage({
+      chatId,
+      text: "We couldn’t find that membership. Talk to support if this keeps happening.",
+    });
+    return;
+  }
+
+  await linkChannelIdentity({
+    channel: "telegram",
+    externalUserId: chatId,
+    customerId: customer.id,
+    address: customer.email,
+    inbound: true,
+  });
+
+  await recordFunnelEvent({
+    eventName: "programme_activated",
+    customerId: customer.id,
+    source: "telegram",
+    properties: { channel: "telegram", chatId },
+    eventId: `activate:telegram:${customer.id}:${chatId}`,
+  });
+
+  const first = customer.name.split(" ")[0] ?? "athlete";
+  await sendTelegramMessage({
+    chatId,
+    text: `You’re connected, ${first}. Daily accountability stays in WhatsApp — this chat is for programme alerts when we enable them.`,
+  });
+}
+
 export async function POST(request: Request) {
   const update = (await request.json()) as TelegramUpdate;
   const chatId = String(
@@ -30,8 +101,23 @@ export async function POST(request: Request) {
 
   if (!chatId) return NextResponse.json({ ok: true });
 
-  const access = isAllowedTelegramChat(chatId);
+  const access = await isAllowedTelegramChat(chatId);
+
   if (!access.allowed) {
+    const text = update.message?.text ?? "";
+    if (text.startsWith("/start")) {
+      await db.telegramMessageLog.create({
+        data: {
+          chatId,
+          direction: "in",
+          kind: "customer_start",
+          payload: update as object,
+        },
+      });
+      await handleCustomerStart(chatId, text);
+      return NextResponse.json({ ok: true, customer: true });
+    }
+
     await db.telegramMessageLog.create({
       data: {
         chatId,

@@ -1,9 +1,17 @@
 import { AlertsClient } from "@/components/admin/AlertsClient";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getAlertsPageData } from "@/lib/admin/queries/pages";
+import { requireAdminSession } from "@/lib/auth/session";
 import { getCmsMap } from "@/lib/cms/store";
 
 export default async function AlertsPage() {
+  await requireAdminSession([
+    "kane",
+    "leah",
+    "lemoni",
+    "indigo",
+    "asim",
+  ]);
   const [data, cms] = await Promise.all([
     getAlertsPageData(),
     getCmsMap("admin"),

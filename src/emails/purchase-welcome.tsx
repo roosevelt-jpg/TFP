@@ -298,7 +298,7 @@ PurchaseWelcomeEmail.PreviewProps = {
   whatsappUrl:
     "https://wa.me/447466396911?text=Hi%2C%20I%27d%20like%20to%20start%20my%20coaching",
   billingUrl: "https://billing.stripe.com/p/login/test_9B63cu9vWdjzgnO3v7dfG00",
-  logoUrl: "https://theformulaperformance.com/email/logo.png",
+  logoUrl: "/email/logo.png",
   communityImageUrl: "https://theformulaperformance.com/email/community.jpg",
   supportUrl: "https://theformulaperformance.com/support",
 } satisfies PurchaseWelcomeEmailProps;

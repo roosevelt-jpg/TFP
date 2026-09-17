@@ -4,12 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { ADMIN_NAV } from "@/lib/admin/nav";
+import { filterNavForRole } from "@/lib/admin/staff";
 import { AdminIcons } from "@/components/admin/icons";
+import type { StaffRole } from "@/generated/prisma/client";
 
 type Props = {
   userName: string;
   userRole: string;
+  staffRole: StaffRole;
   openAlertCount: number;
   image?: string | null;
 };
@@ -17,12 +19,14 @@ type Props = {
 export function AdminSidebar({
   userName,
   userRole,
+  staffRole,
   openAlertCount,
   image,
 }: Props) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [alertCount, setAlertCount] = useState(openAlertCount);
+  const nav = filterNavForRole(staffRole);
   const initials = userName
     .split(" ")
     .map((p) => p[0])
@@ -72,14 +76,16 @@ export function AdminSidebar({
           />
         </div>
         <nav className="cmd-nav">
-          {ADMIN_NAV.map((group) => (
+          {nav.map((group) => (
             <div key={group.group}>
               <div className="cmd-nav-group">{group.group}</div>
               {group.items.map((item) => {
                 const active =
                   item.href === "/admin"
                     ? pathname === "/admin"
-                    : pathname.startsWith(item.href);
+                    : item.href === "/admin/me"
+                      ? pathname === "/admin/me"
+                      : pathname.startsWith(item.href);
                 const count =
                   item.id === "alerts" ? alertCount : item.count;
                 return (

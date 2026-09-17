@@ -45,7 +45,8 @@ export async function getAdminSession(): Promise<AdminSession | null> {
 }
 
 export async function requireAdminSession(
-  allowed: StaffRole[] = ["kane", "leah", "lemoni", "indigo", "viewer"],
+  allowed: StaffRole[] = ["kane", "leah", "lemoni", "indigo", "asim", "viewer"],
+  options?: { skipProfileGate?: boolean },
 ): Promise<AdminSession> {
   const session = await getAdminSession();
   if (!session) redirect("/admin/login");
@@ -57,5 +58,17 @@ export async function requireAdminSession(
     redirect("/admin/setup-2fa");
   }
   if (!allowed.includes(session.user.role)) redirect("/admin/login?error=role");
+
+  if (!options?.skipProfileGate && session.user.role !== "kane") {
+    const { db } = await import("@/db");
+    const profile = await db.staffProfile.findUnique({
+      where: { userId: session.user.id },
+      select: { completedAt: true },
+    });
+    if (!profile?.completedAt) {
+      redirect("/admin/complete-profile");
+    }
+  }
+
   return session;
 }

@@ -1,14 +1,15 @@
 import "server-only";
 
-import { env } from "@/env";
 import { db } from "@/db";
+import { resolveSecret } from "@/lib/secrets/store";
 
 export async function sendTelegramMessage(input: {
   chatId: string;
   text: string;
   replyMarkup?: unknown;
 }) {
-  if (!env.TELEGRAM_BOT_TOKEN) {
+  const botToken = await resolveSecret("TELEGRAM_BOT_TOKEN");
+  if (!botToken) {
     await db.telegramMessageLog.create({
       data: {
         chatId: input.chatId,
@@ -21,7 +22,7 @@ export async function sendTelegramMessage(input: {
   }
 
   const res = await fetch(
-    `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+    `https://api.telegram.org/bot${botToken}/sendMessage`,
     {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -47,14 +48,24 @@ export async function sendTelegramMessage(input: {
   return { ok: res.ok as boolean, json };
 }
 
-export function isAllowedTelegramChat(chatId: string): {
+export async function getKaneTelegramChatId() {
+  return resolveSecret("TELEGRAM_KANE_CHAT_ID");
+}
+
+export async function getLeahTelegramChatId() {
+  return resolveSecret("TELEGRAM_LEAH_CHAT_ID");
+}
+
+export async function isAllowedTelegramChat(chatId: string): Promise<{
   allowed: boolean;
   role: "kane" | "leah" | null;
-} {
-  if (env.TELEGRAM_KANE_CHAT_ID && chatId === env.TELEGRAM_KANE_CHAT_ID) {
+}> {
+  const kaneId = await getKaneTelegramChatId();
+  if (kaneId && chatId === kaneId) {
     return { allowed: true, role: "kane" };
   }
-  if (env.TELEGRAM_LEAH_CHAT_ID && chatId === env.TELEGRAM_LEAH_CHAT_ID) {
+  const leahId = await getLeahTelegramChatId();
+  if (leahId && chatId === leahId) {
     return { allowed: true, role: "leah" };
   }
   return { allowed: false, role: null };

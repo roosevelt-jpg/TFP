@@ -6,6 +6,7 @@ import { logger } from "@/lib/logger";
 import { fulfillCheckout } from "@/lib/payments/fulfill-checkout";
 
 import { handleChargeRefunded, handleDisputeCreated } from "./handlers/charges";
+import { handleCheckoutExpired } from "./handlers/checkout-expired";
 import {
   handleInvoiceActionRequired,
   handleInvoiceFinalizationFailed,
@@ -71,6 +72,10 @@ export async function handleStripeEvent(
 
     case "charge.dispute.created":
       handleDisputeCreated(event.data.object);
+      return "handled";
+
+    case "checkout.session.expired":
+      await handleCheckoutExpired(event.data.object);
       return "handled";
 
     // Comms and analytics ship in a later phase, so these stay findable for

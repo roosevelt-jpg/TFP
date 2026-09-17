@@ -27,6 +27,7 @@ import { cleanText } from "@/lib/sanitize/text";
 import { verifyTurnstile } from "@/lib/turnstile";
 import { checkoutSchema } from "@/lib/validation/checkout/schema";
 import { env } from "@/env";
+import { recordConsent, recordFunnelEvent } from "@/lib/funnel/records";
 
 export const createCheckoutSession = actionClient
   .metadata({ actionName: "createCheckoutSession" })
@@ -115,6 +116,10 @@ export const createCheckoutSession = actionClient
         // field, so a lookup outage delays the discount rather than the sale.
         promotionCodeId:
           promo?.state === "valid" ? promo.promotionCodeId : undefined,
+        promotionCode:
+          promo?.state === "valid" && parsedInput.promoCode
+            ? parsedInput.promoCode.trim().toUpperCase()
+            : undefined,
       }),
       idempotencyKey: checkoutIdempotencyKey(stripeCustomerId),
     });
@@ -133,6 +138,28 @@ export const createCheckoutSession = actionClient
     logger.info("Checkout session created", {
       sessionId: session.id,
       waitlistLinked: Boolean(waitlist),
+    });
+
+    await recordConsent({
+      customerId: existing?.id,
+      waitlistId: waitlist?.id,
+      channel: "programme",
+      purpose: "checkout",
+      source: "checkout_form",
+      policyVersion: CHECKOUT_POLICY_VERSION,
+      ipAddress: ip,
+    });
+
+    await recordFunnelEvent({
+      eventName: "checkout_started",
+      customerId: existing?.id,
+      waitlistId: waitlist?.id,
+      sessionId: session.id,
+      source: "web",
+      properties: {
+        promo: promo?.state === "valid" ? parsedInput.promoCode : undefined,
+      },
+      eventId: `checkout_started:${session.id}`,
     });
 
     return { url: session.url };

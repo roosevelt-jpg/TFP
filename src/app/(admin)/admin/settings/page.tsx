@@ -1,18 +1,22 @@
 import { AccountSettingsForm } from "@/components/admin/AccountSettingsForm";
 import { ThresholdEditor } from "@/components/admin/ThresholdEditor";
 import { PausePostingButton } from "@/components/admin/PausePostingButton";
+import { StaffAccessPanel } from "@/components/admin/StaffAccessPanel";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { db } from "@/db";
+import { listOpenInvites, listStaffUsers } from "@/lib/admin/invites";
 import { requireAdminSession } from "@/lib/auth/session";
 import { getCmsMap } from "@/lib/cms/store";
 
 export default async function SettingsPage() {
   const session = await requireAdminSession(["kane"]);
-  const [thresholds, cms] = await Promise.all([
+  const [thresholds, cms, users, invites] = await Promise.all([
     db.alertThreshold.findMany({
       orderBy: { ruleId: "asc" },
     }),
     getCmsMap("admin"),
+    listStaffUsers(),
+    listOpenInvites(),
   ]);
 
   return (
@@ -20,7 +24,7 @@ export default async function SettingsPage() {
       <div className="cmd-page-lead">
         <div className="cmd-page-lead-line" data-cms="settings.lead">
           {cms["settings.lead"] ??
-            "Your account, roles, access rules, posting kill switch and editable alert thresholds."}
+            "Your account, team invites, roles, posting kill switch and editable alert thresholds."}
         </div>
       </div>
 
@@ -28,6 +32,23 @@ export default async function SettingsPage() {
         name={session.user.name}
         email={session.user.email}
         image={session.user.image}
+      />
+
+      <StaffAccessPanel
+        users={users.map((u) => ({
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          updatedAt: u.updatedAt.toISOString(),
+          twoFactorEnabled: u.twoFactorEnabled,
+        }))}
+        invites={invites.map((i) => ({
+          id: i.id,
+          email: i.email,
+          role: i.role,
+          expiresAt: i.expiresAt.toISOString(),
+        }))}
       />
 
       <div className="cmd-panel">
@@ -48,52 +69,6 @@ export default async function SettingsPage() {
             </div>
           </div>
           <PausePostingButton />
-        </div>
-      </div>
-
-      <div className="cmd-panel">
-        <div className="cmd-panel-head">
-          <div className="cmd-panel-title" data-cms="settings.panel.roles">
-            {cms["settings.panel.roles"] ?? "Roles"}
-          </div>
-        </div>
-        <div className="cmd-panel-body">
-          <div className="cmd-role-row">
-            <div className="cell-strong">Kane</div>
-            <div className="cell-muted">
-              Full access — every page, every approval, finance, customer data
-            </div>
-            <div>
-              <span className="cmd-badge cmd-badge-verified">Full</span>
-            </div>
-          </div>
-          <div className="cmd-role-row">
-            <div className="cell-strong">Leah</div>
-            <div className="cell-muted">
-              Money page, refunds up to £50, scorecard
-            </div>
-            <div>
-              <span className="cmd-badge cmd-badge-calculated">Limited</span>
-            </div>
-          </div>
-          <div className="cmd-role-row">
-            <div className="cell-strong">Lemoni</div>
-            <div className="cell-muted">
-              Coaching pipeline, scorecard, calendar, CMS
-            </div>
-            <div>
-              <span className="cmd-badge cmd-badge-calculated">Limited</span>
-            </div>
-          </div>
-          <div className="cmd-role-row">
-            <div className="cell-strong">Indigo</div>
-            <div className="cell-muted">
-              Systems health — no finance, no customer lists
-            </div>
-            <div>
-              <span className="cmd-badge cmd-badge-calculated">Limited</span>
-            </div>
-          </div>
         </div>
       </div>
 

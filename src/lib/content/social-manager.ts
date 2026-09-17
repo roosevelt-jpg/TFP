@@ -1,7 +1,10 @@
 import "server-only";
 
-import { env } from "@/env";
 import { db } from "@/db";
+import {
+  getKaneTelegramChatId,
+  sendTelegramMessage,
+} from "@/lib/telegram/client";
 
 /**
  * Social media manager agent — plans only. No publish tool.
@@ -54,10 +57,10 @@ export async function buildMondayContentPlan() {
     },
   });
 
-  if (env.TELEGRAM_KANE_CHAT_ID) {
-    const { sendTelegramMessage } = await import("@/lib/telegram/client");
+  const kaneChatId = await getKaneTelegramChatId();
+  if (kaneChatId) {
     await sendTelegramMessage({
-      chatId: env.TELEGRAM_KANE_CHAT_ID,
+      chatId: kaneChatId,
       text: pack,
     });
   }
@@ -82,10 +85,10 @@ export async function buildAffiliateMondayPrompt() {
     "Attach decisions in Sunday 12:00 planning.",
   ].join("\n");
 
-  if (env.TELEGRAM_KANE_CHAT_ID) {
-    const { sendTelegramMessage } = await import("@/lib/telegram/client");
+  const kaneChatId = await getKaneTelegramChatId();
+  if (kaneChatId) {
     await sendTelegramMessage({
-      chatId: env.TELEGRAM_KANE_CHAT_ID,
+      chatId: kaneChatId,
       text,
     });
   }

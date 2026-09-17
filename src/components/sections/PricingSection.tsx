@@ -5,15 +5,17 @@ import { TrackCta } from "@/components/analytics/TrackCta";
 import { TrackPricingView } from "@/components/analytics/TrackPricingView";
 import { Section } from "@/components/layout/Section";
 import { SIGNUP_HREF } from "@/lib/launch";
-import { CURRENCY, PRICE_MONTHLY, PRICE_TODAY } from "@/lib/pricing";
+import type { ResolvedOffer } from "@/lib/offers/resolve";
+import { formatGbpAmount } from "@/lib/pricing";
 import { pricingFeatures } from "@/content/marketing";
 
 type Props = {
   ctaLabel: string;
   reassurance: string;
+  offer: ResolvedOffer;
 };
 
-export function PricingSection({ ctaLabel, reassurance }: Props) {
+export function PricingSection({ ctaLabel, reassurance, offer }: Props) {
   return (
     <Section id="pricing" divided>
       <TrackPricingView />
@@ -26,12 +28,12 @@ export function PricingSection({ ctaLabel, reassurance }: Props) {
         <div className="mt-10">
           <TrackCta placement="pricing">
             <PricingCard
-              priceToday={PRICE_TODAY}
-              priceMonthly={PRICE_MONTHLY}
-              currency={CURRENCY}
+              priceToday={formatGbpAmount(offer.amountDueToday)}
+              priceMonthly={offer.renewalAmount}
+              currency={offer.currencySymbol}
               features={pricingFeatures}
               cta={{ label: ctaLabel, href: SIGNUP_HREF }}
-              reassurance={reassurance}
+              reassurance={reassurance || offer.renewalDisclosure}
             />
           </TrackCta>
         </div>

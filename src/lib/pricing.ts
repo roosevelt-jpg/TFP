@@ -9,7 +9,23 @@ export const CURRENCY = "£";
 export const PROGRAMME_WEEKS = 8;
 export const TRIAL_DAYS = PROGRAMME_WEEKS * 7;
 
-export const ROLLOVER_DISCLOSURE = `${CURRENCY}${PRICE_TODAY} today for the ${PROGRAMME_WEEKS}-week programme, then ${CURRENCY}${PRICE_MONTHLY} a month. Cancel anytime.`;
+// Half off the programme fee only (not membership). Mirrors the Stripe coupon.
+export const FOUNDER_PRICE_TODAY = PRICE_TODAY / 2;
+
+/** Display helper — £74.50 stays two decimals; £149 stays whole. */
+export function formatGbpAmount(amount: number): string {
+  return Number.isInteger(amount) ? String(amount) : amount.toFixed(2);
+}
+
+export function gbp(amount: number): string {
+  return `${CURRENCY}${formatGbpAmount(amount)}`;
+}
+
+export const ROLLOVER_DISCLOSURE = `${gbp(PRICE_TODAY)} today for the ${PROGRAMME_WEEKS}-week programme, then ${gbp(PRICE_MONTHLY)} a month. Cancel anytime.`;
+
+export function rolloverDisclosure(amountDueToday: number): string {
+  return `${gbp(amountDueToday)} today for the ${PROGRAMME_WEEKS}-week programme, then ${gbp(PRICE_MONTHLY)} a month. Cancel anytime.`;
+}
 
 // The launch offer: half off the programme fee for the first 50 buyers, once
 // only, and not the monthly membership. Mirrored in stripe-bootstrap, which

@@ -2,8 +2,14 @@ import "server-only";
 
 import type Stripe from "stripe";
 
+import { recordFunnelEvent } from "@/lib/funnel/records";
 import { logger } from "@/lib/logger";
 import { syncStripeSubscriptionState } from "@/lib/payments/sync-subscription";
+import { db } from "@/db";
+import {
+  getKaneTelegramChatId,
+  sendTelegramMessage,
+} from "@/lib/telegram/client";
 
 // dahlia removed invoice.subscription; the link moved under parent.
 export function readSubscriptionId(invoice: Stripe.Invoice): string | null {
@@ -12,8 +18,6 @@ export function readSubscriptionId(invoice: Stripe.Invoice): string | null {
   return typeof subscription === "string" ? subscription : subscription.id;
 }
 
-// Day 56 and every month after. Also the recovery path: a successful retry
-// during dunning lands here and flips the row back to active.
 export async function handleInvoicePaid(
   invoice: Stripe.Invoice,
   eventCreated: number,
@@ -34,8 +38,10 @@ export async function handleInvoicePaid(
   }
 }
 
-// Stripe's Smart Retries own the recovery schedule and the customer emails. Our
-// job is only to mirror the state so access reflects it.
+/**
+ * Mirror subscription state, record funnel event, alert Kane (PY2),
+ * and open a staff recovery todo. Stripe still owns customer dunning emails.
+ */
 export async function handleInvoicePaymentFailed(
   invoice: Stripe.Invoice,
   eventCreated: number,
@@ -45,18 +51,76 @@ export async function handleInvoicePaymentFailed(
 
   await syncStripeSubscriptionState(subscriptionId, eventCreated);
 
+  const sub = await db.subscription.findUnique({
+    where: { stripeSubscriptionId: subscriptionId },
+    include: { customer: true },
+  });
+
+  await recordFunnelEvent({
+    eventName: "payment_failed",
+    customerId: sub?.customerId,
+    source: "stripe",
+    properties: {
+      stripeSubscriptionId: subscriptionId,
+      invoiceId: invoice.id,
+      attemptCount: invoice.attempt_count,
+      amountDue: invoice.amount_due,
+      hostedInvoiceUrl: invoice.hosted_invoice_url,
+      nextAttempt: invoice.next_payment_attempt,
+    },
+    eventId: `payment_failed:${invoice.id}:${invoice.attempt_count ?? 0}`,
+  });
+
+  const threadKey = `PY2-${subscriptionId}`;
+  const existing = await db.alert.findFirst({
+    where: { threadKey, status: { in: ["open", "acknowledged"] } },
+  });
+  if (!existing) {
+    await db.alert.create({
+      data: {
+        ruleId: "PY2",
+        severity: "p1",
+        title: `Payment failed — ${sub?.customer.email ?? subscriptionId}`,
+        payload: {
+          invoiceId: invoice.id,
+          amountDue: invoice.amount_due,
+          hostedInvoiceUrl: invoice.hosted_invoice_url,
+          customerId: sub?.customerId,
+        },
+        threadKey,
+      },
+    });
+  }
+
+  if (sub?.customerId) {
+    await db.staffTodo.create({
+      data: {
+        personKey: "leah",
+        title: `Recover payment: ${sub.customer.email}`,
+        status: "open",
+        dueAt: new Date(Date.now() + 4 * 60 * 60 * 1000),
+        source: "system",
+        createdBy: "stripe.payment_failed",
+      },
+    });
+  }
+
+  const kaneChatId = await getKaneTelegramChatId();
+  if (kaneChatId) {
+    await sendTelegramMessage({
+      chatId: kaneChatId,
+      text: `P1 PY2 · Payment failed for ${sub?.customer.email ?? subscriptionId} · £${((invoice.amount_due ?? 0) / 100).toFixed(2)} · ${invoice.hosted_invoice_url ?? "no hosted URL"}`,
+    });
+  }
+
   logger.warn("Membership payment failed", {
     stripeSubscriptionId: subscriptionId,
     attemptCount: invoice.attempt_count,
     nextAttempt: invoice.next_payment_attempt,
-    // A hard decline schedules retries that never execute until the customer
-    // supplies a new card, so this number alone doesn't mean recovery is coming.
     amountDue: invoice.amount_due,
   });
 }
 
-// The customer's bank wants SCA. Stripe emails them a hosted link; we only need
-// the state mirrored and a breadcrumb.
 export async function handleInvoiceActionRequired(
   invoice: Stripe.Invoice,
   eventCreated: number,
@@ -72,9 +136,6 @@ export async function handleInvoiceActionRequired(
   });
 }
 
-// Needs a human: the subscription stays active and the customer keeps access
-// while collection is impossible, so this is silent revenue loss until someone
-// looks.
 export function handleInvoiceFinalizationFailed(invoice: Stripe.Invoice): void {
   logger.error("Invoice could not be finalized", undefined, {
     invoiceId: invoice.id,

@@ -237,7 +237,7 @@ export function WaitlistWelcomeEmail({
 WaitlistWelcomeEmail.PreviewProps = {
   firstName: "Ahmed",
   waitlistRef: "WL-48217",
-  logoUrl: "https://theformulaperformance.com/email/logo.png",
+  logoUrl: "/email/logo.png",
   communityImageUrl: "https://theformulaperformance.com/email/community.jpg",
   instagramUrl: "https://instagram.com/kanem14",
   unsubscribeUrl:

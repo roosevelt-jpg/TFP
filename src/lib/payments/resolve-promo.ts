@@ -1,6 +1,6 @@
 import "server-only";
 
-import { stripe } from "@/lib/clients/stripe";
+import { getStripe } from "@/lib/clients/stripe";
 import { logger } from "@/lib/logger";
 
 export type PromoLookup =
@@ -26,6 +26,7 @@ export async function resolvePromotionCode(code: string): Promise<PromoLookup> {
   if (!trimmed) return { state: "invalid" };
 
   try {
+    const stripe = await getStripe();
     const { data } = await stripe.promotionCodes.list({
       code: trimmed,
       active: true,

@@ -4,43 +4,48 @@ import { SectionHeader } from "@/components/brand/SectionHeader";
 import { Section } from "@/components/layout/Section";
 import { BorderBeam } from "@/components/ui/border-beam";
 import { SIGNUP_HREF } from "@/lib/launch";
+import type { ResolvedOffer } from "@/lib/offers/resolve";
 import {
   CURRENCY,
   LAUNCH_PROMOTION_LIMIT,
   PRICE_TODAY,
   PROGRAMME_WEEKS,
+  formatGbpAmount,
 } from "@/lib/pricing";
-import { launchCopy } from "@/content/launch-copy";
 
-// Half off the programme fee, matching the Stripe coupon the CTA applies.
-const FOUNDER_PRICE = PRICE_TODAY / 2;
-
-const PERKS = [
-  {
-    title: "Half off the programme fee",
-    body: `${CURRENCY}${FOUNDER_PRICE} instead of ${CURRENCY}${PRICE_TODAY} for the full ${PROGRAMME_WEEKS} weeks.`,
-  },
-  {
-    title: "50% off the Complete Stack",
-    body: "The Formula Male or Female stack, at half price alongside your programme.",
-  },
-  {
-    title: "Applied automatically",
-    body: "The founder discount is added to your order as soon as you reach checkout.",
-  },
-];
-
-export function FounderOfferSection({
-  seatsLeft,
-}: {
+type Props = {
   seatsLeft?: number | null;
-}) {
-  const heading =
-    seatsLeft === 0
-      ? "Founder places are sold out."
-      : seatsLeft != null
-        ? `${seatsLeft} founder seats left.`
-        : `Only the first ${LAUNCH_PROMOTION_LIMIT} members.`;
+  offer: ResolvedOffer;
+  ctaLabel: string;
+};
+
+export function FounderOfferSection({ seatsLeft, offer, ctaLabel }: Props) {
+  const founderPrice = formatGbpAmount(offer.amountDueToday);
+  const soldOut = seatsLeft === 0 || !offer.founderActive;
+
+  const heading = soldOut
+    ? "Founder places are sold out."
+    : seatsLeft != null
+      ? `${seatsLeft} founder seats left.`
+      : `Only the first ${LAUNCH_PROMOTION_LIMIT} members.`;
+
+  const perks = [
+    {
+      title: "Half off the programme fee",
+      body: `${CURRENCY}${founderPrice} instead of ${CURRENCY}${PRICE_TODAY} for the full ${PROGRAMME_WEEKS} weeks.`,
+    },
+    {
+      title: "50% off the Complete Stack",
+      body: "The Formula Male or Female stack, at half price alongside your programme.",
+    },
+  {
+    title: "Applied at checkout",
+    body: "Your founder discount is attached when you start checkout from this page.",
+  },
+  ];
+
+  // when soldOut we still show CTA; perks only when founder active
+  const stackHref = "/stack";
 
   return (
     <Section divided id="founder-offer">
@@ -50,40 +55,51 @@ export function FounderOfferSection({
         headingChars={24}
         leadChars={50}
         lead={
-          seatsLeft === 0
-            ? "Join the waitlist for the next cohort."
+          soldOut
+            ? `Standard pricing is ${CURRENCY}${PRICE_TODAY} today, then membership from week ${PROGRAMME_WEEKS}.`
             : "Standard pricing returns once the founder places are gone."
         }
       />
-      <div className="mt-11 grid gap-3.5 md:grid-cols-3 md:grid-rows-[auto_1fr]">
-        {PERKS.map((perk, i) => (
-          <Reveal
-            key={perk.title}
-            delayMs={i * 80}
-            className="grid h-full md:row-span-2 md:grid-rows-subgrid"
-          >
-            {/* Subgrid keeps the titles and the bodies on shared rows, so a
-                title that wraps to two lines doesn't push its body out of step
-                with the neighbouring cards. */}
-            <div className="border-hairline-strong relative grid h-full gap-2 overflow-hidden rounded-xs border p-6 md:row-span-2 md:grid-rows-subgrid">
-              <h3 className="text-h3 font-semibold">{perk.title}</h3>
-              <p className="text-muted leading-[1.6]">{perk.body}</p>
-              <BorderBeam
-                size={70}
-                duration={7}
-                delay={i * 2.3}
-                colorFrom="var(--red)"
-                colorTo="var(--red-bright)"
-                className="motion-reduce:hidden"
-              />
-            </div>
-          </Reveal>
-        ))}
-      </div>
+      {!soldOut ? (
+        <div className="mt-11 grid gap-3.5 md:grid-cols-3 md:grid-rows-[auto_1fr]">
+          {perks.map((perk, i) => (
+            <Reveal
+              key={perk.title}
+              delayMs={i * 80}
+              className="grid h-full md:row-span-2 md:grid-rows-subgrid"
+            >
+              <div className="border-hairline-strong relative grid h-full gap-2 overflow-hidden rounded-xs border p-6 md:row-span-2 md:grid-rows-subgrid">
+                <h3 className="text-h3 font-semibold">{perk.title}</h3>
+                <p className="text-muted leading-[1.6]">
+                  {perk.title.includes("Complete Stack") ? (
+                    <>
+                      {perk.body}{" "}
+                      <a href={stackHref} className="text-text underline">
+                        See the stack
+                      </a>
+                      .
+                    </>
+                  ) : (
+                    perk.body
+                  )}
+                </p>
+                <BorderBeam
+                  size={70}
+                  duration={7}
+                  delay={i * 2.3}
+                  colorFrom="var(--red)"
+                  colorTo="var(--red-bright)"
+                  className="motion-reduce:hidden"
+                />
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      ) : null}
       <Reveal delayMs={240}>
         <div className="mt-9 flex justify-center">
           <CtaButton href={SIGNUP_HREF} size="lg">
-            {launchCopy.cta}
+            {ctaLabel}
           </CtaButton>
         </div>
       </Reveal>

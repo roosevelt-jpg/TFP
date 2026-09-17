@@ -16,8 +16,11 @@ import { ConfirmingSkeleton } from "@/features/checkout/ConfirmingSkeleton";
 import { PaidHero } from "@/features/checkout/PaidHero";
 import { PaidReceipt } from "@/features/checkout/PaidReceipt";
 import { PaidSecondarySteps } from "@/features/checkout/PaidSecondarySteps";
+import { PostPurchaseUpsells } from "@/features/checkout/PostPurchaseUpsells";
 import { TrackPurchase } from "@/features/checkout/TrackPurchase";
 import { WhatsAppOptIn } from "@/features/checkout/WhatsAppOptIn";
+import { env } from "@/env";
+import { telegramActivationUrl } from "@/lib/telegram/activation";
 
 export const metadata: Metadata = {
   title: "You're in",
@@ -103,6 +106,16 @@ async function Confirmation({
           <Reveal delayMs={60}>
             <WhatsAppOptIn />
           </Reveal>
+          <Reveal delayMs={90}>
+            <PostPurchaseUpsells
+              stackUrl={
+                env.COMPLETE_STACK_URL ??
+                env.COMPLETE_STACK_MALE_URL ??
+                "/stack"
+              }
+              telegramUrl={await telegramActivationUrl(confirmed.customerId)}
+            />
+          </Reveal>
           <Reveal delayMs={120}>
             <PaidSecondarySteps />
           </Reveal>
@@ -110,6 +123,7 @@ async function Confirmation({
             <PaidReceipt
               orderRef={confirmed.ref}
               sessionId={confirmed.sessionId}
+              amountPaid={confirmed.amountTotal / 100}
             />
           </Reveal>
         </div>

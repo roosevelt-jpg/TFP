@@ -96,6 +96,8 @@ model Customer {
   coaching      CoachingProfile?
   purchases     Purchase[]
   subscriptions Subscription[]
+  /// Linked warehouse CRM person (1:1 when resolved).
+  person        PersonCustomer?
 
   createdAt DateTime @default(now()) @db.Timestamptz
   updatedAt DateTime @updatedAt @db.Timestamptz
@@ -290,6 +292,7 @@ enum StaffRole {
   leah
   lemoni
   indigo
+  asim
   viewer
 }
 
@@ -397,9 +400,10 @@ model User {
   role             StaffRole @default(viewer)
   twoFactorEnabled Boolean   @default(false)
 
-  sessions  Session[]
-  accounts  Account[]
-  twoFactor TwoFactor?
+  sessions     Session[]
+  accounts     Account[]
+  twoFactor    TwoFactor?
+  staffProfile StaffProfile?
 
   @@map("user")
 }
@@ -488,12 +492,26 @@ model PersonCustomer {
   ghlId      String? @unique
   igHandle   String?
 
+  /// Programme buyer identity when email/phone/Stripe match.
+  customerId String?   @unique
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  /// Profile photo (data URL or /uploads/clients/… path).
+  image       String?
+  country     String?
+  timezone    String?
+  dateOfBirth DateTime? @db.Date
+  bioSummary  String?
+
   orders       WarehouseOrder[]
   payments     WarehousePayment[]
   enrolments   ProgrammeEnrolment[]
   calls        Call[]
   leadThreads  LeadThread[]
   fulfilments  Fulfilment[]
+  assignments  ClientStaffAssignment[]
+  sessions     ClientSession[]
+  notes        ClientNote[]
 
   createdAt DateTime @default(now()) @db.Timestamptz
   updatedAt DateTime @updatedAt @db.Timestamptz
@@ -979,6 +997,108 @@ model AlertThreshold {
   updatedAt DateTime @updatedAt @db.Timestamptz
 }
 
+/// Encrypted API credentials entered in /admin/integrations (Kane only).
+/// Values never leave the server in plaintext after save.
+model IntegrationSecret {
+  id           String   @id @default(cuid())
+  key          String   @unique
+  ciphertext   String
+  iv           String
+  tag          String
+  lastFour     String?
+  updatedBy    String?
+  createdAt    DateTime @default(now()) @db.Timestamptz
+  updatedAt    DateTime @updatedAt @db.Timestamptz
+}
+
+enum StaffTodoStatus {
+  open
+  done
+  skipped
+}
+
+enum StaffTodoSource {
+  system
+  kane
+  self
+}
+
+enum StaffReportStatus {
+  draft
+  submitted
+  approved
+  rejected
+}
+
+/// Kane invite — email link creates Better Auth user with assigned role.
+model StaffInvite {
+  id         String    @id @default(cuid())
+  email      String
+  role       StaffRole
+  tokenHash  String    @unique
+  invitedBy  String
+  expiresAt  DateTime  @db.Timestamptz
+  acceptedAt DateTime? @db.Timestamptz
+  createdAt  DateTime  @default(now()) @db.Timestamptz
+  updatedAt  DateTime  @updatedAt @db.Timestamptz
+
+  @@index([email])
+  @@index([expiresAt])
+}
+
+/// Completed during invite accept — unlocks My Desk after Resend welcome.
+model StaffProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName    String
+  phone       String
+  whatsapp    String?
+  jobTitle    String
+  timezone    String   @default("Asia/Dubai")
+  completedAt DateTime @db.Timestamptz
+  createdAt   DateTime @default(now()) @db.Timestamptz
+  updatedAt   DateTime @updatedAt @db.Timestamptz
+}
+
+model StaffTodo {
+  id             String          @id @default(cuid())
+  personKey      String
+  userId         String?
+  title          String
+  dueAt          DateTime?       @db.Timestamptz
+  status         StaffTodoStatus @default(open)
+  source         StaffTodoSource @default(system)
+  linkedReportId String?
+  createdBy      String?
+  completedAt    DateTime?       @db.Timestamptz
+  createdAt      DateTime        @default(now()) @db.Timestamptz
+  updatedAt      DateTime        @updatedAt @db.Timestamptz
+
+  @@index([personKey, status])
+  @@index([userId, status])
+  @@index([dueAt])
+}
+
+model StaffReport {
+  id           String            @id @default(cuid())
+  authorUserId String
+  personKey    String
+  periodLabel  String
+  body         String
+  status       StaffReportStatus @default(draft)
+  submittedAt  DateTime?         @db.Timestamptz
+  reviewedBy   String?
+  reviewNote   String?
+  reviewedAt   DateTime?         @db.Timestamptz
+  createdAt    DateTime          @default(now()) @db.Timestamptz
+  updatedAt    DateTime          @updatedAt @db.Timestamptz
+
+  @@index([personKey, status])
+  @@index([authorUserId, createdAt])
+  @@index([status, submittedAt])
+}
+
 model DailySnapshot {
   id                String    @id @default(cuid())
   date              DateTime  @unique @db.Date
@@ -1014,5 +1134,188 @@ model TelegramMessageLog {
   createdAt DateTime @default(now()) @db.Timestamptz
 
   @@index([chatId, createdAt])
+}
+
+// --- Funnel CRM layer (spec §7): sits beside Customer/Waitlist, does not replace them ---
+
+model ConsentRecord {
+  id            String    @id @default(cuid())
+  customerId    String?
+  waitlistId    String?
+  channel       String
+  purpose       String
+  status        String
+  source        String
+  policyVersion String
+  capturedAt    DateTime  @db.Timestamptz
+  withdrawnAt   DateTime? @db.Timestamptz
+  ipAddress     String?
+  createdAt     DateTime  @default(now()) @db.Timestamptz
+
+  @@index([customerId, channel, capturedAt])
+  @@index([waitlistId, channel, capturedAt])
+}
+
+model FunnelEvent {
+  id            String   @id @default(cuid())
+  eventId       String   @unique
+  eventName     String
+  customerId    String?
+  waitlistId    String?
+  anonymousId   String?
+  sessionId     String?
+  correlationId String?
+  source        String
+  properties    Json?
+  occurredAt    DateTime @db.Timestamptz
+  receivedAt    DateTime @default(now()) @db.Timestamptz
+
+  @@index([eventName, occurredAt])
+  @@index([customerId, occurredAt])
+  @@index([waitlistId, occurredAt])
+}
+
+model WorkflowExecution {
+  id             String    @id @default(cuid())
+  dedupeKey      String    @unique
+  workflowKey    String
+  customerId     String?
+  waitlistId     String?
+  email          String?
+  triggerEventId String?
+  state          String    @default("running")
+  currentStep    String?
+  nextActionAt   DateTime? @db.Timestamptz
+  attemptCount   Int       @default(0)
+  lastError      String?
+  createdAt      DateTime  @default(now()) @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @db.Timestamptz
+
+  messages OutboundMessage[]
+
+  @@index([workflowKey, state])
+  @@index([nextActionAt])
+  @@index([email])
+}
+
+model OutboundMessage {
+  id                  String    @id @default(cuid())
+  customerId          String?
+  waitlistId          String?
+  workflowExecutionId String?
+  workflow            WorkflowExecution? @relation(fields: [workflowExecutionId], references: [id], onDelete: SetNull)
+  channel             String
+  templateId          String?
+  providerMessageId   String?
+  status              String
+  failureReason       String?
+  createdAt           DateTime  @default(now()) @db.Timestamptz
+  sentAt              DateTime? @db.Timestamptz
+
+  @@index([workflowExecutionId])
+  @@index([customerId, createdAt])
+  @@index([waitlistId, createdAt])
+}
+
+model ChannelIdentity {
+  id             String    @id @default(cuid())
+  customerId     String?
+  waitlistId     String?
+  channel        String
+  externalUserId String
+  address        String?
+  status         String    @default("active")
+  lastInboundAt  DateTime? @db.Timestamptz
+  lastOutboundAt DateTime? @db.Timestamptz
+  createdAt      DateTime  @default(now()) @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @db.Timestamptz
+
+  @@unique([channel, externalUserId])
+  @@index([customerId])
+  @@index([waitlistId])
+}
+
+// --- Client 360 CRM (admin-facing person profile) ---
+
+enum ClientStaffRole {
+  coach
+  cs
+  setter
+  am
+  fulfilment
+}
+
+enum ClientSessionType {
+  coaching_call
+  checkin
+  assessment
+  training
+  onboarding
+  other
+}
+
+enum ClientSessionStatus {
+  scheduled
+  completed
+  no_show
+  cancelled
+}
+
+model ClientStaffAssignment {
+  id              String          @id @default(cuid())
+  personId        String
+  person          PersonCustomer  @relation(fields: [personId], references: [id], onDelete: Cascade)
+  /// Scorecard key (leah / lemoni / indigo / asim) or free staff label.
+  staffPersonKey  String
+  staffUserId     String?
+  role            ClientStaffRole @default(coach)
+  assignedBy      String?
+  assignedAt      DateTime        @default(now()) @db.Timestamptz
+  endedAt         DateTime?       @db.Timestamptz
+  notes           String?
+
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  @@index([personId, endedAt])
+  @@index([staffPersonKey, endedAt])
+}
+
+model ClientSession {
+  id             String              @id @default(cuid())
+  personId       String
+  person         PersonCustomer      @relation(fields: [personId], references: [id], onDelete: Cascade)
+  customerId     String?
+  type           ClientSessionType   @default(coaching_call)
+  status         ClientSessionStatus @default(completed)
+  title          String
+  scheduledAt    DateTime            @db.Timestamptz
+  completedAt    DateTime?           @db.Timestamptz
+  durationMin    Int?
+  staffPersonKey String?
+  callId         String?
+  notes          String?
+  createdBy      String?
+
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  @@index([personId, scheduledAt])
+  @@index([customerId, scheduledAt])
+  @@index([status, scheduledAt])
+}
+
+model ClientNote {
+  id         String         @id @default(cuid())
+  personId   String
+  person     PersonCustomer @relation(fields: [personId], references: [id], onDelete: Cascade)
+  authorEmail String
+  body       String
+  pinned     Boolean        @default(false)
+
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  @@index([personId, createdAt])
 }
 

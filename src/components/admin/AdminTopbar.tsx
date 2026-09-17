@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
 import { AdminIcons } from "@/components/admin/icons";
+import { AdminSearch } from "@/components/admin/AdminSearch";
 import { NotificationBell } from "@/components/admin/NotificationBell";
 import { saveCmsFieldAction } from "@/actions/admin/cms.action";
 
@@ -89,10 +90,7 @@ export function AdminTopbar({ title, openAlertCount, canEditCms }: Props) {
         <h1 className="cmd-page-title">{title}</h1>
       </div>
       <div className="cmd-topbar-actions">
-        <div className="cmd-topbar-search">
-          <AdminIcons name="search" />
-          Search orders, threads, people…
-        </div>
+        <AdminSearch />
         {canEditCms ? (
           <button
             type="button"

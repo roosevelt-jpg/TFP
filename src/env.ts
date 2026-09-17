@@ -12,8 +12,11 @@ export const env = createEnv({
     DB_POOL_MAX: z.coerce.number().int().positive().default(1),
     RESEND_API_KEY: z.string().min(1),
     RESEND_FROM: z.string().min(1),
-    EMAIL_LOGO_URL: z.url(),
     EMAIL_COMMUNITY_URL: z.url(),
+    // Admin invites prefer Gmail SMTP; optional when Resend is the only driver.
+    GMAIL_SMTP_USER: z.string().min(1).optional(),
+    GMAIL_SMTP_PASS: z.string().min(1).optional(),
+    GMAIL_SMTP_FROM: z.string().min(1).optional(),
     UPSTASH_REDIS_REST_URL: z.url(),
     UPSTASH_REDIS_REST_TOKEN: z.string().min(1),
     SENTRY_ORG: z.string().min(1).optional(),
@@ -27,6 +30,24 @@ export const env = createEnv({
     // Launch-day kill switch: CRM sync isn't time-critical, so it can be
     // disabled under incident without touching emails and redriven later.
     GHL_SYNC_ENABLED: z.stringbool().default(true),
+    // Abandoned checkout recovery (30m / 6h / 24h / 48h).
+    CHECKOUT_RECOVERY_ENABLED: z.stringbool().default(true),
+    // Funnel feature flags (spec §16).
+    FUNNEL_V2_ENABLED: z.stringbool().default(true),
+    LEAD_NURTURE_ENABLED: z.stringbool().default(true),
+    WHATSAPP_WORKFLOWS_ENABLED: z.stringbool().default(true),
+    TELEGRAM_ACTIVATION_ENABLED: z.stringbool().default(true),
+    INSTAGRAM_INBOUND_ENABLED: z.stringbool().default(true),
+    COMPLETE_STACK_ENABLED: z.stringbool().default(true),
+    // Public Shopify (or other) storefront URL for the Complete Stack upsell.
+    COMPLETE_STACK_URL: z.url().optional(),
+    COMPLETE_STACK_MALE_URL: z.url().optional(),
+    COMPLETE_STACK_FEMALE_URL: z.url().optional(),
+    // Meta Instagram / WhatsApp messaging webhook verify token.
+    META_WEBHOOK_VERIFY_TOKEN: z.string().min(1).optional(),
+    META_APP_SECRET: z.string().min(1).optional(),
+    META_PAGE_ACCESS_TOKEN: z.string().min(1).optional(),
+    META_INSTAGRAM_ACCOUNT_ID: z.string().min(1).optional(),
 
     // BetterStack heartbeat. Reconcile is the guarantee of last resort, so it
     // failing silently is the one failure nothing else would catch.
@@ -41,6 +62,7 @@ export const env = createEnv({
 
     // Telegram CTO channel. Optional until Phase 2; locked to Kane's chat.
     TELEGRAM_BOT_TOKEN: z.string().min(1).optional(),
+    TELEGRAM_BOT_USERNAME: z.string().min(1).optional(),
     TELEGRAM_KANE_CHAT_ID: z.string().min(1).optional(),
     TELEGRAM_LEAH_CHAT_ID: z.string().min(1).optional(),
 

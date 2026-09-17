@@ -1,91 +1,23 @@
 import { AdminShell } from "@/components/admin/AdminShell";
+import { EmailLogoUploadForm } from "@/components/admin/EmailLogoUploadForm";
+import { IntegrationCredentialsForm } from "@/components/admin/IntegrationCredentialsForm";
 import { getIntegrationsPageData } from "@/lib/admin/queries/pages";
-import { env } from "@/env";
-
-const CREDENTIAL_ROWS = [
-  {
-    sourceId: "S1",
-    name: "Shopify",
-    keys: ["SHOPIFY_SHOP_DOMAIN", "SHOPIFY_ADMIN_TOKEN"],
-    configured: () => Boolean(env.SHOPIFY_SHOP_DOMAIN && env.SHOPIFY_ADMIN_TOKEN),
-  },
-  {
-    sourceId: "S2",
-    name: "Stripe",
-    keys: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"],
-    configured: () => Boolean(env.STRIPE_SECRET_KEY),
-  },
-  {
-    sourceId: "S3",
-    name: "Meta Ads",
-    keys: ["META_ACCESS_TOKEN", "META_AD_ACCOUNT_ID"],
-    configured: () => Boolean(env.META_ACCESS_TOKEN && env.META_AD_ACCOUNT_ID),
-  },
-  {
-    sourceId: "S4",
-    name: "Klaviyo",
-    keys: ["KLAVIYO_API_KEY"],
-    configured: () => Boolean(env.KLAVIYO_API_KEY),
-  },
-  {
-    sourceId: "S5",
-    name: "GoHighLevel",
-    keys: ["GHL_INTEGRATION_TOKEN", "GHL_LOCATION_ID"],
-    configured: () =>
-      Boolean(env.GHL_INTEGRATION_TOKEN && env.GHL_LOCATION_ID),
-  },
-  {
-    sourceId: "S6",
-    name: "n8n",
-    keys: ["N8N_API_URL", "N8N_API_KEY"],
-    configured: () => Boolean(env.N8N_API_URL && env.N8N_API_KEY),
-  },
-  {
-    sourceId: "S7",
-    name: "Gmail",
-    keys: ["GMAIL_CLIENT_ID", "GMAIL_CLIENT_SECRET", "GMAIL_REFRESH_TOKEN"],
-    configured: () =>
-      Boolean(
-        env.GMAIL_CLIENT_ID &&
-          env.GMAIL_CLIENT_SECRET &&
-          env.GMAIL_REFRESH_TOKEN,
-      ),
-  },
-  {
-    sourceId: "S8",
-    name: "Calendly",
-    keys: ["CALENDLY_TOKEN"],
-    configured: () => Boolean(env.CALENDLY_TOKEN),
-  },
-  {
-    sourceId: "S12",
-    name: "Revolut",
-    keys: ["REVOLUT_API_TOKEN"],
-    configured: () => Boolean(env.REVOLUT_API_TOKEN),
-  },
-  {
-    sourceId: "S13",
-    name: "Frame.io",
-    keys: ["FRAME_IO_TOKEN"],
-    configured: () => Boolean(env.FRAME_IO_TOKEN),
-  },
-  {
-    sourceId: "Telegram",
-    name: "Telegram approvals",
-    keys: ["TELEGRAM_BOT_TOKEN", "TELEGRAM_KANE_CHAT_ID"],
-    configured: () =>
-      Boolean(env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_KANE_CHAT_ID),
-  },
-  {
-    sourceId: "CTO",
-    name: "Claude CTO agent",
-    keys: ["ANTHROPIC_API_KEY"],
-    configured: () => Boolean(env.ANTHROPIC_API_KEY),
-  },
-] as const;
+import { requireAdminSession } from "@/lib/auth/session";
+import { emailLogoStatus } from "@/lib/mail/logo";
+import {
+  ALL_CREDENTIAL_KEYS,
+  CREDENTIAL_GROUPS,
+} from "@/lib/secrets/catalog";
+import { listSecretStatuses } from "@/lib/secrets/store";
 
 export default async function IntegrationsPage() {
-  const connectors = await getIntegrationsPageData();
+  const session = await requireAdminSession(["kane", "indigo"]);
+  const [connectors, statuses, logoStatus] = await Promise.all([
+    getIntegrationsPageData(),
+    listSecretStatuses(ALL_CREDENTIAL_KEYS),
+    emailLogoStatus(),
+  ]);
+  const canEdit = session.user.role === "kane";
 
   return (
     <AdminShell titleKey="integrations">
@@ -97,48 +29,27 @@ export default async function IntegrationsPage() {
       </div>
 
       <div className="cmd-section-note">
-        API credentials are not entered in the UI — set them in{" "}
-        <span className="cmd-mono">.env.local</span> (local) or Vercel env
-        (production). Restart the dev server after changes. See{" "}
-        <span className="cmd-mono">.env.example</span> for every key.
+        Credentials are entered here by Kane, encrypted in Postgres (your
+        Supabase database), then hidden. Vercel env vars remain a valid
+        fallback for deploy-time secrets. The Performance email logo is
+        uploaded as a file (not a URL) and embedded in every send.
       </div>
 
-      <div className="cmd-panel">
-        <div className="cmd-panel-head">
-          <div>
-            <div className="cmd-panel-title">Credential checklist</div>
-            <div className="cmd-panel-sub">
-              Status reflects whether the env var is present — not a live API
-              ping
-            </div>
+      {canEdit ? (
+        <>
+          <EmailLogoUploadForm status={logoStatus} />
+          <IntegrationCredentialsForm
+            groups={[...CREDENTIAL_GROUPS]}
+            statuses={statuses}
+          />
+        </>
+      ) : (
+        <div className="cmd-panel">
+          <div className="cmd-panel-body">
+            Only Kane can add or rotate integration credentials.
           </div>
         </div>
-        <div className="cmd-panel-body">
-          {CREDENTIAL_ROWS.map((row) => {
-            const ok = row.configured();
-            return (
-              <div className="cmd-role-row" key={row.sourceId}>
-                <div className="cell-strong">
-                  {row.name}
-                  <div className="cell-muted" style={{ marginTop: 2 }}>
-                    {row.sourceId}
-                  </div>
-                </div>
-                <div className="cell-muted cmd-mono" style={{ fontSize: 11 }}>
-                  {row.keys.join(" · ")}
-                </div>
-                <div>
-                  <span
-                    className={`cmd-badge ${ok ? "cmd-badge-verified" : "cmd-badge-calculated"}`}
-                  >
-                    {ok ? "Set" : "Missing"}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      )}
 
       <div className="cmd-panel">
         <div className="cmd-panel-head">

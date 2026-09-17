@@ -1,6 +1,10 @@
 import type Stripe from "stripe";
 
-import { STRIPE_KEY_IS_LIVE, stripe } from "@/lib/clients/stripe";
+import {
+  getStripe,
+  getStripeWebhookSecret,
+  stripeKeyIsLive,
+} from "@/lib/clients/stripe";
 import { logger } from "@/lib/logger";
 import {
   type HandleOutcome,
@@ -11,7 +15,6 @@ import {
   recordStripeEvent,
 } from "@/lib/stripe-events/persist-event";
 import { routeEvent } from "@/lib/stripe-events/router";
-import { env } from "@/env";
 import { StripeEventStatus } from "@/generated/prisma/enums";
 
 // Stripe waits up to 10s for this endpoint before redirecting a paying customer
@@ -30,11 +33,9 @@ export async function POST(request: Request) {
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(
-      payload,
-      signature,
-      env.STRIPE_WEBHOOK_SECRET,
-    );
+    const stripe = await getStripe();
+    const webhookSecret = await getStripeWebhookSecret();
+    event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
   } catch (error) {
     // Bad signature or a stale timestamp. Never processed, never persisted —
     // an unverified payload is attacker-controlled.
@@ -50,12 +51,13 @@ export async function POST(request: Request) {
   //
   // A test event reaching live data would create fake customers and fire real
   // emails. 200 so Stripe stops retrying something we will never accept.
-  if (event.livemode !== STRIPE_KEY_IS_LIVE) {
+  const keyIsLive = await stripeKeyIsLive();
+  if (event.livemode !== keyIsLive) {
     logger.error("Stripe webhook livemode mismatch", undefined, {
       stripeEventId: event.id,
       type: event.type,
       eventLivemode: event.livemode,
-      keyIsLive: STRIPE_KEY_IS_LIVE,
+      keyIsLive,
     });
     return Response.json({ received: true, ignored: "livemode" });
   }

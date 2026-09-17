@@ -213,6 +213,13 @@ their cron on deploy, so a schedule change only takes effect after
 `RECONCILE_HEARTBEAT_URL` must all be set there as well as in Vercel. A missing
 one fails the first task run loudly rather than silently.
 
+**Checkout recovery.** Abandoned sessions enqueue `checkout-recovery-step`
+only when `CHECKOUT_RECOVERY_ENABLED=true` (same flag in Vercel and Trigger).
+Steps are 30m / 6h / 24h / 48h; purchase fulfilment cancels later steps via
+idempotency + purchase lookup. If recovery emails stop, check the flag first,
+then Trigger runs for `checkout-recovery-step`, then Resend. Leave the flag
+off until a staging expire→email→pay smoke test has passed.
+
 **Supabase 3F000 errors.** The roughly 113/hour `3F000` errors in the Supabase
 dashboard are benign noise from the disabled Data API. Do not re-enable the Data
 API to silence them.

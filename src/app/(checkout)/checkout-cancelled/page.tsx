@@ -9,8 +9,8 @@ import { Container } from "@/components/layout/Container";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SkipLink } from "@/components/layout/SkipLink";
-import { SIGNUP_HREF } from "@/lib/launch";
-import { CURRENCY, PRICE_TODAY } from "@/lib/pricing";
+import { PAYMENTS_LIVE, SIGNUP_HREF } from "@/lib/launch";
+import { resolvePublicOffer } from "@/lib/offers/resolve";
 
 export const metadata: Metadata = {
   title: "Checkout not completed",
@@ -23,7 +23,9 @@ const FOOTER_LINKS = [
   { label: "Support", href: "/support" },
 ];
 
-export default function CheckoutCancelledPage() {
+export default async function CheckoutCancelledPage() {
+  const offer = await resolvePublicOffer(PAYMENTS_LIVE);
+
   return (
     <>
       <SkipLink />
@@ -61,8 +63,7 @@ export default function CheckoutCancelledPage() {
               className="bg-hairline-strong size-0.75 rounded-full"
             />
             <span>
-              {CURRENCY}
-              {PRICE_TODAY} today · cancel anytime
+              {offer.amountDueTodayLabel} today · cancel anytime
             </span>
           </div>
 

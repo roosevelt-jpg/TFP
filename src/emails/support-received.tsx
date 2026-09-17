@@ -119,7 +119,7 @@ export function SupportReceivedEmail({
 SupportReceivedEmail.PreviewProps = {
   firstName: "Ahmed",
   requestType: "general question",
-  logoUrl: "https://theformulaperformance.com/email/logo.png",
+  logoUrl: "/email/logo.png",
 } satisfies SupportReceivedEmailProps;
 
 export default SupportReceivedEmail;

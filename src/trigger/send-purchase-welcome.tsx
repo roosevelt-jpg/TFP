@@ -1,8 +1,6 @@
 import { AbortTaskRunError, logger, schemaTask } from "@trigger.dev/sdk";
 import { z } from "zod";
 
-import { resend } from "@/lib/clients/resend";
-import { isPermanentSendError } from "@/lib/clients/resend-error";
 import { firstNameOf } from "@/lib/name";
 import { portalLoginUrl } from "@/lib/payments/portal";
 import { CURRENCY, PRICE_MONTHLY, PROGRAMME_WEEKS } from "@/lib/pricing";
@@ -10,15 +8,12 @@ import { COACH_WHATSAPP_URL } from "@/lib/whatsapp";
 import { db } from "@/db";
 import { PurchaseWelcomeEmail } from "@/emails/purchase-welcome";
 import { env } from "@/env";
+import { emailLogoSrc } from "@/lib/mail/logo";
+import { isPermanentMailError, sendMail } from "@/lib/mail/send";
 
 import { emailQueue } from "./queues";
 
 const SUPPORT_URL = `${env.NEXT_PUBLIC_APP_URL}/support`;
-
-// Matches the waitlist sender: RESEND_FROM may already carry a display name.
-const senderFrom = env.RESEND_FROM.includes("<")
-  ? env.RESEND_FROM
-  : `The Formula Programme <${env.RESEND_FROM}>`;
 
 // Chained from the watermark task rather than enqueued beside it, because the
 // download link has to point at a file that already exists. withPdf is false
@@ -74,11 +69,14 @@ export const sendPurchaseWelcome = schemaTask({
     const rollover = new Date(purchase.purchasedAt ?? new Date());
     rollover.setDate(rollover.getDate() + PROGRAMME_WEEKS * 7);
 
-    const result = await resend.emails.send(
-      {
-        from: senderFrom,
+    try {
+      const result = await sendMail({
+        channel: "client",
         to: purchase.customer.email,
         subject: "You're in - The Formula Programme",
+        eligibility: {
+          purpose: "transactional",
+        },
         react: (
           <PurchaseWelcomeEmail
             firstName={firstNameOf(purchase.customer.name)}
@@ -96,16 +94,24 @@ export const sendPurchaseWelcome = schemaTask({
             }
             whatsappUrl={COACH_WHATSAPP_URL}
             billingUrl={await portalLoginUrl(purchase.customer.email)}
-            logoUrl={env.EMAIL_LOGO_URL}
+            logoUrl={emailLogoSrc()}
             communityImageUrl={env.EMAIL_COMMUNITY_URL}
             supportUrl={SUPPORT_URL}
           />
         ),
-      },
-      { idempotencyKey: `purchase-welcome/${payload.purchaseRef}` },
-    );
+        idempotencyKey: `purchase-welcome/${payload.purchaseRef}`,
+      });
 
-    if (result.error) {
+      logger.info("Purchase welcome sent", {
+        purchaseRef: payload.purchaseRef,
+        to: purchase.customer.email,
+        withPdf: payload.withPdf,
+        emailId: result.id,
+        driver: result.driver,
+      });
+
+      return { id: result.id, driver: result.driver };
+    } catch (error) {
       // Release the claim so a retry can send: the column is a lock, and
       // holding it after a failure would mean nobody ever gets the email.
       await db.purchase.updateMany({
@@ -113,27 +119,19 @@ export const sendPurchaseWelcome = schemaTask({
         data: { welcomeEmailAt: null },
       });
 
-      const detail = `${result.error.name}: ${result.error.message} (${result.error.statusCode})`;
-      if (isPermanentSendError(result.error)) {
+      const detail =
+        error instanceof Error ? error.message : "purchase welcome failed";
+      if (isPermanentMailError(error)) {
         throw new AbortTaskRunError(detail);
       }
 
-      logger.warn("Resend rejected the purchase welcome; retrying", {
+      logger.warn("Purchase welcome failed; retrying", {
         purchaseRef: payload.purchaseRef,
         attempt: ctx.attempt.number,
-        message: result.error.message,
+        message: detail,
       });
-      throw new Error(detail);
+      throw error instanceof Error ? error : new Error(detail);
     }
-
-    logger.info("Purchase welcome sent", {
-      purchaseRef: payload.purchaseRef,
-      to: purchase.customer.email,
-      withPdf: payload.withPdf,
-      emailId: result.data?.id,
-    });
-
-    return { id: result.data?.id };
   },
   onFailure: async ({ payload, error }) => {
     logger.error("Purchase welcome permanently failed", {

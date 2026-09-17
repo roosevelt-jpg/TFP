@@ -1,8 +1,10 @@
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getFulfilmentPageData } from "@/lib/admin/queries/pages";
+import { requireAdminSession } from "@/lib/auth/session";
 import { getCmsMap } from "@/lib/cms/store";
 
 export default async function FulfilmentPage() {
+  await requireAdminSession(["kane", "asim"]);
   const [data, cms] = await Promise.all([
     getFulfilmentPageData(),
     getCmsMap("admin"),

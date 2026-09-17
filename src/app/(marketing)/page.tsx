@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import { CtaButton } from "@/components/brand/CtaButton";
 import { StickyCtaBar } from "@/components/brand/StickyCtaBar";
 import { Testimonial } from "@/components/brand/Testimonial";
@@ -16,11 +18,12 @@ import { PricingSection } from "@/components/sections/PricingSection";
 import { TransformationsSection } from "@/components/sections/TransformationsSection";
 import { VslSection } from "@/components/sections/VslSection";
 import { Section } from "@/components/layout/Section";
-import { SIGNUP_HREF } from "@/lib/launch";
+import { SIGNUP_HREF, PAYMENTS_LIVE } from "@/lib/launch";
 import {
   getFounderSeatsRemaining,
   getLandingCopy,
 } from "@/lib/cms/landing";
+import { resolvePublicOffer } from "@/lib/offers/resolve";
 import { testimonials } from "@/content/testimonials";
 import { TrackCta } from "@/components/analytics/TrackCta";
 
@@ -39,12 +42,45 @@ const FOOTER_LINKS = [
   { label: "Contact", href: "/support" },
 ];
 
-export default async function Home() {
-  const [copy, seatsLeft] = await Promise.all([
+export default function Home() {
+  return (
+    <Suspense fallback={<LandingShell />}>
+      <HomeContent />
+    </Suspense>
+  );
+}
+
+function LandingShell() {
+  return (
+    <>
+      <SkipLink />
+      <AnnouncementBar href={SIGNUP_HREF}>Loading…</AnnouncementBar>
+      <SiteHeader nav={NAV} ctaOnMobile={false} />
+      <main id="main" className="relative z-10">
+        <HeroSection
+          headline="Lose fat. Build muscle."
+          subhead="Loading programme details…"
+          ctaLabel="Join the waitlist"
+          trust=""
+        />
+      </main>
+    </>
+  );
+}
+
+async function HomeContent() {
+  const [copy, seatsLeft, offer] = await Promise.all([
     getLandingCopy(),
     getFounderSeatsRemaining(),
+    resolvePublicOffer(PAYMENTS_LIVE),
   ]);
   const featured = testimonials.find((t) => t.featured) ?? testimonials[0];
+  const heroTrust = PAYMENTS_LIVE
+    ? offer.renewalDisclosure
+    : copy.heroTrust;
+  const reassurance = PAYMENTS_LIVE
+    ? offer.renewalDisclosure
+    : copy.reassurance;
 
   return (
     <>
@@ -76,17 +112,22 @@ export default async function Home() {
           headline={copy.heroHeadline}
           subhead={copy.heroSubhead}
           ctaLabel={copy.cta}
-          trust={copy.heroTrust}
+          trust={heroTrust}
         />
         <VslSection />
         <AboutSection />
         <TransformationsSection />
         <OutcomeSection />
         <FeaturesSection />
-        <FounderOfferSection seatsLeft={seatsLeft} />
+        <FounderOfferSection
+          seatsLeft={seatsLeft}
+          offer={offer}
+          ctaLabel={copy.cta}
+        />
         <PricingSection
           ctaLabel={copy.cta}
-          reassurance={copy.reassurance}
+          reassurance={reassurance}
+          offer={offer}
         />
         <Section id="social-proof" divided>
           <div className="mx-auto max-w-[640px]">

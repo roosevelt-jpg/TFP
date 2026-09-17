@@ -10,6 +10,7 @@ import { pullGhlLeadThreads, pullKlaviyoCampaigns } from "@/lib/connectors/ghl-k
 import { pullN8nStatus, runUptimeChecks } from "@/lib/connectors/uptime-n8n";
 import { pullRevolutBalances } from "@/lib/connectors/revolut";
 import { triageGmailInbox } from "@/lib/connectors/gmail";
+import { pullCalendlyEvents } from "@/lib/connectors/calendly";
 import { rebuildDailySnapshot } from "@/lib/metrics/economics";
 
 export const pullShopifyTask = schemaTask({
@@ -86,4 +87,16 @@ export const revolutSchedule = schedules.task({
   id: "command.revolut-schedule",
   cron: { pattern: "15 */6 * * *", environments: ["PRODUCTION"] },
   run: async () => pullRevolutBalances(),
+});
+
+export const calendlySchedule = schedules.task({
+  id: "command.calendly-schedule",
+  cron: { pattern: "*/15 * * * *", environments: ["PRODUCTION"] },
+  run: async () => pullCalendlyEvents(),
+});
+
+export const pullCalendlyTask = schemaTask({
+  id: "command.pull-calendly",
+  schema: z.object({}),
+  run: async () => pullCalendlyEvents(),
 });
