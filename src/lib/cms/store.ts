@@ -1,12 +1,8 @@
 import "server-only";
 
-import { cacheLife } from "next/cache";
-
 import { db } from "@/db";
 
 export async function getCmsMap(namespace: string): Promise<Record<string, string>> {
-  "use cache";
-  cacheLife("hours");
   const rows = await db.cmsDocument.findMany({ where: { namespace } });
   return Object.fromEntries(rows.map((r) => [r.key, r.value]));
 }
@@ -16,8 +12,6 @@ export async function getCmsValue(
   key: string,
   fallback: string,
 ): Promise<string> {
-  "use cache";
-  cacheLife("hours");
   const row = await db.cmsDocument.findUnique({
     where: { namespace_key: { namespace, key } },
   });
@@ -57,5 +51,8 @@ export async function upsertCmsValue(input: {
   });
 }
 
-export const LANDING_CMS_NAMESPACE = "landing";
-export const ADMIN_CMS_NAMESPACE = "admin";
+export {
+  LANDING_CMS_NAMESPACE,
+  ADMIN_CMS_NAMESPACE,
+  BRAND_CMS_NAMESPACE,
+} from "@/lib/cms/namespaces";

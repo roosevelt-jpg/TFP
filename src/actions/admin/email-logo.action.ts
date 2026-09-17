@@ -1,8 +1,11 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import * as z from "zod";
 
 import { requireAdminSession } from "@/lib/auth/session";
+import { upsertCmsValue } from "@/lib/cms/store";
 import { uploadEmailLogo } from "@/lib/mail/logo";
 import { actionClient } from "@/lib/safe-action";
 import { db } from "@/db";
@@ -28,6 +31,13 @@ export const uploadEmailLogoAction = actionClient
 
     await uploadEmailLogo(bytes, parsedInput.contentType.toLowerCase());
 
+    await upsertCmsValue({
+      namespace: "landing",
+      key: "brand.emailLogo",
+      value: "/email/logo.png",
+      updatedBy: session.user.email,
+    });
+
     await db.auditLog.create({
       data: {
         actor: session.user.email,
@@ -36,6 +46,9 @@ export const uploadEmailLogoAction = actionClient
         entityId: "performance-logo",
       },
     });
+
+    revalidatePath("/admin/cms");
+    revalidatePath("/admin/integrations");
 
     return {
       ok: true,

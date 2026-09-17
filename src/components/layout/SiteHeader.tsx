@@ -11,10 +11,11 @@ type SiteHeaderProps = {
   nav?: NavItem[];
   cta?: React.ReactNode;
   variant?: "full" | "minimal";
-  // Set on pages with no hero image, where the logo is the LCP element.
   logoPriority?: boolean;
-  // Minimal variant only: hide the cta on mobile (e.g. /join relocates it).
   ctaOnMobile?: boolean;
+  /** CMS-driven logo path or URL. */
+  logoSrc?: string;
+  brandName?: string;
 };
 
 export function SiteHeader({
@@ -23,15 +24,14 @@ export function SiteHeader({
   variant = "full",
   logoPriority = false,
   ctaOnMobile = true,
+  logoSrc = "/logo.svg",
+  brandName = "The Formula Programme",
 }: SiteHeaderProps) {
   return (
     <header className="relative z-2 py-[18px]">
       <Container
         className={cn(
           "flex items-center gap-4 min-[900px]:justify-between",
-          // Centre the logo whenever it is alone on the row. The landing header
-          // has nav + cta, but both are desktop-only, so it centres on mobile
-          // too and only splits once they appear.
           ctaOnMobile ? "justify-between" : "justify-center",
         )}
       >
@@ -40,12 +40,13 @@ export function SiteHeader({
           className="flex items-center gap-2.5 text-[0.98rem] font-semibold"
         >
           <Image
-            src="/logo.svg"
-            alt="The Formula Programme"
+            src={logoSrc}
+            alt={brandName}
             width={1440}
             height={209}
             preload={logoPriority}
             className="relative top-[3px] h-[26px] w-auto"
+            unoptimized={logoSrc.startsWith("/uploads/") || logoSrc.startsWith("http")}
           />
         </Link>
 
@@ -58,9 +59,6 @@ export function SiteHeader({
             )}
           </div>
         ) : (
-          // gap matches the nav's own 30px once the links are visible, so the
-          // space before the CTA doesn't read tighter than the gaps between
-          // links. Stays 16px below that, where only the logo and CTA show.
           <div className="flex items-center gap-4 min-[900px]:gap-7.5">
             <nav
               aria-label="Main"

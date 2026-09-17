@@ -1,36 +1,30 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 
+import { TrackCta } from "@/components/analytics/TrackCta";
 import { CtaButton } from "@/components/brand/CtaButton";
+import { Reveal } from "@/components/brand/Reveal";
+import { SectionHeader } from "@/components/brand/SectionHeader";
 import { StickyCtaBar } from "@/components/brand/StickyCtaBar";
 import { Testimonial } from "@/components/brand/Testimonial";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
+import { Section } from "@/components/layout/Section";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SkipLink } from "@/components/layout/SkipLink";
-import { AboutSection } from "@/components/sections/AboutSection";
-import { FaqSection } from "@/components/sections/FaqSection";
-import { FeaturesSection } from "@/components/sections/FeaturesSection";
-import { FinalCtaSection } from "@/components/sections/FinalCtaSection";
-import { FounderOfferSection } from "@/components/sections/FounderOfferSection";
+import { CompactFaqSection } from "@/components/sections/CompactFaqSection";
+import { CompactFinalCta } from "@/components/sections/CompactFinalCta";
+import { CompactHowSection } from "@/components/sections/CompactHowSection";
+import { CompactVslSection } from "@/components/sections/CompactVslSection";
 import { HeroSection } from "@/components/sections/HeroSection";
-import { OutcomeSection } from "@/components/sections/OutcomeSection";
 import { PricingSection } from "@/components/sections/PricingSection";
-import { TransformationsSection } from "@/components/sections/TransformationsSection";
-import { VslSection } from "@/components/sections/VslSection";
-import { Section } from "@/components/layout/Section";
-import { SIGNUP_HREF, PAYMENTS_LIVE } from "@/lib/launch";
-import {
-  getFounderSeatsRemaining,
-  getLandingCopy,
-} from "@/lib/cms/landing";
+import { getFounderSeatsRemaining, getLandingContent } from "@/lib/cms/landing";
+import { PAYMENTS_LIVE, SIGNUP_HREF } from "@/lib/launch";
 import { resolvePublicOffer } from "@/lib/offers/resolve";
-import { testimonials } from "@/content/testimonials";
-import { TrackCta } from "@/components/analytics/TrackCta";
 
 const NAV = [
-  { label: "How it works", href: "/how-it-works" },
   { label: "Pricing", href: "/#pricing" },
-  { label: "FAQ", href: "/faq" },
+  { label: "FAQ", href: "/#faq" },
 ];
 
 const FOOTER_LINKS = [
@@ -41,6 +35,21 @@ const FOOTER_LINKS = [
   { label: "Refunds", href: "/support?type=refund" },
   { label: "Contact", href: "/support" },
 ];
+
+export async function generateMetadata(): Promise<Metadata> {
+  const content = await getLandingContent();
+  return {
+    title: content.brand.name,
+    icons: {
+      icon: content.brand.favicon,
+    },
+    openGraph: content.brand.ogImage
+      ? {
+          images: [{ url: content.brand.ogImage }],
+        }
+      : undefined,
+  };
+}
 
 export default function Home() {
   return (
@@ -54,14 +63,14 @@ function LandingShell() {
   return (
     <>
       <SkipLink />
-      <AnnouncementBar href={SIGNUP_HREF}>Loading…</AnnouncementBar>
-      <SiteHeader nav={NAV} ctaOnMobile={false} />
+      <SiteHeader nav={NAV} ctaOnMobile={false} logoSrc="/logo.svg" />
       <main id="main" className="relative z-10">
         <HeroSection
-          headline="Lose fat. Build muscle."
-          subhead="Loading programme details…"
-          ctaLabel="Join the waitlist"
+          headline="The Formula Programme"
+          subhead="Loading…"
+          ctaLabel="Join"
           trust=""
+          eyebrow="8-week programme"
         />
       </main>
     </>
@@ -69,31 +78,39 @@ function LandingShell() {
 }
 
 async function HomeContent() {
-  const [copy, seatsLeft, offer] = await Promise.all([
-    getLandingCopy(),
+  const [content, seatsLeft, offer] = await Promise.all([
+    getLandingContent(),
     getFounderSeatsRemaining(),
     resolvePublicOffer(PAYMENTS_LIVE),
   ]);
-  const featured = testimonials.find((t) => t.featured) ?? testimonials[0];
+
   const heroTrust = PAYMENTS_LIVE
     ? offer.renewalDisclosure
-    : copy.heroTrust;
+    : content.hero.trust;
   const reassurance = PAYMENTS_LIVE
     ? offer.renewalDisclosure
-    : copy.reassurance;
+    : content.pricing.reassurance;
+
+  const featured =
+    content.proof.items.find((t) => t.featured) ?? content.proof.items[0];
+
+  const showVsl = content.vsl.enabled && Boolean(content.vsl.playbackId);
 
   return (
     <>
       <SkipLink />
-      <AnnouncementBar href={SIGNUP_HREF}>
-        {copy.announcement}
-        {seatsLeft != null
-          ? ` · ${seatsLeft} founder seats left`
-          : null}
-      </AnnouncementBar>
+      {content.announcement.enabled ? (
+        <AnnouncementBar href={SIGNUP_HREF}>
+          {content.announcement.text}
+          {seatsLeft != null ? ` · ${seatsLeft} founder seats left` : null}
+        </AnnouncementBar>
+      ) : null}
+
       <SiteHeader
         nav={NAV}
         ctaOnMobile={false}
+        logoSrc={content.brand.logo}
+        brandName={content.brand.name}
         cta={
           <TrackCta placement="header">
             <CtaButton
@@ -101,7 +118,7 @@ async function HomeContent() {
               size="sm"
               className="hidden whitespace-nowrap min-[900px]:inline-flex"
             >
-              {copy.cta}
+              {content.hero.cta}
             </CtaButton>
           </TrackCta>
         }
@@ -109,53 +126,104 @@ async function HomeContent() {
 
       <main id="main" className="relative z-10">
         <HeroSection
-          headline={copy.heroHeadline}
-          subhead={copy.heroSubhead}
-          ctaLabel={copy.cta}
+          headline={content.hero.headline}
+          subhead={content.hero.subhead}
+          ctaLabel={content.hero.cta}
           trust={heroTrust}
+          eyebrow={content.hero.eyebrow}
+          heroImage={content.hero.image || undefined}
+          showWatchCta={showVsl}
         />
-        <VslSection />
-        <AboutSection />
-        <TransformationsSection />
-        <OutcomeSection />
-        <FeaturesSection />
-        <FounderOfferSection
-          seatsLeft={seatsLeft}
-          offer={offer}
-          ctaLabel={copy.cta}
-        />
+
+        {showVsl ? (
+          <CompactVslSection
+            heading={content.vsl.heading}
+            lead={content.vsl.lead}
+            playbackId={content.vsl.playbackId}
+            poster={content.vsl.poster || undefined}
+          />
+        ) : null}
+
+        {featured ? (
+          <Section id="proof" divided>
+            <SectionHeader
+              align="center"
+              eyebrow="Proof"
+              heading={content.proof.heading}
+              lead={content.proof.lead}
+            />
+            <Reveal>
+              <div className="mx-auto mt-8 max-w-[640px]">
+                <Testimonial
+                  quote={featured.quote}
+                  name={featured.name}
+                  detail={featured.detail}
+                  featured
+                />
+              </div>
+            </Reveal>
+            {content.proof.items.length > 1 ? (
+              <div className="mx-auto mt-8 grid max-w-[960px] gap-4 min-[720px]:grid-cols-2">
+                {content.proof.items
+                  .filter((t) => t !== featured)
+                  .slice(0, 2)
+                  .map((t) => (
+                    <Testimonial
+                      key={t.name}
+                      quote={t.quote}
+                      name={t.name}
+                      detail={t.detail}
+                    />
+                  ))}
+              </div>
+            ) : null}
+          </Section>
+        ) : null}
+
+        {content.how.enabled ? (
+          <CompactHowSection
+            heading={content.how.heading}
+            steps={content.how.steps}
+          />
+        ) : null}
+
         <PricingSection
-          ctaLabel={copy.cta}
+          ctaLabel={content.hero.cta}
           reassurance={reassurance}
           offer={offer}
+          eyebrow={content.pricing.eyebrow}
+          heading={content.pricing.heading}
+          features={content.pricing.features}
         />
-        <Section id="social-proof" divided>
-          <div className="mx-auto max-w-[640px]">
-            <Testimonial
-              quote={featured.quote}
-              name={featured.name}
-              detail={featured.detail}
-              featured
-            />
-          </div>
-        </Section>
-        <FaqSection />
-        <FinalCtaSection body={copy.finalCta} ctaLabel={copy.cta} />
+
+        <CompactFaqSection
+          heading={content.faq.heading}
+          items={content.faq.items}
+        />
+
+        <CompactFinalCta
+          heading={content.final.heading}
+          body={content.final.body}
+          ctaLabel={content.final.cta}
+        />
       </main>
 
       <SiteFooter
         links={FOOTER_LINKS}
-        disclaimer="Your Performance Coach is an AI trained on Kane's coaching style, not a live person. Results vary. Not medical advice; consult a professional before starting any programme."
+        disclaimer={content.footer.disclaimer}
+        logoSrc={content.brand.logo}
+        brandName={content.brand.name}
+        tagline={content.footer.tagline}
       />
 
       <StickyCtaBar
-        primary={copy.stickyLabel}
+        primary={content.sticky.label}
         secondary={
           seatsLeft != null
             ? `${seatsLeft} founder seats left`
-            : copy.stickySecondary
+            : content.sticky.secondary
         }
-        cta={{ label: copy.cta, href: SIGNUP_HREF }}
+        cta={{ label: content.hero.cta, href: SIGNUP_HREF }}
       />
     </>
   );

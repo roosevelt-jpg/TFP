@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import { CtaButton } from "@/components/brand/CtaButton";
 import { Eyebrow } from "@/components/brand/Eyebrow";
 import { GridBackdrop } from "@/components/brand/GridBackdrop";
@@ -15,9 +17,22 @@ type Props = {
   subhead: string;
   ctaLabel: string;
   trust: string;
+  eyebrow?: string;
+  heroImage?: string;
+  showWatchCta?: boolean;
 };
 
-export function HeroSection({ headline, subhead, ctaLabel, trust }: Props) {
+export function HeroSection({
+  headline,
+  subhead,
+  ctaLabel,
+  trust,
+  eyebrow = "8-week programme · Founder launch",
+  heroImage,
+  showWatchCta = false,
+}: Props) {
+  const parts = eyebrow.split("·").map((p) => p.trim()).filter(Boolean);
+
   return (
     <section
       id="top"
@@ -29,15 +44,20 @@ export function HeroSection({ headline, subhead, ctaLabel, trust }: Props) {
           <div className="mx-auto grid max-w-[560px] justify-items-center gap-[22px] text-center min-[940px]:mx-0 min-[940px]:justify-items-start min-[940px]:text-left">
             <Reveal>
               <Eyebrow align="center" className="min-[641px]:hidden">
-                8-week programme · Founder launch
+                {eyebrow}
               </Eyebrow>
               <Eyebrow className="hidden min-[641px]:inline-flex">
-                <span>8-week programme</span>
-                <span
-                  aria-hidden
-                  className="bg-hairline-strong size-[3px] rounded-full"
-                />
-                <span>Founder launch</span>
+                {parts.map((part, i) => (
+                  <span key={part} className="inline-flex items-center gap-2">
+                    {i > 0 ? (
+                      <span
+                        aria-hidden
+                        className="bg-hairline-strong size-[3px] rounded-full"
+                      />
+                    ) : null}
+                    <span>{part}</span>
+                  </span>
+                ))}
               </Eyebrow>
             </Reveal>
             <Reveal delayMs={60}>
@@ -50,7 +70,7 @@ export function HeroSection({ headline, subhead, ctaLabel, trust }: Props) {
               </SectionHeading>
             </Reveal>
             <Reveal delayMs={120}>
-              <p className="text-muted max-w-[33ch] text-lead leading-[1.6]">
+              <p className="text-muted max-w-[36ch] text-lead leading-[1.6]">
                 {subhead}
               </p>
             </Reveal>
@@ -59,26 +79,43 @@ export function HeroSection({ headline, subhead, ctaLabel, trust }: Props) {
                 <TrackCta placement="hero">
                   <CtaButton href={SIGNUP_HREF}>{ctaLabel}</CtaButton>
                 </TrackCta>
-                <CtaButton href="#watch" variant="ghost" withShine={false}>
-                  Watch Kane explain it
-                </CtaButton>
+                {showWatchCta ? (
+                  <CtaButton href="#watch" variant="ghost" withShine={false}>
+                    Watch Kane explain it
+                  </CtaButton>
+                ) : null}
               </div>
             </Reveal>
-            <Reveal delayMs={240}>
-              <TrustLine>{trust}</TrustLine>
-            </Reveal>
+            {trust ? (
+              <Reveal delayMs={240}>
+                <TrustLine>{trust}</TrustLine>
+              </Reveal>
+            ) : null}
           </div>
           <Reveal
             delayMs={160}
             className="flex justify-center justify-self-center min-[940px]:block min-[940px]:self-end"
           >
-            <PhoneMockup
-              image={{
-                src: "/assets/kane-hero.png",
-                alt: "Kane Mousah, former professional Bellator fighter and founder of The Formula",
-              }}
-              chat={heroChat}
-            />
+            {heroImage ? (
+              <div className="relative aspect-[3/4] w-full max-w-[360px] overflow-hidden rounded-sm">
+                <Image
+                  src={heroImage}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="360px"
+                  priority
+                />
+              </div>
+            ) : (
+              <PhoneMockup
+                image={{
+                  src: "/assets/kane-hero.png",
+                  alt: "Kane Mousah, founder of The Formula",
+                }}
+                chat={heroChat}
+              />
+            )}
           </Reveal>
         </div>
       </Container>

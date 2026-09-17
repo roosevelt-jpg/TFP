@@ -13,6 +13,9 @@ type SiteFooterProps = {
   width?: "default" | "narrow";
   // Compact single-row footer for utility pages (404, checkout) — no logo block.
   minimal?: boolean;
+  logoSrc?: string;
+  brandName?: string;
+  tagline?: string;
 };
 
 function FooterNav({
@@ -45,6 +48,9 @@ export function SiteFooter({
   disclaimer,
   width = "default",
   minimal = false,
+  logoSrc = "/logo.svg",
+  brandName = "The Formula Programme",
+  tagline = "The 8-week programme plus your Performance Coach in WhatsApp. The method behind The Formula, pointed at your next eight weeks.",
 }: SiteFooterProps) {
   if (minimal) {
     return (
@@ -69,16 +75,20 @@ export function SiteFooter({
         <div className="flex flex-wrap items-start justify-between gap-[26px]">
           <div>
             <Image
-              src="/logo.svg"
-              alt="The Formula Programme"
+              src={logoSrc}
+              alt={brandName}
               width={1440}
               height={209}
               className="h-6 w-auto"
+              unoptimized={
+                logoSrc.startsWith("/uploads/") || logoSrc.startsWith("http")
+              }
             />
-            <p className="text-dim mt-3.5 max-w-[42ch] text-[0.9rem] leading-relaxed">
-              The 8-week programme plus your Performance Coach in WhatsApp. The
-              method behind The Formula, pointed at your next eight weeks.
-            </p>
+            {tagline ? (
+              <p className="text-dim mt-3.5 max-w-[42ch] text-[0.9rem] leading-relaxed">
+                {tagline}
+              </p>
+            ) : null}
           </div>
 
           <FooterNav
