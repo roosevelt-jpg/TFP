@@ -3,8 +3,6 @@ import { Suspense } from "react";
 
 import { TrackCta } from "@/components/analytics/TrackCta";
 import { CtaButton } from "@/components/brand/CtaButton";
-import { Reveal } from "@/components/brand/Reveal";
-import { SectionHeader } from "@/components/brand/SectionHeader";
 import { StickyCtaBar } from "@/components/brand/StickyCtaBar";
 import { Testimonial } from "@/components/brand/Testimonial";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
@@ -12,19 +10,24 @@ import { Section } from "@/components/layout/Section";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SkipLink } from "@/components/layout/SkipLink";
-import { CompactFaqSection } from "@/components/sections/CompactFaqSection";
-import { CompactFinalCta } from "@/components/sections/CompactFinalCta";
-import { CompactHowSection } from "@/components/sections/CompactHowSection";
-import { CompactVslSection } from "@/components/sections/CompactVslSection";
+import { AboutSection } from "@/components/sections/AboutSection";
+import { FaqSection } from "@/components/sections/FaqSection";
+import { FeaturesSection } from "@/components/sections/FeaturesSection";
+import { FinalCtaSection } from "@/components/sections/FinalCtaSection";
+import { FounderOfferSection } from "@/components/sections/FounderOfferSection";
 import { HeroSection } from "@/components/sections/HeroSection";
+import { OutcomeSection } from "@/components/sections/OutcomeSection";
 import { PricingSection } from "@/components/sections/PricingSection";
+import { TransformationsSection } from "@/components/sections/TransformationsSection";
+import { VslSection } from "@/components/sections/VslSection";
 import { getFounderSeatsRemaining, getLandingContent } from "@/lib/cms/landing";
 import { PAYMENTS_LIVE, SIGNUP_HREF } from "@/lib/launch";
 import { resolvePublicOffer } from "@/lib/offers/resolve";
 
 const NAV = [
+  { label: "How it works", href: "/how-it-works" },
   { label: "Pricing", href: "/#pricing" },
-  { label: "FAQ", href: "/#faq" },
+  { label: "FAQ", href: "/faq" },
 ];
 
 const FOOTER_LINKS = [
@@ -64,7 +67,7 @@ function LandingShell() {
     <>
       <SkipLink />
       <SiteHeader nav={NAV} ctaOnMobile={false} logoSrc="/logo.svg" />
-      <main id="main" className="relative z-10">
+      <main id="main" className="landing-dense relative z-10">
         <HeroSection
           headline="The Formula Programme"
           subhead="Loading…"
@@ -94,7 +97,8 @@ async function HomeContent() {
   const featured =
     content.proof.items.find((t) => t.featured) ?? content.proof.items[0];
 
-  const showVsl = content.vsl.enabled && Boolean(content.vsl.playbackId);
+  const showVsl =
+    content.vsl.enabled !== false && Boolean(content.vsl.playbackId);
 
   return (
     <>
@@ -124,7 +128,7 @@ async function HomeContent() {
         }
       />
 
-      <main id="main" className="relative z-10">
+      <main id="main" className="landing-dense relative z-10">
         <HeroSection
           headline={content.hero.headline}
           subhead={content.hero.subhead}
@@ -136,7 +140,7 @@ async function HomeContent() {
         />
 
         {showVsl ? (
-          <CompactVslSection
+          <VslSection
             heading={content.vsl.heading}
             lead={content.vsl.lead}
             playbackId={content.vsl.playbackId}
@@ -144,49 +148,15 @@ async function HomeContent() {
           />
         ) : null}
 
-        {featured ? (
-          <Section id="proof" divided>
-            <SectionHeader
-              align="center"
-              eyebrow="Proof"
-              heading={content.proof.heading}
-              lead={content.proof.lead}
-            />
-            <Reveal>
-              <div className="mx-auto mt-8 max-w-[640px]">
-                <Testimonial
-                  quote={featured.quote}
-                  name={featured.name}
-                  detail={featured.detail}
-                  featured
-                />
-              </div>
-            </Reveal>
-            {content.proof.items.length > 1 ? (
-              <div className="mx-auto mt-8 grid max-w-[960px] gap-4 min-[720px]:grid-cols-2">
-                {content.proof.items
-                  .filter((t) => t !== featured)
-                  .slice(0, 2)
-                  .map((t) => (
-                    <Testimonial
-                      key={t.name}
-                      quote={t.quote}
-                      name={t.name}
-                      detail={t.detail}
-                    />
-                  ))}
-              </div>
-            ) : null}
-          </Section>
-        ) : null}
-
-        {content.how.enabled ? (
-          <CompactHowSection
-            heading={content.how.heading}
-            steps={content.how.steps}
-          />
-        ) : null}
-
+        <AboutSection />
+        <TransformationsSection />
+        <OutcomeSection />
+        <FeaturesSection />
+        <FounderOfferSection
+          seatsLeft={seatsLeft}
+          offer={offer}
+          ctaLabel={content.hero.cta}
+        />
         <PricingSection
           ctaLabel={content.hero.cta}
           reassurance={reassurance}
@@ -196,13 +166,21 @@ async function HomeContent() {
           features={content.pricing.features}
         />
 
-        <CompactFaqSection
-          heading={content.faq.heading}
-          items={content.faq.items}
-        />
+        {featured ? (
+          <Section id="social-proof" divided>
+            <div className="mx-auto max-w-[640px]">
+              <Testimonial
+                quote={featured.quote}
+                name={featured.name}
+                detail={featured.detail}
+                featured
+              />
+            </div>
+          </Section>
+        ) : null}
 
-        <CompactFinalCta
-          heading={content.final.heading}
+        <FaqSection />
+        <FinalCtaSection
           body={content.final.body}
           ctaLabel={content.final.cta}
         />

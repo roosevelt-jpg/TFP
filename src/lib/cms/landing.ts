@@ -112,7 +112,7 @@ export async function getLandingContent(): Promise<LandingContent> {
       trust: v("hero.trust") || launchCopy.heroTrust,
     },
     vsl: {
-      enabled: isOn(v("vsl.enabled") || "false"),
+      enabled: isOn(v("vsl.enabled") || "true"),
       heading: v("vsl.heading"),
       lead: v("vsl.lead"),
       playbackId: v("vsl.playbackId"),

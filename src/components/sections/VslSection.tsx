@@ -4,29 +4,42 @@ import { VslPlayer } from "@/components/brand/VslPlayer";
 import { Section } from "@/components/layout/Section";
 import { siteConfig } from "@/config/site";
 
-const VSL_TITLE = "Kane explains The Formula";
+type Props = {
+  heading?: string;
+  lead?: string;
+  playbackId?: string;
+  poster?: string;
+};
 
-export function VslSection() {
-  // Tighter than --space-section: the video is the content, so the usual
-  // section padding left it marooned in empty space.
+export function VslSection({
+  heading = "Hear it from Kane.",
+  lead = "Five minutes on how the programme works and who it is for.",
+  playbackId = siteConfig.vslPlaybackId,
+  poster,
+}: Props) {
+  const posterUrl =
+    poster ||
+    `https://image.mux.com/${playbackId}/thumbnail.webp?time=3`;
+
   return (
-    <Section divided id="watch" className="py-[clamp(56px,7vw,88px)]">
+    <Section divided id="watch">
       <SectionHeader
+        align="center"
         eyebrow="Watch first"
-        heading="Hear it from Kane."
-        headingChars={20}
-        leadChars={46}
-        lead="Five minutes on how the programme works and who it is for."
+        heading={heading}
+        headingChars={28}
+        leadChars={52}
+        lead={lead}
       />
       <Reveal>
-        {/* aspect-video on the wrapper too: the lazy player's own placeholder
-            only reserves space once its bundle mounts, so without this the
-            container collapses and the sections below jump. */}
-        <div className="border-hairline-strong mx-auto mt-7 aspect-video max-w-260 overflow-hidden rounded-sm border">
+        <div
+          data-landing-stack
+          className="border-hairline-strong mx-auto aspect-video w-full max-w-[820px] overflow-hidden rounded-sm border"
+        >
           <VslPlayer
-            playbackId={siteConfig.vslPlaybackId}
-            poster={`https://image.mux.com/${siteConfig.vslPlaybackId}/thumbnail.webp?time=3`}
-            title={VSL_TITLE}
+            playbackId={playbackId}
+            poster={posterUrl}
+            title={heading}
           />
         </div>
       </Reveal>

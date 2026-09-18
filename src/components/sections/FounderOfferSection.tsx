@@ -61,16 +61,22 @@ export function FounderOfferSection({ seatsLeft, offer, ctaLabel }: Props) {
         }
       />
       {!soldOut ? (
-        <div className="mt-11 grid gap-3.5 md:grid-cols-3 md:grid-rows-[auto_1fr]">
+        <div
+          data-landing-stack
+          className="mt-8 grid gap-2.5 md:grid-cols-3 md:grid-rows-[auto_1fr]"
+        >
           {perks.map((perk, i) => (
             <Reveal
               key={perk.title}
               delayMs={i * 80}
               className="grid h-full md:row-span-2 md:grid-rows-subgrid"
             >
-              <div className="border-hairline-strong relative grid h-full gap-2 overflow-hidden rounded-xs border p-6 md:row-span-2 md:grid-rows-subgrid">
+              <div
+                data-landing-card
+                className="border-hairline-strong relative grid h-full gap-1.5 overflow-hidden rounded-xs border p-6 md:row-span-2 md:grid-rows-subgrid"
+              >
                 <h3 className="text-h3 font-semibold">{perk.title}</h3>
-                <p className="text-muted leading-[1.6]">
+                <p className="text-muted text-[0.88rem] leading-[1.45]">
                   {perk.title.includes("Complete Stack") ? (
                     <>
                       {perk.body}{" "}
@@ -97,8 +103,8 @@ export function FounderOfferSection({ seatsLeft, offer, ctaLabel }: Props) {
         </div>
       ) : null}
       <Reveal delayMs={240}>
-        <div className="mt-9 flex justify-center">
-          <CtaButton href={SIGNUP_HREF} size="lg">
+        <div className="mt-5 flex justify-center">
+          <CtaButton href={SIGNUP_HREF} size="md">
             {ctaLabel}
           </CtaButton>
         </div>

@@ -20,26 +20,29 @@ export function PricingCard({
   reassurance,
 }: PricingCardProps) {
   return (
-    <div className="bg-bg border-hairline-strong mx-auto max-w-[540px] rounded-xs border p-[clamp(26px,4vw,38px)] text-left">
-      <div className="flex flex-wrap items-baseline gap-2.5">
-        <div className="font-display text-[clamp(3rem,9vw,4rem)] leading-[0.9] font-medium tracking-[-0.02em]">
+    <div
+      data-landing-card
+      className="bg-bg border-hairline-strong mx-auto max-w-[500px] rounded-xs border p-[clamp(18px,3vw,28px)] text-left"
+    >
+      <div className="flex flex-wrap items-baseline gap-2">
+        <div className="font-display text-[clamp(2.4rem,6.5vw,3.25rem)] leading-[0.9] font-medium tracking-[-0.02em]" data-landing-price>
           {currency}
           {priceToday}
         </div>
-        <span className="text-dim text-[0.9rem] font-semibold tracking-[0.06em] uppercase">
+        <span className="text-dim text-[0.82rem] font-semibold tracking-[0.06em] uppercase">
           to start
         </span>
       </div>
 
-      <p className="mt-3.5 text-[1.05rem] leading-[1.55]">
+      <p className="mt-2.5 text-[0.88rem] leading-[1.4]">
         Includes your full <b className="font-semibold">8-week programme</b>{" "}
         <span className="text-dim">+</span> your{" "}
         <b className="font-semibold">Performance Coach for 8 weeks</b>.
       </p>
 
-      <div className="bg-hairline my-5 h-px" />
+      <div className="bg-hairline my-4 h-px" data-landing-divider />
 
-      <p className="text-muted text-[1rem] leading-[1.55]">
+      <p className="text-muted text-[0.85rem] leading-[1.4]">
         Then{" "}
         <b className="text-text font-semibold">
           {currency}
@@ -49,29 +52,29 @@ export function PricingCard({
         <b className="text-text font-semibold">Cancel anytime.</b>
       </p>
 
-      <ul className="mt-[22px] grid list-none gap-[11px] p-0">
+      <ul className="mt-3 grid list-none gap-1.5 p-0">
         {features.map((feature) => (
           <li
             key={feature}
-            className="flex items-start gap-[11px] text-[0.98rem]"
+            className="flex items-start gap-2 text-[0.82rem]"
           >
-            <span aria-hidden className="bg-red mt-[9px] size-[5px] shrink-0" />
+            <span aria-hidden className="bg-red mt-1.5 size-[4px] shrink-0" />
             {feature}
           </li>
         ))}
       </ul>
 
-      <CtaButton href={cta.href} block className="mt-6" size="md">
+      <CtaButton href={cta.href} block className="mt-4" size="sm">
         {cta.label}
       </CtaButton>
 
       {reassurance && (
-        <p className="text-dim mt-[15px] text-center text-[0.84rem] leading-normal">
+        <p className="text-dim mt-2.5 text-center text-[0.75rem] leading-normal">
           {reassurance}
         </p>
       )}
 
-      <div className="text-dim mt-4 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 text-[0.77rem] min-[480px]:gap-4">
+      <div className="text-dim mt-2.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[0.7rem] min-[480px]:gap-3">
         <span className="inline-flex items-center gap-2">
           <svg
             aria-hidden

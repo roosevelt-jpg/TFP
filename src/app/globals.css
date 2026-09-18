@@ -310,3 +310,150 @@ html:not(.motion-ready) [data-reveal] {
     transform: translateX(-50%);
   }
 }
+
+/* Landing density — keep every section, compress type/spacing/cards so the
+   page feels premium and tight. Scoped so join/checkout/legal stay unchanged.
+   --text-* must be re-set here: @theme inline bakes root sizes into utilities. */
+.landing-dense {
+  --fs-display: clamp(1.55rem, 3.2vw, 2.35rem);
+  --fs-h2: clamp(1.3rem, 2.4vw, 1.85rem);
+  --fs-h3: clamp(0.95rem, 1.4vw, 1.1rem);
+  --fs-lead: clamp(0.88rem, 1.2vw, 0.98rem);
+  --fs-eyebrow: 0.62rem;
+  --text-display: var(--fs-display);
+  --text-h2: var(--fs-h2);
+  --text-h3: var(--fs-h3);
+  --text-lead: var(--fs-lead);
+  --text-eyebrow: var(--fs-eyebrow);
+  --space-section: clamp(28px, 4.2vw, 52px);
+  --landing-stack: clamp(0.85rem, 1.6vw, 1.15rem);
+  --landing-card-pad: clamp(12px, 1.6vw, 16px);
+  --landing-header-gap: 0.4rem;
+  --landing-lead-gap: 0.45rem;
+}
+
+.landing-dense .text-display,
+.landing-dense h1.text-display,
+.landing-dense h2.text-display {
+  font-size: var(--fs-display);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+
+.landing-dense .text-h2,
+.landing-dense h2.text-h2 {
+  font-size: var(--fs-h2);
+  line-height: 1.12;
+  letter-spacing: -0.018em;
+}
+
+.landing-dense .text-h3,
+.landing-dense h3.text-h3 {
+  font-size: var(--fs-h3);
+  line-height: 1.25;
+}
+
+.landing-dense .text-lead {
+  font-size: var(--fs-lead);
+  line-height: 1.45;
+}
+
+.landing-dense .text-eyebrow {
+  font-size: var(--fs-eyebrow);
+  gap: 6px;
+}
+
+.landing-dense .text-eyebrow .bg-red {
+  width: 4px;
+  height: 4px;
+}
+
+.landing-dense [data-section-header] [data-section-title] {
+  margin-top: var(--landing-header-gap);
+}
+
+.landing-dense [data-section-header] [data-section-lead] {
+  margin-top: var(--landing-lead-gap);
+}
+
+.landing-dense [data-landing-stack] {
+  margin-top: var(--landing-stack) !important;
+}
+
+.landing-dense [data-landing-card] {
+  padding: var(--landing-card-pad) !important;
+}
+
+.landing-dense [data-landing-card] figcaption {
+  padding: 0.7rem 0.85rem !important;
+  gap: 0.55rem !important;
+}
+
+.landing-dense [data-landing-card] figcaption blockquote {
+  font-size: 0.82rem !important;
+  line-height: 1.4 !important;
+}
+
+.landing-dense [data-landing-column] {
+  padding-block: 0.7rem !important;
+}
+
+.landing-dense [data-landing-column] h3 {
+  font-size: 0.95rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.landing-dense [data-landing-column] p {
+  font-size: 0.82rem !important;
+  line-height: 1.4 !important;
+}
+
+.landing-dense [data-landing-stat] .font-display {
+  font-size: 1.25rem !important;
+}
+
+.landing-dense [data-landing-stat] .bg-hairline-strong {
+  margin-block: 6px !important;
+}
+
+.landing-dense [data-landing-stat] .text-dim {
+  font-size: 0.68rem !important;
+}
+
+.landing-dense [data-landing-price] {
+  font-size: clamp(1.85rem, 4.5vw, 2.45rem) !important;
+}
+
+.landing-dense [data-slot="accordion-trigger"] {
+  padding-block: 0.7rem !important;
+  font-size: 0.92rem !important;
+}
+
+.landing-dense [data-slot="accordion-content"] p {
+  padding-bottom: 0.7rem !important;
+  font-size: 0.85rem !important;
+  line-height: 1.45 !important;
+}
+
+.landing-dense [data-landing-cta] {
+  min-height: 2.4rem;
+  padding-block: 0.55rem;
+  padding-inline: 1.1rem;
+  font-size: 0.88rem;
+}
+
+.landing-dense [data-landing-cta][data-size="lg"] {
+  min-height: 2.55rem;
+  padding-block: 0.65rem;
+  padding-inline: 1.25rem;
+  font-size: 0.92rem;
+}
+
+.landing-dense [data-landing-divider] {
+  margin-block: 0.75rem !important;
+}
+
+.landing-dense [data-landing-chip] {
+  padding: 0.3rem 0.65rem !important;
+  font-size: 0.7rem !important;
+}

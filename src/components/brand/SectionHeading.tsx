@@ -7,7 +7,7 @@ type SectionHeadingProps = {
   align?: "start" | "center";
   maxChars?: number;
   className?: string;
-};
+} & React.HTMLAttributes<HTMLHeadingElement>;
 
 export function SectionHeading({
   as: Tag = "h2",
@@ -16,6 +16,7 @@ export function SectionHeading({
   align = "start",
   maxChars,
   className,
+  ...rest
 }: SectionHeadingProps) {
   return (
     <Tag
@@ -25,6 +26,7 @@ export function SectionHeading({
         className,
       )}
       style={maxChars ? { maxWidth: `${maxChars}ch` } : undefined}
+      {...rest}
     >
       {children}
     </Tag>

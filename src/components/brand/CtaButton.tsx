@@ -65,11 +65,17 @@ export function CtaButton({
     </>
   );
   const classes = cn(cta({ variant, size, block }), className);
+  const dataSize = size === "lg" || size === "sm" ? size : "md";
 
   if (props.as === "button") {
     const { as: _as, ...rest } = props;
     return (
-      <button className={classes} {...rest}>
+      <button
+        className={classes}
+        data-landing-cta
+        data-size={dataSize}
+        {...rest}
+      >
         {content}
       </button>
     );
@@ -77,7 +83,13 @@ export function CtaButton({
 
   const { as: _as, href, ...rest } = props;
   return (
-    <Link href={href} className={classes} {...rest}>
+    <Link
+      href={href}
+      className={classes}
+      data-landing-cta
+      data-size={dataSize}
+      {...rest}
+    >
       {content}
     </Link>
   );

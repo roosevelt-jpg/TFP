@@ -16,7 +16,7 @@ export function FaqSection() {
       <SectionHeader
         eyebrow="Questions"
         heading="Everything else you’re wondering."
-        className="mb-[34px]"
+        className="mb-3.5"
       />
       <Accordion>
         {featuredFaqs.map((faq) => (

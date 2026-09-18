@@ -36,12 +36,12 @@ export function HeroSection({
   return (
     <section
       id="top"
-      className="relative pt-[clamp(24px,4vw,52px)] pb-(--space-section)"
+      className="relative pt-[clamp(10px,1.8vw,22px)] pb-[clamp(24px,3.5vw,44px)]"
     >
       <GridBackdrop vignette="hero" />
       <Container className="relative z-10">
-        <div className="grid items-center gap-[clamp(28px,5vw,56px)] min-[940px]:grid-cols-[1.06fr_.94fr]">
-          <div className="mx-auto grid max-w-[560px] justify-items-center gap-[22px] text-center min-[940px]:mx-0 min-[940px]:justify-items-start min-[940px]:text-left">
+        <div className="grid items-center gap-[clamp(14px,2.5vw,28px)] min-[940px]:grid-cols-[1.06fr_.94fr]">
+          <div className="mx-auto grid max-w-[520px] justify-items-center gap-3 text-center min-[940px]:mx-0 min-[940px]:justify-items-start min-[940px]:text-left">
             <Reveal>
               <Eyebrow align="center" className="min-[641px]:hidden">
                 {eyebrow}
@@ -64,23 +64,30 @@ export function HeroSection({
               <SectionHeading
                 as="h1"
                 size="display"
-                className="text-balance text-[clamp(2rem,4.2vw,3.2rem)]"
+                className="text-balance"
               >
                 {headline}
               </SectionHeading>
             </Reveal>
             <Reveal delayMs={120}>
-              <p className="text-muted max-w-[36ch] text-lead leading-[1.6]">
+              <p className="text-muted max-w-[38ch] text-lead leading-[1.45]">
                 {subhead}
               </p>
             </Reveal>
             <Reveal delayMs={180}>
-              <div className="flex flex-wrap items-center justify-center gap-[13px] min-[940px]:justify-start">
+              <div className="flex flex-wrap items-center justify-center gap-2 min-[940px]:justify-start">
                 <TrackCta placement="hero">
-                  <CtaButton href={SIGNUP_HREF}>{ctaLabel}</CtaButton>
+                  <CtaButton href={SIGNUP_HREF} size="sm">
+                    {ctaLabel}
+                  </CtaButton>
                 </TrackCta>
                 {showWatchCta ? (
-                  <CtaButton href="#watch" variant="ghost" withShine={false}>
+                  <CtaButton
+                    href="#watch"
+                    variant="ghost"
+                    withShine={false}
+                    size="sm"
+                  >
                     Watch Kane explain it
                   </CtaButton>
                 ) : null}
@@ -97,13 +104,13 @@ export function HeroSection({
             className="flex justify-center justify-self-center min-[940px]:block min-[940px]:self-end"
           >
             {heroImage ? (
-              <div className="relative aspect-[3/4] w-full max-w-[360px] overflow-hidden rounded-sm">
+              <div className="relative aspect-[3/4] w-full max-w-[300px] overflow-hidden rounded-sm">
                 <Image
                   src={heroImage}
                   alt=""
                   fill
                   className="object-cover"
-                  sizes="360px"
+                  sizes="300px"
                   priority
                 />
               </div>

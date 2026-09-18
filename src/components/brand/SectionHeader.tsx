@@ -14,8 +14,8 @@ type SectionHeaderProps = {
   className?: string;
 };
 
-// Canonical section-header rhythm, identical on every section so the page reads
-// as one system: eyebrow → 14px → heading → 18px → lead. Reveal stagger 0/60/120.
+// Canonical section-header rhythm. Gaps are tokenised so .landing-dense can
+// compress them without rewriting every section.
 export function SectionHeader({
   eyebrow,
   heading,
@@ -26,7 +26,10 @@ export function SectionHeader({
   className,
 }: SectionHeaderProps) {
   return (
-    <div className={cn(align === "center" && "text-center", className)}>
+    <div
+      data-section-header
+      className={cn(align === "center" && "text-center", className)}
+    >
       <Reveal>
         <Eyebrow align={align}>{eyebrow}</Eyebrow>
       </Reveal>
@@ -34,7 +37,8 @@ export function SectionHeader({
         <SectionHeading
           align={align}
           maxChars={headingChars}
-          className="mt-3.5"
+          data-section-title
+          className="mt-[length:var(--landing-header-gap,0.875rem)]"
         >
           {heading}
         </SectionHeading>
@@ -42,8 +46,9 @@ export function SectionHeader({
       {lead && (
         <Reveal delayMs={120}>
           <p
+            data-section-lead
             className={cn(
-              "text-muted mt-[18px] text-lead leading-[1.6]",
+              "text-muted mt-[length:var(--landing-lead-gap,1.125rem)] text-lead leading-[1.55]",
               align === "center" && "mx-auto",
             )}
             style={{ maxWidth: `${leadChars}ch` }}

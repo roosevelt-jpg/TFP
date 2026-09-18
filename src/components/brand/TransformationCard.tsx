@@ -14,8 +14,11 @@ export function TransformationCard({
   priority,
 }: TransformationCardProps) {
   return (
-    <figure className="border-hairline-strong flex h-full flex-col overflow-hidden rounded-sm border">
-      <div className="border-hairline-strong border-b p-2.5">
+    <figure
+      data-landing-card
+      className="border-hairline-strong flex h-full flex-col overflow-hidden rounded-sm border"
+    >
+      <div className="border-hairline-strong border-b p-1.5">
         <Image
           src={image}
           alt={`${name} before and after The Formula programme`}
@@ -26,13 +29,13 @@ export function TransformationCard({
           className="block h-auto w-full rounded-xs"
         />
       </div>
-      <figcaption className="flex flex-1 flex-col gap-4 p-5">
-        <blockquote className="text-muted flex-1 leading-[1.55]">
+      <figcaption className="flex flex-1 flex-col gap-2 p-3">
+        <blockquote className="text-muted flex-1 text-[0.82rem] leading-[1.4]">
           {quote}
         </blockquote>
-        <div className="flex items-center gap-2.5">
-          <span aria-hidden className="bg-red size-1.5 rounded-full" />
-          <span className="text-[0.78rem] font-semibold tracking-[0.14em] uppercase">
+        <div className="flex items-center gap-1.5">
+          <span aria-hidden className="bg-red size-1 rounded-full" />
+          <span className="text-[0.66rem] font-semibold tracking-[0.14em] uppercase">
             {name}
           </span>
         </div>

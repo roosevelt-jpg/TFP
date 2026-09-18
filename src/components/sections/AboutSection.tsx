@@ -8,7 +8,7 @@ import { siteConfig } from "@/config/site";
 export function AboutSection() {
   return (
     <Section divided>
-      <div className="grid items-center gap-[clamp(32px,5vw,60px)] md:grid-cols-2">
+      <div className="grid items-center gap-[clamp(14px,2.5vw,28px)] md:grid-cols-2">
         <Reveal>
           <CoachPortrait
             src="/assets/kane-coach.jpg"
@@ -22,12 +22,12 @@ export function AboutSection() {
           <SectionHeader
             eyebrow="Who’s in your corner"
             heading="Coached by someone who’s been in the fight."
-            headingChars={15}
+            headingChars={18}
             leadChars={48}
             lead="I fought pro MMA in Bellator, then spent 20+ years coaching. I founded The Formula and built the accountability system behind it myself."
           />
           <Reveal delayMs={120}>
-            <div className="mt-8 grid gap-6 min-[500px]:grid-cols-3">
+            <div className="mt-4 grid gap-3 min-[500px]:grid-cols-3">
               <StatBlock value="Ex-pro" caption="MMA fighter" />
               <StatBlock value="Bellator" caption="On the big stage" />
               <StatBlock value="8 weeks" caption="To your turnaround" />

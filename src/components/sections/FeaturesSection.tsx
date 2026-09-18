@@ -10,13 +10,16 @@ export function FeaturesSection() {
       <SectionHeader
         eyebrow="How it works"
         heading="Your Performance Coach, inside WhatsApp"
-        headingChars={26}
+        headingChars={28}
         leadChars={52}
         lead="One number to save. For eight weeks it's how you train, eat and stay on track, all in the app you already have open."
       />
-      <div className="mt-11.5 grid items-stretch gap-3.5 md:grid-cols-2">
+      <div
+        data-landing-stack
+        className="mt-8 grid items-stretch gap-2.5 md:grid-cols-2"
+      >
         {features.map((item, i) => (
-          <Reveal key={item.title} delayMs={i * 80} className="h-full">
+          <Reveal key={item.title} delayMs={i * 60} className="h-full">
             <IncludedCard
               index={String(i + 1).padStart(2, "0")}
               title={item.title}

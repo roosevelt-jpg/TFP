@@ -128,8 +128,8 @@ export const LANDING_CMS_FIELDS: CmsFieldDef[] = [
     label: "Show short video section",
     kind: "toggle",
     group: "Video",
-    fallback: "false",
-    help: "Off by default for a shorter landing. Turn on when Mux ID is set.",
+    fallback: "true",
+    help: "On by default. Turn off only if you want to hide the VSL.",
   },
   {
     key: "vsl.heading",
@@ -143,7 +143,7 @@ export const LANDING_CMS_FIELDS: CmsFieldDef[] = [
     label: "Video lead",
     kind: "textarea",
     group: "Video",
-    fallback: "Under two minutes on how the programme works.",
+    fallback: "Five minutes on how the programme works and who it is for.",
   },
   {
     key: "vsl.playbackId",

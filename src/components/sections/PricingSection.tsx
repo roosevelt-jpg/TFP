@@ -31,7 +31,7 @@ export function PricingSection({
       <TrackPricingView />
       <SectionHeader align="center" eyebrow={eyebrow} heading={heading} />
       <Reveal delayMs={120}>
-        <div className="mt-10">
+        <div className="mt-5">
           <TrackCta placement="pricing">
             <PricingCard
               priceToday={formatGbpAmount(offer.amountDueToday)}
