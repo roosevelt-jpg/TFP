@@ -380,12 +380,14 @@ export async function getClient360(personId: string) {
       enrolments: person.enrolments,
       subscriptions: person.customer?.subscriptions ?? [],
       activeTier: [
-        ...person.enrolments
-          .filter((e) => e.status === "active")
-          .map((e) => `${e.line}${e.tier ? ` · ${e.tier}` : ""}`),
-        ...(person.customer?.subscriptions ?? [])
-          .filter((s) => s.status === "active" || s.status === "trialing")
-          .map((s) => s.stripePriceId),
+        ...new Set([
+          ...person.enrolments
+            .filter((e) => e.status === "active")
+            .map((e) => `${e.line}${e.tier ? ` · ${e.tier}` : ""}`),
+          ...(person.customer?.subscriptions ?? [])
+            .filter((s) => s.status === "active" || s.status === "trialing")
+            .map((s) => s.stripePriceId),
+        ]),
       ],
     },
     assignedStaff: activeAssignments.map((a) => ({
