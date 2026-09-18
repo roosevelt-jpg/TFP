@@ -1,8 +1,40 @@
+import { Suspense } from "react";
+
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getFunnelPageData } from "@/lib/admin/queries/funnel";
 import { requireAdminSession } from "@/lib/auth/session";
 
-export default async function FunnelMetricsPage() {
+export default function FunnelMetricsPage() {
+  return (
+    <Suspense fallback={<FunnelFallback />}>
+      <FunnelMetricsContent />
+    </Suspense>
+  );
+}
+
+function FunnelFallback() {
+  return (
+    <div className="tfp-command" data-theme="dark">
+      <div className="cmd-app">
+        <div className="cmd-main" style={{ padding: 24 }}>
+          <div className="cmd-page-lead">
+            <div className="cmd-page-lead-line">Loading funnel metrics…</div>
+          </div>
+          <div className="cmd-kpi-grid">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <div className="cmd-kpi-card" key={i}>
+                <div className="cmd-kpi-label">…</div>
+                <div className="cmd-kpi-value">—</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+async function FunnelMetricsContent() {
   await requireAdminSession(["kane", "lemoni", "leah"]);
   const data = await getFunnelPageData();
   const k = data.kpis;
@@ -81,7 +113,9 @@ export default async function FunnelMetricsPage() {
                   <div className="cmd-list-title">{e.eventName}</div>
                   <div className="cmd-list-sub">
                     {e.source} · {e.occurredAt.toLocaleString("en-GB")}
-                    {e.customerId ? ` · customer ${e.customerId.slice(0, 8)}…` : ""}
+                    {e.customerId
+                      ? ` · customer ${e.customerId.slice(0, 8)}…`
+                      : ""}
                   </div>
                 </div>
               </div>

@@ -8,6 +8,7 @@ import { requireAdminSession } from "@/lib/auth/session";
 import { upsertCmsValue } from "@/lib/cms/store";
 import { uploadEmailLogo } from "@/lib/mail/logo";
 import { actionClient } from "@/lib/safe-action";
+import { assertVaultUnlocked } from "@/lib/secrets/vault-passcode";
 import { db } from "@/db";
 
 const schema = z.object({
@@ -24,6 +25,7 @@ export const uploadEmailLogoAction = actionClient
   .inputSchema(schema)
   .action(async ({ parsedInput }) => {
     const session = await requireAdminSession(["kane"]);
+    await assertVaultUnlocked(session.user.id);
     const bytes = Buffer.from(parsedInput.dataBase64, "base64");
     if (bytes.byteLength < 64) {
       throw new Error("File looks empty");

@@ -1,6 +1,7 @@
+import { Suspense } from "react";
+
 import { AdminShell } from "@/components/admin/AdminShell";
-import { EmailLogoUploadForm } from "@/components/admin/EmailLogoUploadForm";
-import { IntegrationCredentialsForm } from "@/components/admin/IntegrationCredentialsForm";
+import { IntegrationsVaultGate } from "@/components/admin/IntegrationsVaultGate";
 import { getIntegrationsPageData } from "@/lib/admin/queries/pages";
 import { requireAdminSession } from "@/lib/auth/session";
 import { emailLogoStatus } from "@/lib/mail/logo";
@@ -9,14 +10,39 @@ import {
   CREDENTIAL_GROUPS,
 } from "@/lib/secrets/catalog";
 import { listSecretStatuses } from "@/lib/secrets/store";
+import {
+  isVaultUnlocked,
+  vaultPasscodeConfigured,
+} from "@/lib/secrets/vault-passcode";
 
-export default async function IntegrationsPage() {
+export default function IntegrationsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="tfp-command" data-theme="dark">
+          <div className="cmd-app">
+            <div className="cmd-main" style={{ padding: 24 }}>
+              Loading integrations…
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <IntegrationsPageContent />
+    </Suspense>
+  );
+}
+
+async function IntegrationsPageContent() {
   const session = await requireAdminSession(["kane", "indigo"]);
-  const [connectors, statuses, logoStatus] = await Promise.all([
-    getIntegrationsPageData(),
-    listSecretStatuses(ALL_CREDENTIAL_KEYS),
-    emailLogoStatus(),
-  ]);
+  const [connectors, statuses, logoStatus, passcodeConfigured, unlocked] =
+    await Promise.all([
+      getIntegrationsPageData(),
+      listSecretStatuses(ALL_CREDENTIAL_KEYS),
+      emailLogoStatus(),
+      vaultPasscodeConfigured(),
+      isVaultUnlocked(session.user.id),
+    ]);
   const canEdit = session.user.role === "kane";
 
   return (
@@ -24,29 +50,28 @@ export default async function IntegrationsPage() {
       <div className="cmd-page-lead">
         <div className="cmd-page-lead-line">
           <strong>{connectors.length}</strong> data sources in the warehouse
-          registry.
+          registry. Credential edits require Kane’s vault passcode.
         </div>
       </div>
 
       <div className="cmd-section-note">
-        Credentials are entered here by Kane, encrypted in Postgres (your
-        Supabase database), then hidden. Vercel env vars remain a valid
-        fallback for deploy-time secrets. The Performance email logo is
-        uploaded as a file (not a URL) and embedded in every send.
+        Credentials are encrypted in Postgres after save. The vault passcode
+        gates viewing and changing them — set it once, unlock when needed, reset
+        with the current code.
       </div>
 
       {canEdit ? (
-        <>
-          <EmailLogoUploadForm status={logoStatus} />
-          <IntegrationCredentialsForm
-            groups={[...CREDENTIAL_GROUPS]}
-            statuses={statuses}
-          />
-        </>
+        <IntegrationsVaultGate
+          passcodeConfigured={passcodeConfigured}
+          unlocked={unlocked}
+          groups={[...CREDENTIAL_GROUPS]}
+          statuses={statuses}
+          logoStatus={logoStatus}
+        />
       ) : (
         <div className="cmd-panel">
           <div className="cmd-panel-body">
-            Only Kane can add or rotate integration credentials.
+            Only Kane can unlock the vault and rotate integration credentials.
           </div>
         </div>
       )}

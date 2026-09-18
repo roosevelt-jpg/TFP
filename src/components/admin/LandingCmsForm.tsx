@@ -8,6 +8,10 @@ import {
   uploadCmsMediaAction,
 } from "@/actions/admin/cms.action";
 import type { CmsFieldDef } from "@/lib/cms/landing-catalog";
+import {
+  plainTextJsonStrings,
+  stripHtmlToPlainText,
+} from "@/lib/cms/plain-text";
 
 type FieldValue = {
   key: string;
@@ -20,6 +24,12 @@ type FieldValue = {
 type Props = {
   groups: Array<[string, FieldValue[]]>;
 };
+
+function displayValue(field: FieldValue) {
+  if (field.kind === "image" || field.kind === "toggle") return field.value;
+  if (field.kind === "json") return plainTextJsonStrings(field.value);
+  return stripHtmlToPlainText(field.value);
+}
 
 export function LandingCmsForm({ groups }: Props) {
   const router = useRouter();
@@ -56,10 +66,9 @@ export function LandingCmsForm({ groups }: Props) {
       <div className="cmd-panel" style={{ marginBottom: 16 }}>
         <div className="cmd-panel-body">
           <p className="cmd-list-sub">
-            Full marketing CMS — every landing string, image, FAQ, testimonial,
-            site logo, favicon, email logo and share image. API credentials live
-            under <a href="/admin/integrations">Integrations</a>. Changes
-            publish on save.
+            Plain-text marketing CMS only — no HTML. Paste copy as normal text;
+            tags are stripped on save. Images upload separately. API credentials
+            live under <a href="/admin/integrations">Integrations</a>.
           </p>
         </div>
       </div>
@@ -73,7 +82,7 @@ export function LandingCmsForm({ groups }: Props) {
             {fields.map((field) => (
               <FieldEditor
                 key={field.key}
-                field={field}
+                field={{ ...field, value: displayValue(field) }}
                 pending={pending}
                 onSaveText={saveText}
                 onSaveImage={saveImage}
@@ -138,8 +147,10 @@ function FieldEditor({
         >
           <input
             name="url"
+            type="text"
             defaultValue={field.value}
             placeholder="Or paste image URL / path"
+            autoComplete="off"
           />
           <button
             className="cmd-btn cmd-btn-sm cmd-btn-primary"
@@ -183,7 +194,40 @@ function FieldEditor({
     );
   }
 
-  const rows = field.kind === "json" ? 10 : field.kind === "textarea" ? 4 : 2;
+  if (field.kind === "text") {
+    return (
+      <form
+        className="cmd-field"
+        onSubmit={(event) => {
+          event.preventDefault();
+          const value = String(
+            new FormData(event.currentTarget).get("value") ?? "",
+          );
+          onSaveText(field.key, value);
+        }}
+      >
+        <label htmlFor={field.key}>{field.label}</label>
+        {field.help ? <div className="cmd-list-sub">{field.help}</div> : null}
+        <input
+          id={field.key}
+          name="value"
+          type="text"
+          defaultValue={field.value}
+          autoComplete="off"
+          spellCheck
+        />
+        <button
+          className="cmd-btn cmd-btn-sm cmd-btn-primary"
+          disabled={pending}
+          type="submit"
+        >
+          Save
+        </button>
+      </form>
+    );
+  }
+
+  const rows = field.kind === "json" ? 10 : 4;
 
   return (
     <form
@@ -203,6 +247,7 @@ function FieldEditor({
         name="value"
         defaultValue={field.value}
         rows={rows}
+        spellCheck={field.kind !== "json"}
         style={
           field.kind === "json"
             ? { fontFamily: "var(--cmd-font-mono)" }

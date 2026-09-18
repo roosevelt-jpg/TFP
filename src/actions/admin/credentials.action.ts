@@ -8,6 +8,7 @@ import {
   deleteIntegrationSecret,
   upsertIntegrationSecret,
 } from "@/lib/secrets/store";
+import { assertVaultUnlocked } from "@/lib/secrets/vault-passcode";
 import { actionClient } from "@/lib/safe-action";
 
 const keySchema = z
@@ -26,6 +27,7 @@ export const saveIntegrationSecretAction = actionClient
   )
   .action(async ({ parsedInput }) => {
     const session = await requireAdminSession(["kane"]);
+    await assertVaultUnlocked(session.user.id);
     await upsertIntegrationSecret({
       key: parsedInput.key,
       value: parsedInput.value,
@@ -38,7 +40,8 @@ export const clearIntegrationSecretAction = actionClient
   .metadata({ actionName: "admin.clearIntegrationSecret" })
   .inputSchema(z.object({ key: keySchema }))
   .action(async ({ parsedInput }) => {
-    await requireAdminSession(["kane"]);
+    const session = await requireAdminSession(["kane"]);
+    await assertVaultUnlocked(session.user.id);
     await deleteIntegrationSecret(parsedInput.key);
     return { ok: true as const, key: parsedInput.key };
   });
