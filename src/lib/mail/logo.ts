@@ -14,11 +14,16 @@ export const EMAIL_LOGO_BLOB_PATH = "branding/email-logo.png";
 
 const LOCAL_LOGO_PATH = path.join(process.cwd(), "public", "email", "logo.png");
 
-const store = () => ({
-  access: "private" as const,
-  storeId: env.FORMULA_BLOB_STORE_ID,
-  token: env.BLOB_READ_WRITE_TOKEN,
-});
+const store = () => {
+  if (!env.FORMULA_BLOB_STORE_ID || !env.BLOB_READ_WRITE_TOKEN) {
+    throw new Error("Blob store credentials are not configured");
+  }
+  return {
+    access: "private" as const,
+    storeId: env.FORMULA_BLOB_STORE_ID,
+    token: env.BLOB_READ_WRITE_TOKEN,
+  };
+};
 
 /** Img src for templates — always the uploaded file via CID, never a URL. */
 export function emailLogoSrc() {

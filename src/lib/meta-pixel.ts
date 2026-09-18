@@ -2,7 +2,6 @@ import {
   getTrackingConsent,
   onTrackingConsentChange,
 } from "@/lib/tracking-consent";
-import { env } from "@/env";
 
 // The official base snippet, in TypeScript: a queueing stub is installed as
 // window.fbq, then fbevents.js takes the same function over by attaching
@@ -33,7 +32,7 @@ function injectScript(): void {
 }
 
 export function loadMetaPixel(): void {
-  const pixelId = env.NEXT_PUBLIC_META_PIXEL_ID;
+  const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
   if (!pixelId || fbq) return;
 
   try {

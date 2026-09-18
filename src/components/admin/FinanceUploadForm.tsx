@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 
 import { uploadFinanceCsvAction } from "@/actions/admin/finance.action";
+import { CURRENCY_CODES } from "@/lib/i18n/catalog";
 
 export function FinanceUploadForm() {
   const [pending, startTransition] = useTransition();
@@ -14,7 +15,8 @@ export function FinanceUploadForm() {
         <div>
           <div className="cmd-panel-title">Upload Leah finance CSV</div>
           <div className="cmd-panel-sub">
-            Columns: date,category,subcategory,description,amount,currency,account,business_line
+            Columns: date,category,subcategory,description,amount,currency,account,business_line.
+            Currency must be one of: {CURRENCY_CODES.join(", ")}.
           </div>
         </div>
       </div>

@@ -1,10 +1,9 @@
-import { env } from "@/env";
-
 export const siteConfig = {
   name: "The Formula Programme",
   title: "The Formula Programme",
   description: "An 8-week fitness programme by Kane Mousah.",
-  url: env.NEXT_PUBLIC_APP_URL,
+  // Avoid importing @/env here — several client sections read siteConfig.
+  url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
   contactEmail: "info@theformulaperformance.com",
   instagramUrl: "https://instagram.com/kanem14",
   // Mux public playback ID for the landing page VSL. Public playback policy, so

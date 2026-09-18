@@ -6,6 +6,7 @@ import {
   recordFunnelEvent,
   upsertWorkflow,
 } from "@/lib/funnel/records";
+import { enqueueActivationReminderWhatsApp } from "@/lib/whatsapp/enqueue";
 
 import { emailQueue } from "./queues";
 
@@ -26,6 +27,7 @@ export const checkOnboardingIncomplete = schemaTask({
         id: true,
         email: true,
         name: true,
+        whatsapp: true,
         coaching: { select: { id: true } },
       },
     });
@@ -63,6 +65,15 @@ export const checkOnboardingIncomplete = schemaTask({
         threadKey: `onboarding:${purchaseRef}`,
       },
     });
+
+    if (customer.whatsapp) {
+      await enqueueActivationReminderWhatsApp({
+        customerId,
+        purchaseRef,
+        whatsapp: customer.whatsapp,
+        firstName: customer.name.split(/\s+/)[0] ?? customer.name,
+      });
+    }
 
     await recordFunnelEvent({
       eventName: "onboarding_incomplete",

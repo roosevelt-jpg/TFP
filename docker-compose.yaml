@@ -8,8 +8,8 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: formula
     ports:
-      # Host 55433 → container 5432. Point TablePlus at localhost:55433.
-      - "55433:5432"
+      # Host 15432 → container 5432. (55433 is in Windows Hyper-V excluded ranges; 5433 often taken.)
+      - "15432:5432"
     volumes:
       - formula_pgdata:/var/lib/postgresql/data
     healthcheck:

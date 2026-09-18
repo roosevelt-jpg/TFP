@@ -164,6 +164,72 @@ export const CREDENTIAL_GROUPS: CredentialGroup[] = [
         label: "Meta page access token",
         secret: true,
       },
+      {
+        key: "WHATSAPP_ACCESS_TOKEN",
+        label: "WhatsApp Cloud API access token",
+        secret: true,
+      },
+      {
+        key: "WHATSAPP_PHONE_NUMBER_ID",
+        label: "WhatsApp phone number ID",
+        secret: false,
+        placeholder: "From Meta → WhatsApp → API setup",
+      },
+      {
+        key: "WHATSAPP_BUSINESS_ACCOUNT_ID",
+        label: "WhatsApp Business Account ID",
+        secret: false,
+      },
+    ],
+  },
+  {
+    id: "WhatsAppTemplates",
+    name: "WhatsApp templates (env fallback)",
+    description:
+      "Optional env fallbacks. Prefer Growth → WhatsApp → Templates in admin — those win over these names.",
+    fields: [
+      {
+        key: "WHATSAPP_TEMPLATE_WAITLIST_WELCOME",
+        label: "Waitlist welcome (fallback name)",
+        secret: false,
+        placeholder: "waitlist_welcome",
+      },
+      {
+        key: "WHATSAPP_TEMPLATE_CHECKOUT_RECOVERY",
+        label: "Checkout recovery (fallback name)",
+        secret: false,
+        placeholder: "checkout_recovery",
+      },
+      {
+        key: "WHATSAPP_TEMPLATE_PURCHASE_CONFIRMATION",
+        label: "Purchase confirmation (fallback name)",
+        secret: false,
+        placeholder: "purchase_confirmation",
+      },
+      {
+        key: "WHATSAPP_TEMPLATE_PURCHASE_ACTIVATION",
+        label: "Purchase activation (fallback name)",
+        secret: false,
+        placeholder: "purchase_activation",
+      },
+      {
+        key: "WHATSAPP_TEMPLATE_ACTIVATION_REMINDER",
+        label: "Activation reminder (fallback name)",
+        secret: false,
+        placeholder: "activation_reminder",
+      },
+      {
+        key: "WHATSAPP_TEMPLATE_SERVICE_REGISTERED",
+        label: "Service registered (fallback name)",
+        secret: false,
+        placeholder: "service_registered",
+      },
+      {
+        key: "WHATSAPP_SEND_PURCHASE_ACTIVATION",
+        label: "Send first-party purchase WA (true/false)",
+        secret: false,
+        placeholder: "true",
+      },
     ],
   },
   {
@@ -171,8 +237,7 @@ export const CREDENTIAL_GROUPS: CredentialGroup[] = [
     name: "Calendly",
     description: "Booked calls",
     fields: [{ key: "CALENDLY_TOKEN", label: "Personal access token", secret: true }],
-  },
-  {
+  },  {
     id: "S12",
     name: "Revolut",
     description: "Cash balances (Business API)",

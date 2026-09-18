@@ -9,11 +9,16 @@ import { env } from "@/env";
 // stay reproducible.
 const MASTER_PATH = "programme-master.pdf";
 
-const store = () => ({
-  access: "private" as const,
-  storeId: env.FORMULA_BLOB_STORE_ID,
-  token: env.BLOB_READ_WRITE_TOKEN,
-});
+const store = () => {
+  if (!env.FORMULA_BLOB_STORE_ID || !env.BLOB_READ_WRITE_TOKEN) {
+    throw new Error("Blob store credentials are not configured");
+  }
+  return {
+    access: "private" as const,
+    storeId: env.FORMULA_BLOB_STORE_ID,
+    token: env.BLOB_READ_WRITE_TOKEN,
+  };
+};
 
 export async function readMasterPdf(): Promise<Uint8Array | null> {
   const result = await get(MASTER_PATH, store());

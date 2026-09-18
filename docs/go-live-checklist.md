@@ -99,6 +99,18 @@ on the Trigger side fails the first task run rather than failing the deploy.
       still reaches `/api/telegram/webhook`.
 - [ ] Instagram inbound: Meta app webhook → `/api/webhooks/meta`, verify token
       + app secret set.
+- [ ] **WhatsApp Cloud API** (same Meta webhook as IG — subscribe `whatsapp_business_account` on `/api/webhooks/meta`):
+      - Paste `WHATSAPP_ACCESS_TOKEN` + `WHATSAPP_PHONE_NUMBER_ID` in Integrations
+      - Approve templates in Business Manager, then set exact names in
+        **Admin → Growth → WhatsApp** (MessageTemplate CRUD). Env
+        `WHATSAPP_TEMPLATE_*` is fallback only.
+      - Confirm waitlist join enqueues `waitlist_welcome`
+      - Confirm abandoned-checkout 24h step sends `checkout_recovery`
+      - Confirm purchase sends `purchase_confirmation` + `purchase_activation`
+        (flag `WHATSAPP_SEND_PURCHASE_ACTIVATION`, default true)
+      - Confirm coaching intake sends `service_registered`
+      - Confirm STOP / unsubscribe withdraws WhatsApp consent
+      - Confirm inbound WA statuses update OutboundMessage on the shared Meta path
 - [ ] Funnel metrics visible at `/admin/growth/funnel`.
 - [ ] Apply funnel CRM + Client 360 migrations if not already deployed.
 

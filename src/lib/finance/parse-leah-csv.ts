@@ -1,5 +1,7 @@
 import "server-only";
 
+import { isCurrencyCode } from "@/lib/i18n/catalog";
+
 /** Appendix A categories (Roosevelt Part 04 §2.2). */
 export const APPENDIX_A_CATEGORIES = new Set([
   "PAYOUT_SHOPIFY",
@@ -188,8 +190,11 @@ function parseAppendixA(
     }
 
     const currency = (get("currency") || "GBP").toUpperCase();
-    if (!["GBP", "AED", "EUR", "USD"].includes(currency)) {
-      errors.push({ row: rowNumber, reason: `Invalid currency "${currency}"` });
+    if (!isCurrencyCode(currency)) {
+      errors.push({
+        row: rowNumber,
+        reason: `Invalid currency "${currency}" — use GBP, AED, EUR, USD, AUD, or CAD`,
+      });
       continue;
     }
 

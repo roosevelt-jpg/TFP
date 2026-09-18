@@ -3,7 +3,6 @@ import type { Metadata, Viewport } from "next";
 import { ConsentBanner } from "@/components/ConsentBanner";
 import { MetaPixelPageView } from "@/components/MetaPixelPageView";
 import { siteConfig } from "@/config/site";
-import { env } from "@/env";
 
 import { body, display } from "./fonts";
 import "./globals.css";
@@ -68,7 +67,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
             new visitor must act on (fixed positioning is unaffected). */}
         <ConsentBanner />
         {children}
-        {env.NEXT_PUBLIC_META_PIXEL_ID ? <MetaPixelPageView /> : null}
+        {process.env.NEXT_PUBLIC_META_PIXEL_ID ? (
+          <MetaPixelPageView />
+        ) : null}
       </body>
     </html>
   );

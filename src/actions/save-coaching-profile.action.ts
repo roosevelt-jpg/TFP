@@ -10,6 +10,9 @@ import { resolvePaidPurchase } from "@/lib/payments/resolve-purchase";
 import { actionClient } from "@/lib/safe-action";
 import { cleanText } from "@/lib/sanitize/text";
 import { coachingSchema } from "@/lib/validation/coaching/schema";
+import { enqueueServiceRegisteredWhatsApp } from "@/lib/whatsapp/enqueue";
+import { db } from "@/db";
+import { firstNameOf } from "@/lib/name";
 
 // The session id is the only credential: the customer is resolved from Stripe
 // server-side, so nothing the client sends can point these answers at someone
@@ -57,6 +60,26 @@ export const saveCoaching = actionClient
       purchaseRef: purchase.ref,
       customerId: purchase.customerId,
     });
+
+    try {
+      const customer = await db.customer.findUnique({
+        where: { id: purchase.customerId },
+        select: { whatsapp: true, name: true },
+      });
+      if (customer?.whatsapp) {
+        await enqueueServiceRegisteredWhatsApp({
+          toE164: customer.whatsapp,
+          firstName: firstNameOf(customer.name) || customer.name,
+          customerId: purchase.customerId,
+          serviceKey: `coaching:${purchase.ref}`,
+        });
+      }
+    } catch (error) {
+      logger.warn("Could not enqueue service_registered WhatsApp", {
+        purchaseRef: purchase.ref,
+        message: error instanceof Error ? error.message : "failed",
+      });
+    }
 
     return { saved: true };
   });

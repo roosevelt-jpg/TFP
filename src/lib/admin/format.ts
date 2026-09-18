@@ -1,10 +1,24 @@
-export function formatGbp(pence: number): string {
-  const pounds = pence / 100;
+import {
+  coerceCurrencyCode,
+  type CurrencyCode,
+} from "@/lib/i18n/catalog";
+
+export function formatMoney(
+  minorUnits: number,
+  currency: string = "GBP",
+): string {
+  const code = coerceCurrencyCode(currency);
+  const major = minorUnits / 100;
   return new Intl.NumberFormat("en-GB", {
     style: "currency",
-    currency: "GBP",
-    maximumFractionDigits: pounds % 1 === 0 ? 0 : 2,
-  }).format(pounds);
+    currency: code,
+    maximumFractionDigits: major % 1 === 0 ? 0 : 2,
+  }).format(major);
+}
+
+/** @deprecated prefer formatMoney — GBP-only helper kept for call sites. */
+export function formatGbp(pence: number): string {
+  return formatMoney(pence, "GBP");
 }
 
 export function formatDelta(pct: number): string {
@@ -30,3 +44,5 @@ export function labelClass(
   if (label === "recorded") return "cmd-badge cmd-badge-recorded";
   return "cmd-badge cmd-badge-calculated";
 }
+
+export type { CurrencyCode };

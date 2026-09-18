@@ -16,3 +16,8 @@ export const ghlQueue = queue({
   name: "ghl",
   concurrencyLimit: 5,
 });
+
+export const whatsappQueue = queue({
+  name: "whatsapp",
+  concurrencyLimit: 4,
+});

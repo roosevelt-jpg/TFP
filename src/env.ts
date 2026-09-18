@@ -36,6 +36,9 @@ export const env = createEnv({
     FUNNEL_V2_ENABLED: z.stringbool().default(true),
     LEAD_NURTURE_ENABLED: z.stringbool().default(true),
     WHATSAPP_WORKFLOWS_ENABLED: z.stringbool().default(true),
+    // First-party purchase WhatsApp (confirmation + activation templates).
+    // Default on — disable only if GHL must be the sole purchase WA sender.
+    WHATSAPP_SEND_PURCHASE_ACTIVATION: z.stringbool().default(true),
     TELEGRAM_ACTIVATION_ENABLED: z.stringbool().default(true),
     INSTAGRAM_INBOUND_ENABLED: z.stringbool().default(true),
     COMPLETE_STACK_ENABLED: z.stringbool().default(true),
@@ -49,13 +52,24 @@ export const env = createEnv({
     META_PAGE_ACCESS_TOKEN: z.string().min(1).optional(),
     META_INSTAGRAM_ACCOUNT_ID: z.string().min(1).optional(),
 
+    // WhatsApp Cloud API (optional until WABA credentials are pasted).
+    WHATSAPP_ACCESS_TOKEN: z.string().min(1).optional(),
+    WHATSAPP_PHONE_NUMBER_ID: z.string().min(1).optional(),
+    WHATSAPP_BUSINESS_ACCOUNT_ID: z.string().min(1).optional(),
+    WHATSAPP_TEMPLATE_WAITLIST_WELCOME: z.string().min(1).optional(),
+    WHATSAPP_TEMPLATE_CHECKOUT_RECOVERY: z.string().min(1).optional(),
+    WHATSAPP_TEMPLATE_PURCHASE_CONFIRMATION: z.string().min(1).optional(),
+    WHATSAPP_TEMPLATE_PURCHASE_ACTIVATION: z.string().min(1).optional(),
+    WHATSAPP_TEMPLATE_ACTIVATION_REMINDER: z.string().min(1).optional(),
+    WHATSAPP_TEMPLATE_SERVICE_REGISTERED: z.string().min(1).optional(),
     // BetterStack heartbeat. Reconcile is the guarantee of last resort, so it
     // failing silently is the one failure nothing else would catch.
     RECONCILE_HEARTBEAT_URL: z.url().optional(),
 
     // Private store holding the master programme and each watermarked copy.
-    FORMULA_BLOB_STORE_ID: z.string().min(1),
-    BLOB_READ_WRITE_TOKEN: z.string().min(1),
+    // Optional locally — PDF/email logo blob features need these in prod.
+    FORMULA_BLOB_STORE_ID: z.string().min(1).optional(),
+    BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(),
 
     // TFP Command (/admin) — Better Auth session secret (32+ chars).
     BETTER_AUTH_SECRET: z.string().min(32),
@@ -90,7 +104,9 @@ export const env = createEnv({
   client: {
     NEXT_PUBLIC_APP_URL: z.url(),
     NEXT_PUBLIC_SENTRY_DSN: z.url().optional(),
-    NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().min(1),
+    // Optional so local/admin preview works before Cloudflare keys are pasted.
+    // Forms already degrade when the site key is missing (TurnstileWidget).
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().min(1).optional(),
     NEXT_PUBLIC_POSTHOG_KEY: z.string().min(1).optional(),
     NEXT_PUBLIC_POSTHOG_HOST: z.url().optional(),
     NEXT_PUBLIC_META_PIXEL_ID: z.string().min(1).optional(),

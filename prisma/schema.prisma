@@ -1206,6 +1206,8 @@ model OutboundMessage {
   workflow            WorkflowExecution? @relation(fields: [workflowExecutionId], references: [id], onDelete: SetNull)
   channel             String
   templateId          String?
+  /// Snapshot of MessageTemplate.version at send time (spec §11.2).
+  templateVersion     Int?
   providerMessageId   String?
   status              String
   failureReason       String?
@@ -1215,6 +1217,43 @@ model OutboundMessage {
   @@index([workflowExecutionId])
   @@index([customerId, createdAt])
   @@index([waitlistId, createdAt])
+  @@index([providerMessageId])
+}
+
+/// Admin-managed Meta message templates (WhatsApp Cloud + Instagram DM copy).
+/// WhatsApp: metaName must match Business Manager. Instagram: bodyText is the DM body.
+model MessageTemplate {
+  id              String   @id @default(cuid())
+  /// whatsapp | instagram
+  channel         String   @default("whatsapp")
+  /// Stable app key: waitlist_welcome, ig_inbound_ack, …
+  key             String   @unique
+  label           String
+  description     String?
+  /// Exact Meta WA template name in Business Manager (WA). For IG, mirrors key.
+  metaName        String
+  language        String   @default("en_GB")
+  /// Full reply body for Instagram DMs (supports {{1}} firstName).
+  bodyText        String?
+  /// How many {{n}} body variables we send (usually firstName as {{1}}).
+  bodyVars        Int      @default(1)
+  /// Dynamic URL button suffixes (0–3). Purchase flows use purchaseRef.
+  buttonUrlCount  Int      @default(0)
+  /// none | image | video | document — WA template header / IG attachment.
+  headerMediaType String   @default("none")
+  /// Public HTTPS URL for header/attachment media (image or video).
+  headerMediaUrl  String?
+  category        String   @default("utility")
+  /// When this template fires (admin copy).
+  triggerHint     String?
+  enabled         Boolean  @default(true)
+  version         Int      @default(1)
+  updatedBy       String?
+  createdAt       DateTime @default(now()) @db.Timestamptz
+  updatedAt       DateTime @updatedAt @db.Timestamptz
+
+  @@index([enabled])
+  @@index([channel, enabled])
 }
 
 model ChannelIdentity {

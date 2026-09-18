@@ -141,6 +141,7 @@ export async function logOutboundMessage(input: {
   workflowExecutionId?: string | null;
   channel: string;
   templateId?: string;
+  templateVersion?: number | null;
   providerMessageId?: string | null;
   status: string;
   failureReason?: string | null;
@@ -152,6 +153,7 @@ export async function logOutboundMessage(input: {
       workflowExecutionId: input.workflowExecutionId ?? undefined,
       channel: input.channel,
       templateId: input.templateId,
+      templateVersion: input.templateVersion ?? undefined,
       providerMessageId: input.providerMessageId ?? undefined,
       status: input.status,
       failureReason: input.failureReason ?? undefined,

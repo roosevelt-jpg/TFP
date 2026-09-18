@@ -129,30 +129,54 @@ export const checkoutRecoveryStep = schemaTask({
           sessionId: payload.sessionId,
           reason: eligible.reason,
         });
-      } else if (
-        payload.whatsapp &&
-        (env.GHL_SYNC_ENABLED === true ||
-          String(env.GHL_SYNC_ENABLED) === "true")
-      ) {
+      } else if (payload.whatsapp) {
         try {
-          const contact = await upsertGhlContact({
-            email: payload.email,
-            name: payload.name ?? payload.email,
-            phone: payload.whatsapp,
-            source: "Checkout Abandoned",
+          const { enqueueWhatsAppTemplate } = await import(
+            "@/lib/whatsapp/enqueue"
+          );
+          await enqueueWhatsAppTemplate({
+            toE164: payload.whatsapp,
+            templateKey: "checkout_recovery",
+            firstName: firstName ?? "there",
+            purpose: "lifecycle",
+            idempotencyKey: `wa:checkout-recovery:${payload.sessionId}`,
+            buttonUrlParams: [
+              `checkout?promo=${encodeURIComponent(
+                offer.promotionCode ?? LAUNCH_PROMOTION_CODE,
+              )}`,
+            ],
           });
-          await addGhlTags(contact.contactId, [
-            TAGS.checkoutAbandoned,
-            TAGS.consentWhatsApp,
-          ]);
         } catch (error) {
-          logger.warn("Checkout recovery WhatsApp/GHL step failed", {
+          logger.warn("Checkout recovery Cloud WhatsApp enqueue failed", {
             sessionId: payload.sessionId,
             message: error instanceof Error ? error.message : "failed",
           });
         }
+
+        if (
+          env.GHL_SYNC_ENABLED === true ||
+          String(env.GHL_SYNC_ENABLED) === "true"
+        ) {
+          try {
+            const contact = await upsertGhlContact({
+              email: payload.email,
+              name: payload.name ?? payload.email,
+              phone: payload.whatsapp,
+              source: "Checkout Abandoned",
+            });
+            await addGhlTags(contact.contactId, [
+              TAGS.checkoutAbandoned,
+              TAGS.consentWhatsApp,
+            ]);
+          } catch (error) {
+            logger.warn("Checkout recovery WhatsApp/GHL step failed", {
+              sessionId: payload.sessionId,
+              message: error instanceof Error ? error.message : "failed",
+            });
+          }
+        }
       } else {
-        logger.info("Checkout recovery WhatsApp step skipped (no phone or GHL off)", {
+        logger.info("Checkout recovery WhatsApp step skipped (no phone)", {
           sessionId: payload.sessionId,
         });
       }

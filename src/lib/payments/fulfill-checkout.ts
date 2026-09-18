@@ -7,6 +7,7 @@ import { enqueueOnboardingCheck } from "@/lib/funnel/enqueue";
 import { recordFunnelEvent } from "@/lib/funnel/records";
 import { logger } from "@/lib/logger";
 import { firstNameOf } from "@/lib/name";
+import { enqueuePurchaseWhatsAppActivation } from "@/lib/whatsapp/enqueue";
 import { generateRef } from "@/lib/waitlist/ref";
 import { db } from "@/db";
 import { PurchaseStatus } from "@/generated/prisma/client";
@@ -158,6 +159,26 @@ async function writeFulfillment(
   await enqueueMembershipPurchase({ purchaseRef: ref, customerId });
   await enqueueProgrammePdf({ purchaseRef: ref, customerId });
   await enqueueOnboardingCheck({ customerId, purchaseRef: ref });
+
+  try {
+    const customer = await db.customer.findUnique({
+      where: { id: customerId },
+      select: { whatsapp: true, name: true },
+    });
+    if (customer?.whatsapp) {
+      await enqueuePurchaseWhatsAppActivation({
+        customerId,
+        purchaseRef: ref,
+        whatsapp: customer.whatsapp,
+        firstName: customer.name.split(/\s+/)[0] ?? customer.name,
+      });
+    }
+  } catch (error) {
+    logger.warn("Could not enqueue purchase WhatsApp activation", {
+      purchaseRef: ref,
+      message: error instanceof Error ? error.message : "failed",
+    });
+  }
 
   await recordFunnelEvent({
     eventName: "payment_succeeded",

@@ -15,6 +15,7 @@ import { verifyTurnstile } from "@/lib/turnstile";
 import { waitlistSchema } from "@/lib/validation/waitlist/schema";
 import { CONSENT_TEXT, POLICY_VERSION } from "@/lib/waitlist/consent";
 import { clientIp, upsertWaitlistLead } from "@/lib/waitlist/persist";
+import { enqueueWaitlistWhatsAppWelcome } from "@/lib/whatsapp/enqueue";
 import { env } from "@/env";
 import type { sendWelcomeEmail } from "@/trigger/send-welcome-email";
 import type { syncGhlContact } from "@/trigger/sync-ghl-contact";
@@ -140,6 +141,12 @@ export const joinWaitlist = actionClient
         waitlistId: lead.id,
         email,
         name,
+      });
+
+      await enqueueWaitlistWhatsAppWelcome({
+        waitlistId: lead.id,
+        whatsapp,
+        firstName: lead.firstName,
       });
 
       if (env.GHL_SYNC_ENABLED) {
