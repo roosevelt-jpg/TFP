@@ -35,17 +35,36 @@ async function bootstrapAdmin() {
     return;
   }
 
-  const existing = await db.user.findUnique({ where: { email } });
-  if (existing) {
+  const hashed = await hashPassword(password);
+  let user = await db.user.findUnique({ where: { email } });
+  if (user) {
     await db.user.update({
-      where: { id: existing.id },
-      data: { role: "kane", name },
+      where: { id: user.id },
+      data: { role: "kane", name, emailVerified: true },
     });
-    console.log(`Admin user exists: ${email} (role=kane)`);
+    const account = await db.account.findFirst({
+      where: { userId: user.id, providerId: "credential" },
+    });
+    if (account) {
+      await db.account.update({
+        where: { id: account.id },
+        data: { password: hashed },
+      });
+    } else {
+      await db.account.create({
+        data: {
+          userId: user.id,
+          accountId: user.id,
+          providerId: "credential",
+          password: hashed,
+        },
+      });
+    }
+    console.log(`Admin user updated: ${email} (role=kane, password reset)`);
     return;
   }
 
-  const user = await db.user.create({
+  user = await db.user.create({
     data: {
       email,
       name,
@@ -54,7 +73,6 @@ async function bootstrapAdmin() {
       twoFactorEnabled: false,
     },
   });
-  const hashed = await hashPassword(password);
   await db.account.create({
     data: {
       userId: user.id,
