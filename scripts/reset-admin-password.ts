@@ -16,7 +16,9 @@ const name = process.env.ADMIN_BOOTSTRAP_NAME ?? "Kane Mousah";
 
 if (!databaseUrl) throw new Error("DATABASE_URL missing");
 if (!email || !password) throw new Error("ADMIN_BOOTSTRAP_EMAIL/PASSWORD missing");
-if (password === "[SENSITIVE]" || password.length < 12) {
+const bootstrapEmail = email;
+const bootstrapPassword = password;
+if (bootstrapPassword === "[SENSITIVE]" || bootstrapPassword.length < 12) {
   throw new Error("Refusing to set redacted/short password");
 }
 if (databaseUrl.includes("[SENSITIVE]")) {
@@ -27,12 +29,12 @@ const adapter = new PrismaPg({ connectionString: databaseUrl });
 const db = new PrismaClient({ adapter });
 
 async function main() {
-  const hashed = await hashPassword(password);
-  let user = await db.user.findUnique({ where: { email } });
+  const hashed = await hashPassword(bootstrapPassword);
+  let user = await db.user.findUnique({ where: { email: bootstrapEmail } });
   if (!user) {
     user = await db.user.create({
       data: {
-        email,
+        email: bootstrapEmail,
         name,
         emailVerified: true,
         role: "kane",
