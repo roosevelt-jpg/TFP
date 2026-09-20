@@ -169,6 +169,16 @@
   object-fit: contain;
 }
 
+/* Keep the silver wordmark’s original gradients on light UI via a dark plate. */
+.tfp-command[data-theme="light"] .cmd-brand {
+  background: #0a0a0a;
+  border-bottom-color: #0a0a0a;
+}
+
+.tfp-command[data-theme="light"] .cmd-sidebar-logo {
+  filter: none;
+}
+
 .tfp-command .cmd-brand-mark {
   width: 30px;
   height: 30px;
