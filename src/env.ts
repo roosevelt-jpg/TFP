@@ -94,6 +94,8 @@ export const env = createEnv({
     GMAIL_REFRESH_TOKEN: z.string().min(1).optional(),
     REVOLUT_API_TOKEN: z.string().min(1).optional(),
     FRAME_IO_TOKEN: z.string().min(1).optional(),
+    GEMINI_API_KEY: z.string().min(1).optional(),
+    GEMINI_MODEL: z.string().min(1).optional(),
     ANTHROPIC_API_KEY: z.string().min(1).optional(),
 
     // Seed / bootstrap for the first Kane admin (dev + first deploy only).

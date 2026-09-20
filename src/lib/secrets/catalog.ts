@@ -294,9 +294,23 @@ export const CREDENTIAL_GROUPS: CredentialGroup[] = [
   },
   {
     id: "CTO",
-    name: "Claude CTO agent",
-    description: "Anthropic API for draft actions",
-    fields: [{ key: "ANTHROPIC_API_KEY", label: "API key", secret: true }],
+    name: "CTO agent",
+    description:
+      "Gemini powers Command drafts (preferred). Anthropic remains an optional fallback if Gemini is unset.",
+    fields: [
+      { key: "GEMINI_API_KEY", label: "Gemini API key", secret: true },
+      {
+        key: "GEMINI_MODEL",
+        label: "Gemini model (optional)",
+        secret: false,
+        placeholder: "gemini-2.5-flash",
+      },
+      {
+        key: "ANTHROPIC_API_KEY",
+        label: "Anthropic API key (fallback)",
+        secret: true,
+      },
+    ],
   },
 ];
 
