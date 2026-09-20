@@ -50,10 +50,12 @@ export async function requireAdminSession(
 ): Promise<AdminSession> {
   const session = await getAdminSession();
   if (!session) redirect("/admin/login");
-  // Local/dev can skip authenticator setup; production still requires 2FA.
+  // Production requires 2FA unless staging sets ADMIN_REQUIRE_2FA=false.
+  // Local/dev skips unless ADMIN_REQUIRE_2FA=true.
   const require2fa =
-    process.env.NODE_ENV === "production" ||
-    process.env.ADMIN_REQUIRE_2FA === "true";
+    process.env.ADMIN_REQUIRE_2FA === "true" ||
+    (process.env.NODE_ENV === "production" &&
+      process.env.ADMIN_REQUIRE_2FA !== "false");
   if (require2fa && !session.user.twoFactorEnabled) {
     redirect("/admin/setup-2fa");
   }
