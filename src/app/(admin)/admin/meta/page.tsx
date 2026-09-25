@@ -6,14 +6,16 @@ import {
   calculateBreakEvenAmer,
   getThousandDayGate,
 } from "@/lib/metrics/economics";
+import { getNathanLayer1Checklist } from "@/lib/meta/layer1-checklist";
 
 export default async function MetaPage() {
   await requireAdminSession(["kane", "indigo"]);
-  const [data, economics, gate, cms] = await Promise.all([
+  const [data, economics, gate, cms, layer1] = await Promise.all([
     getMetaPageData(),
     calculateBreakEvenAmer(),
     getThousandDayGate(),
     getCmsMap("admin"),
+    getNathanLayer1Checklist(),
   ]);
 
   return (
@@ -27,28 +29,102 @@ export default async function MetaPage() {
 
       <div className="cmd-section-note" data-cms="meta.note">
         {cms["meta.note"] ??
-          "Nathan ladder: Layer 2 — proof of the cold hook. Attribution settings never touched. Break-even is calculated from COGS, fees and fulfilment inputs below — never hardcoded."}
+          "Nathan ladder: Layer 1 proof of the cold hook. Attribution settings never touched. Break-even is calculated from COGS, fees and fulfilment inputs below — never hardcoded."}
       </div>
 
       <div className="cmd-kpi-grid">
         <div className="cmd-kpi-card">
-          <div className="cmd-kpi-label" data-cms="meta.kpi.gate">
-            {cms["meta.kpi.gate"] ?? "£1,000/day gate"}
-          </div>
+          <div className="cmd-kpi-label">£1,000/day gate</div>
           <div className="cmd-kpi-value">
-            {formatGbp(gate.purchaseValuePence)}
+            {gate.allPass ? "OPEN" : "LOCKED"}
           </div>
           <div className="cmd-kpi-foot">
             <span
-              className={`cmd-badge ${gate.hit ? "cmd-badge-live" : "cmd-badge-p2"}`}
+              className={`cmd-badge ${gate.allPass ? "cmd-badge-live" : "cmd-badge-p2"}`}
             >
-              {gate.hit ? "Hit" : `${gate.progress}% of £1,000`}
+              {gate.allPass
+                ? "All three tiles pass"
+                : `${gate.passCount}/3 tiles pass`}
             </span>
           </div>
-          <div className="cmd-progress" style={{ marginTop: 8 }}>
-            <div style={{ width: `${gate.progress}%` }} />
+        </div>
+        <div className="cmd-kpi-card">
+          <div className="cmd-kpi-label">Gate · incr ROAS</div>
+          <div className="cmd-kpi-value">
+            {gate.incrRoas != null ? `${gate.incrRoas.toFixed(2)}x` : "—"}
+          </div>
+          <div className="cmd-kpi-foot">
+            <span
+              className={`cmd-badge ${gate.incrRoasPass ? "cmd-badge-live" : "cmd-badge-issue"}`}
+            >
+              {gate.incrRoasPass ? "Pass" : "Fail"} · vs BE{" "}
+              {economics.breakEvenAmer.toFixed(2)}x
+            </span>
           </div>
         </div>
+        <div className="cmd-kpi-card">
+          <div className="cmd-kpi-label">Gate · avg basket</div>
+          <div className="cmd-kpi-value">
+            {formatGbp(gate.avgBasketPence)}
+          </div>
+          <div className="cmd-kpi-foot">
+            <span
+              className={`cmd-badge ${gate.basketPass ? "cmd-badge-live" : "cmd-badge-issue"}`}
+            >
+              {gate.basketPass ? "Pass" : "Fail"} · need ≥ £95
+            </span>
+          </div>
+        </div>
+        <div className="cmd-kpi-card">
+          <div className="cmd-kpi-label">Gate · incr purchases</div>
+          <div className="cmd-kpi-value">{gate.incrPurchases}</div>
+          <div className="cmd-kpi-foot">
+            <span
+              className={`cmd-badge ${gate.purchasesPass ? "cmd-badge-live" : "cmd-badge-issue"}`}
+            >
+              {gate.purchasesPass ? "Pass" : "Fail"} · need ≥ 10
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="cmd-panel">
+        <div className="cmd-panel-head">
+          <div>
+            <div className="cmd-panel-title">Nathan Layer 1 checklist</div>
+            <div className="cmd-panel-sub">{layer1.ladderNote}</div>
+          </div>
+          <span
+            className={`cmd-badge ${layer1.metCount === layer1.total ? "cmd-badge-live" : "cmd-badge-p2"}`}
+          >
+            {layer1.metCount}/{layer1.total} met
+          </span>
+        </div>
+        <div className="cmd-panel-body">
+          <div className="cmd-kpi-grid">
+            {layer1.criteria.map((c) => (
+              <div className="cmd-kpi-card" key={c.id}>
+                <div className="cmd-kpi-label">{c.label}</div>
+                <div className="cmd-kpi-value" style={{ fontSize: 18 }}>
+                  {c.met ? "Pass" : "Open"}
+                </div>
+                <div className="cmd-kpi-foot">
+                  <span
+                    className={`cmd-badge ${c.met ? "cmd-badge-live" : "cmd-badge-calculated"}`}
+                  >
+                    {c.met ? "Met" : "Not yet"}
+                  </span>
+                </div>
+                <div className="cmd-list-sub" style={{ marginTop: 8 }}>
+                  {c.detail}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="cmd-kpi-grid">
         <div className="cmd-kpi-card">
           <div className="cmd-kpi-label" data-cms="meta.kpi.cac">
             {cms["meta.kpi.cac"] ?? "Blended CAC"}
@@ -76,6 +152,15 @@ export default async function MetaPage() {
             {cms["meta.kpi.adSets"] ?? "Active ad sets (7d)"}
           </div>
           <div className="cmd-kpi-value">{data.adSets.length}</div>
+          <div className="cmd-kpi-foot">
+            <span className="cmd-badge cmd-badge-verified">Verified</span>
+          </div>
+        </div>
+        <div className="cmd-kpi-card">
+          <div className="cmd-kpi-label">Purchase value (gate window)</div>
+          <div className="cmd-kpi-value">
+            {formatGbp(gate.purchaseValuePence)}
+          </div>
           <div className="cmd-kpi-foot">
             <span className="cmd-badge cmd-badge-verified">Verified</span>
           </div>
@@ -188,19 +273,35 @@ export default async function MetaPage() {
           {data.changeEvents.length === 0 ? (
             <div className="cmd-list-sub">No change events recorded.</div>
           ) : (
-            data.changeEvents.map((ev) => (
-              <div className="cmd-list-row" key={ev.id}>
-                <div>
-                  <div className="cmd-list-title">
-                    {ev.changeType} · {ev.objectId}
-                  </div>
-                  <div className="cmd-list-sub">
-                    {ev.occurredAt.toLocaleString("en-GB")} — averages split
-                    before/after this point
+            data.changeEvents.map((ev) => {
+              const fmtWindow = (
+                label: string,
+                w: { avgSpendPence: number | null; avgRoas: number | null; days: number },
+              ) => {
+                if (w.days === 0 || w.avgSpendPence == null) {
+                  return `${label}: no AdDaily in window`;
+                }
+                const roas =
+                  w.avgRoas != null ? `${w.avgRoas.toFixed(2)}x ROAS` : "— ROAS";
+                return `${label}: ${formatGbp(Math.round(w.avgSpendPence))}/day · ${roas} (${w.days}d)`;
+              };
+              return (
+                <div className="cmd-list-row" key={ev.id}>
+                  <div>
+                    <div className="cmd-list-title">
+                      {ev.changeType} · {ev.objectId}
+                    </div>
+                    <div className="cmd-list-sub">
+                      {ev.occurredAt.toLocaleString("en-GB")}
+                    </div>
+                    <div className="cmd-list-sub">
+                      {fmtWindow("7d before", ev.before)} →{" "}
+                      {fmtWindow("7d after", ev.after)}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

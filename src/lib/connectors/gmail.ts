@@ -98,7 +98,7 @@ export async function triageGmailInbox() {
       `— The Formula Performance`,
     ].join("\n");
 
-    const check = runSpecialistCheck({
+    const check = await runSpecialistCheck({
       action: `Send drafted Gmail reply: ${subject}`,
       objectIds: { messageId: detail.id, threadId: detail.threadId },
       domain: "gmail",

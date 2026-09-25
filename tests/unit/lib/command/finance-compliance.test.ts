@@ -31,13 +31,22 @@ describe("parseLeahFinanceCsv", () => {
 });
 
 describe("runComplianceCheck", () => {
-  it("fails hormone claims", () => {
+  it("fails hormone claims with timecode placeholder", () => {
     const result = runComplianceCheck({ caption: "Boost your testosterone naturally" });
     expect(result.pass).toBe(false);
+    expect(result.result).toContain("t=0:00");
   });
 
   it("passes clean captions", () => {
     const result = runComplianceCheck({ caption: "Week 6 check-in — stay consistent" });
     expect(result.pass).toBe(true);
+  });
+
+  it("checks OCR/transcript text on asset meta", () => {
+    const result = runComplianceCheck({
+      assetMeta: { transcript: "Talk about TRT protocols" },
+    });
+    expect(result.pass).toBe(false);
+    expect(result.result).toMatch(/t=0:00/);
   });
 });

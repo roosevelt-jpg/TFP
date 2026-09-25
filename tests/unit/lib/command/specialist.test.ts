@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import { runSpecialistCheck } from "@/lib/cto/specialist";
 
 describe("runSpecialistCheck", () => {
-  it("blocks subscription touches", () => {
-    const result = runSpecialistCheck({
+  it("blocks subscription touches", async () => {
+    const result = await runSpecialistCheck({
       action: "Update Kaching selling plan",
       objectIds: { planId: "x" },
       domain: "shopify",
@@ -13,8 +13,8 @@ describe("runSpecialistCheck", () => {
     expect(result.blockedReason).toMatch(/subscription/i);
   });
 
-  it("blocks money movement", () => {
-    const result = runSpecialistCheck({
+  it("blocks money movement", async () => {
+    const result = await runSpecialistCheck({
       action: "Revolut pay supplier",
       objectIds: {},
       domain: "other",
@@ -22,8 +22,8 @@ describe("runSpecialistCheck", () => {
     expect(result.ok).toBe(false);
   });
 
-  it("allows reversible meta pause", () => {
-    const result = runSpecialistCheck({
+  it("allows reversible meta pause", async () => {
+    const result = await runSpecialistCheck({
       action: "Pause ad set Cold V3",
       objectIds: { adSetId: "1" },
       domain: "meta",

@@ -60,6 +60,8 @@ docs/*
 !docs/go-live-checklist.md
 !docs/manual-walkthrough.md
 !docs/waitlist-deprecation.md
+!docs/editor-knowledge-base.md
+!docs/leah-daily-finance-template.csv
 
 # prisma generated client (rebuilt via prisma generate / postinstall)
 /src/generated/prisma/

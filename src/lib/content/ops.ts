@@ -1,6 +1,8 @@
 import "server-only";
 
 import { db } from "@/db";
+import { pullMetricsForPostCard } from "@/lib/content/metrics-pull";
+import { ContentState } from "@/lib/content/states";
 
 export async function pauseAllPosting(actor: string) {
   const channels = await db.channel.updateMany({
@@ -8,8 +10,8 @@ export async function pauseAllPosting(actor: string) {
   });
 
   const scheduled = await db.postCard.updateMany({
-    where: { status: "scheduled" },
-    data: { status: "awaiting_kane" },
+    where: { status: ContentState.scheduled },
+    data: { status: ContentState.awaitingKane },
   });
 
   await db.auditLog.create({
@@ -40,8 +42,8 @@ export async function pauseAccount(
   });
 
   const scheduled = await db.postCard.updateMany({
-    where: { platform, account, status: "scheduled" },
-    data: { status: "awaiting_kane" },
+    where: { platform, account, status: ContentState.scheduled },
+    data: { status: ContentState.awaitingKane },
   });
 
   await db.auditLog.create({
@@ -56,27 +58,5 @@ export async function pauseAccount(
 }
 
 export async function pullPostMetrics(postCardId: string) {
-  const card = await db.postCard.findUniqueOrThrow({
-    where: { id: postCardId },
-  });
-
-  // Until platform audits complete, store a recorded checkpoint from the
-  // last known post URL scrape placeholder — real Graph pulls land after audit.
-  const checkpoint = "24h";
-  await db.postMetric.upsert({
-    where: {
-      postCardId_checkpoint: { postCardId: card.id, checkpoint },
-    },
-    create: {
-      postCardId: card.id,
-      checkpoint,
-      views: 0,
-      likes: 0,
-      comments: 0,
-      shares: 0,
-    },
-    update: { capturedAt: new Date() },
-  });
-
-  return { checkpoint };
+  return pullMetricsForPostCard(postCardId);
 }

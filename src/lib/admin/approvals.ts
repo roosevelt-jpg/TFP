@@ -100,7 +100,8 @@ export async function decideApproval(input: {
 export async function executeApprovedAction(input: {
   id: string;
   actor: string;
-  verificationResult: string;
+  /** If omitted, the dispatcher runs the real side-effect and returns verification. */
+  verificationResult?: string;
 }) {
   const row = await db.approvalRequest.findUniqueOrThrow({
     where: { id: input.id },
@@ -115,13 +116,52 @@ export async function executeApprovedAction(input: {
     });
     throw new Error("Approval token expired");
   }
+  if (row.executedAt) {
+    throw new Error("Approval token already used");
+  }
+
+  // Void if the stored payload no longer matches the hash (object changed after draft).
+  const currentHash = hashPayload({
+    action: row.action,
+    objectIds: row.objectIds,
+    beforeState: row.beforeState ?? null,
+    afterState: row.afterState ?? null,
+  });
+  if (row.payloadHash && row.payloadHash !== currentHash) {
+    await db.approvalRequest.update({
+      where: { id: row.id },
+      data: { status: "expired" },
+    });
+    throw new Error("Approval voided — payload changed since draft");
+  }
+
+  let verification = input.verificationResult;
+  if (!verification) {
+    const { dispatchApprovedAction } = await import(
+      "@/lib/admin/executors/dispatch"
+    );
+    const dispatched = await dispatchApprovedAction(row.id);
+    verification = dispatched.verification;
+    if (!dispatched.ok) {
+      await db.auditLog.create({
+        data: {
+          actor: input.actor,
+          action: "approval.execute_failed",
+          entityType: "ApprovalRequest",
+          entityId: row.id,
+          after: { verification },
+        },
+      });
+      throw new Error(verification);
+    }
+  }
 
   const executed = await db.approvalRequest.update({
     where: { id: row.id },
     data: {
       status: "executed",
       executedAt: new Date(),
-      verificationResult: input.verificationResult,
+      verificationResult: verification,
     },
   });
 
@@ -131,7 +171,7 @@ export async function executeApprovedAction(input: {
       action: "approval.executed",
       entityType: "ApprovalRequest",
       entityId: row.id,
-      after: { verificationResult: input.verificationResult },
+      after: { verificationResult: verification },
     },
   });
 

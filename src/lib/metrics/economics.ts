@@ -133,25 +133,68 @@ export async function rebuildDailySnapshot(date = startOfUtcYesterday()) {
   return { date, revenue, spend, amer, contribution };
 }
 
-/** £1,000/day gate from Nathan Meta strategy. */
+/**
+ * £1,000/day scale gate (Part 05 §4) — three pass/fail tiles:
+ * incremental ROAS ≥ break-even (clean window), avg basket ≥ £95, ≥10 incr purchases.
+ */
 export async function getThousandDayGate() {
-  const today = startOfUtcToday();
-  const ads = await db.adDaily.aggregate({
-    where: { date: today },
-    _sum: {
-      spendPence: true,
-      purchaseValue7dPence: true,
-    },
-  });
+  const since = startOfUtcToday();
+  since.setUTCDate(since.getUTCDate() - 7);
+
+  const [ads, economics, orders] = await Promise.all([
+    db.adDaily.aggregate({
+      where: { date: { gte: since } },
+      _sum: {
+        spendPence: true,
+        purchaseValue7dPence: true,
+        purchaseValueIncrPence: true,
+        purchasesIncr: true,
+      },
+    }),
+    calculateBreakEvenAmer(),
+    db.warehouseOrder.aggregate({
+      where: {
+        paidAt: { gte: since },
+        isNewCustomer: true,
+      },
+      _sum: { netPence: true },
+      _count: true,
+    }),
+  ]);
+
   const spend = ads._sum.spendPence ?? 0;
-  const value = ads._sum.purchaseValue7dPence ?? 0;
-  const targetPence = 100_000; // £1,000
+  const valueIncr = ads._sum.purchaseValueIncrPence ?? 0;
+  const value7d = ads._sum.purchaseValue7dPence ?? 0;
+  const incrPurchases = ads._sum.purchasesIncr ?? 0;
+  const incrRoas = spend > 0 ? valueIncr / spend : null;
+  const orderCount = typeof orders._count === "number" ? orders._count : 0;
+  const avgBasketPence =
+    orderCount > 0 ? Math.round((orders._sum?.netPence ?? 0) / orderCount) : 0;
+
+  const incrRoasPass =
+    incrRoas != null && incrRoas >= economics.breakEvenAmer && spend > 0;
+  const basketPass = avgBasketPence >= 9500;
+  const purchasesPass = incrPurchases >= 10;
+  const passCount = [incrRoasPass, basketPass, purchasesPass].filter(
+    Boolean,
+  ).length;
+  const allPass = passCount === 3;
+  const targetPence = 100_000;
+
   return {
     spendPence: spend,
-    purchaseValuePence: value,
+    purchaseValuePence: valueIncr || value7d,
     targetPence,
-    hit: value >= targetPence,
-    progress: Math.min(100, Math.round((value / targetPence) * 100)),
+    hit: allPass,
+    progress: Math.round((passCount / 3) * 100),
+    incrRoas,
+    incrRoasPass,
+    avgBasketPence,
+    basketPass,
+    incrPurchases,
+    purchasesPass,
+    passCount,
+    allPass,
   };
 }
 

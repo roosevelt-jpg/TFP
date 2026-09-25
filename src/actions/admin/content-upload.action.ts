@@ -3,6 +3,7 @@
 import * as z from "zod";
 
 import { runComplianceCheck } from "@/lib/content/compliance";
+import { ContentState } from "@/lib/content/states";
 import { requireAdminSession } from "@/lib/auth/session";
 import { actionClient } from "@/lib/safe-action";
 import { db } from "@/db";
@@ -27,7 +28,7 @@ export const uploadContentAssetAction = actionClient
         data: {
           title: parsedInput.title,
           uploader: parsedInput.uploader,
-          state: "tagged",
+          state: ContentState.tagged,
           creatorLicence: false,
         },
       });
@@ -39,11 +40,15 @@ export const uploadContentAssetAction = actionClient
     }
 
     const check = runComplianceCheck({ caption: parsedInput.caption });
+    // Part 07: pass → READY then AWAITING_KANE (Kane card created); fail → CHANGES
+    const assetState = check.pass
+      ? ContentState.awaitingKane
+      : ContentState.changesRequested;
     const asset = await db.contentAsset.create({
       data: {
         title: parsedInput.title,
         uploader: parsedInput.uploader,
-        state: check.pass ? "awaiting_kane" : "compliance",
+        state: check.pass ? ContentState.ready : ContentState.changesRequested,
         creatorLicence: true,
       },
     });
@@ -56,10 +61,19 @@ export const uploadContentAssetAction = actionClient
         caption: parsedInput.caption,
         compliancePass: check.pass,
         complianceResult: check.result,
-        status: check.pass ? "awaiting_kane" : "rejected",
+        status: check.pass
+          ? ContentState.awaitingKane
+          : ContentState.changesRequested,
         scheduledAt: new Date(Date.now() + 6 * 60 * 60 * 1000),
       },
     });
+
+    if (check.pass) {
+      await db.contentAsset.update({
+        where: { id: asset.id },
+        data: { state: assetState },
+      });
+    }
 
     await db.auditLog.create({
       data: {
@@ -67,8 +81,16 @@ export const uploadContentAssetAction = actionClient
         action: "content.upload",
         entityType: "ContentAsset",
         entityId: asset.id,
+        meta: {
+          state: check.pass ? assetState : ContentState.changesRequested,
+          compliance: check.result,
+        },
       },
     });
 
-    return { id: asset.id, state: asset.state, compliance: check };
+    return {
+      id: asset.id,
+      state: check.pass ? assetState : ContentState.changesRequested,
+      compliance: check,
+    };
   });

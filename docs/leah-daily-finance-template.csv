@@ -1,0 +1,6 @@
+date,row_type,account,business_line,category,counterparty,amount,currency,reference,status,due_date,approved_by,notes
+2026-09-15,BALANCE,REVOLUT_GBP,,,,0.00,GBP,,CLEARED,,,end of day balance
+2026-09-15,BALANCE,STRIPE,,,,0.00,GBP,,CLEARED,,,available balance
+2026-09-15,IN,STRIPE,TRAINING,PAYOUT_STRIPE,CUSTOMER,149.00,GBP,po_example,CLEARED,,,
+2026-09-15,OUT,REVOLUT_GBP,SUPPLEMENTS,ADS_META,Meta,500.00,GBP,inv-meta-1,CLEARED,,KANE,weekly ads
+2026-09-15,DUE,REVOLUT_GBP,SHARED,SOFTWARE_GHL,GoHighLevel,97.00,GBP,ghl-sept,DUE,2026-09-20,,monthly software

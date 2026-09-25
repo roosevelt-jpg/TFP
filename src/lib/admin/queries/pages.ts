@@ -3,9 +3,23 @@ import "server-only";
 import { db } from "@/db";
 import { formatGbp, relativeFreshness } from "@/lib/admin/format";
 import { requestNow, startOfUtcDay } from "@/lib/admin/request-time";
+import { getWhatsAppCoachHealth } from "@/lib/training/coach-health";
+
+/** Categories that must not appear for non-Kane (team pay). */
+const TEAM_PAY_CATEGORIES = [
+  "TEAM_PAY",
+  "CONTRACTOR",
+  "TEAM",
+  "PAYROLL",
+] as const;
+
+const PNL_LINES = ["supplements", "coaching", "training"] as const;
 
 export async function getMoneyPageData(hideTeamPay: boolean) {
-  const balances = await db.cashBalance.findMany({ orderBy: { account: "asc" } });
+  const now = await requestNow();
+  const balances = await db.cashBalance.findMany({
+    orderBy: { account: "asc" },
+  });
   const due = await db.paymentDue.findMany({
     where: {
       status: { in: ["due", "awaiting_kane"] },
@@ -14,22 +28,92 @@ export async function getMoneyPageData(hideTeamPay: boolean) {
     orderBy: { dueDate: "asc" },
     take: 20,
   });
-  const mtdStart = startOfUtcDay(await requestNow());
+  const mtdStart = startOfUtcDay(now);
   mtdStart.setUTCDate(1);
-  const orders = await db.warehouseOrder.groupBy({
-    by: ["businessLine"],
-    where: { paidAt: { gte: mtdStart } },
-    _sum: { netPence: true, cogsPence: true, shippingPence: true },
+  const burnSince = startOfUtcDay(now);
+  burnSince.setUTCDate(burnSince.getUTCDate() - 30);
+
+  const teamPayFilter = hideTeamPay
+    ? { category: { notIn: [...TEAM_PAY_CATEGORIES] } }
+    : {};
+
+  const [orders, financeByLine, burnAgg, adSpend] = await Promise.all([
+    db.warehouseOrder.groupBy({
+      by: ["businessLine"],
+      where: { paidAt: { gte: mtdStart } },
+      _sum: { netPence: true, cogsPence: true, shippingPence: true },
+    }),
+    db.financeTxn.groupBy({
+      by: ["businessLine"],
+      where: {
+        date: { gte: mtdStart },
+        ...teamPayFilter,
+      },
+      _sum: { amountPence: true },
+    }),
+    db.financeTxn.aggregate({
+      where: {
+        date: { gte: burnSince },
+        amountPence: { lt: 0 },
+        ...teamPayFilter,
+      },
+      _sum: { amountPence: true },
+    }),
+    db.adDaily.aggregate({
+      where: { date: { gte: mtdStart } },
+      _sum: { spendPence: true },
+    }),
+  ]);
+
+  const orderMap = new Map(
+    orders.map((row) => [
+      row.businessLine,
+      {
+        revenuePence: row._sum.netPence ?? 0,
+        directCostPence:
+          (row._sum.cogsPence ?? 0) + (row._sum.shippingPence ?? 0),
+      },
+    ]),
+  );
+  const financeMap = new Map(
+    financeByLine.map((row) => [row.businessLine, row._sum.amountPence ?? 0]),
+  );
+
+  const pnlByLine = PNL_LINES.map((line) => {
+    const order = orderMap.get(line) ?? {
+      revenuePence: 0,
+      directCostPence: 0,
+    };
+    const financeNetPence = financeMap.get(line) ?? 0;
+    return {
+      businessLine: line,
+      revenuePence: order.revenuePence,
+      directCostPence: order.directCostPence,
+      financeNetPence,
+      contributionPence:
+        order.revenuePence - order.directCostPence + financeNetPence,
+    };
   });
-  const adSpend = await db.adDaily.aggregate({
-    where: { date: { gte: mtdStart } },
-    _sum: { spendPence: true },
-  });
+
+  const cashGbp = balances.reduce((sum, b) => {
+    if (b.currency.toLowerCase() !== "gbp") return sum;
+    return sum + b.balanceMinor;
+  }, 0);
+  const burn30dPence = Math.abs(burnAgg._sum.amountPence ?? 0);
+  const dailyBurnPence = burn30dPence > 0 ? Math.round(burn30dPence / 30) : 0;
+  const runwayDays =
+    cashGbp > 0 && dailyBurnPence > 0
+      ? Math.round(cashGbp / dailyBurnPence)
+      : null;
 
   return {
     balances,
     due,
     orders,
+    pnlByLine,
+    runwayDays,
+    cashGbp,
+    dailyBurnPence,
     adSpendPence: adSpend._sum.spendPence ?? 0,
     freshness: balances[0]
       ? relativeFreshness(balances[0].recordedAt)
@@ -101,52 +185,185 @@ export async function getCoachingPageData() {
     include: { person: true },
     take: 10,
   });
-  const setters = await db.call.groupBy({
-    by: ["setter", "outcome"],
-    where: { scheduledAt: { gte: mtdStart } },
-    _count: true,
-  });
-  const tiers = await db.programmeEnrolment.groupBy({
-    by: ["tier"],
-    where: { line: "coaching", status: "active" },
-    _count: true,
-    _sum: { pricePence: true },
-  });
+  const [setters, tiers, callCash, dmQualified] = await Promise.all([
+    db.call.groupBy({
+      by: ["setter", "outcome"],
+      where: { scheduledAt: { gte: mtdStart } },
+      _count: true,
+    }),
+    db.programmeEnrolment.groupBy({
+      by: ["tier"],
+      where: { line: "coaching", status: "active" },
+      _count: true,
+      _sum: { pricePence: true },
+    }),
+    db.call.groupBy({
+      by: ["setter"],
+      where: { scheduledAt: { gte: mtdStart } },
+      _sum: { cashCollectedPence: true },
+      _count: true,
+    }),
+    db.leadThread.count({
+      where: {
+        highIntent: true,
+        OR: [
+          { lastInboundAt: { gte: mtdStart } },
+          { createdAt: { gte: mtdStart } },
+        ],
+      },
+    }),
+  ]);
+
+  const outcomeBySetter = new Map<
+    string,
+    { booked: number; held: number; closed: number; noShow: number }
+  >();
+  for (const row of setters) {
+    const key = row.setter?.trim() || "Unassigned";
+    const cur = outcomeBySetter.get(key) ?? {
+      booked: 0,
+      held: 0,
+      closed: 0,
+      noShow: 0,
+    };
+    if (row.outcome === "booked") cur.booked += row._count;
+    else if (row.outcome === "held") cur.held += row._count;
+    else if (row.outcome === "closed") cur.closed += row._count;
+    else if (row.outcome === "no_show") cur.noShow += row._count;
+    outcomeBySetter.set(key, cur);
+  }
+
+  const hasCallData = setters.length > 0;
+  // LeadThread has no setter attribution — DMs qualified per setter is not measurable.
+  const setterPipeline = hasCallData
+    ? [...outcomeBySetter.entries()]
+        .map(([setter, counts]) => {
+          const cash = callCash.find(
+            (c) => (c.setter?.trim() || "Unassigned") === setter,
+          );
+          return {
+            setter,
+            ...counts,
+            cashCollectedPence: cash?._sum.cashCollectedPence ?? 0,
+            dmsQualifiedMeasurable: false as const,
+            paidMeasurable: false as const,
+          };
+        })
+        .sort((a, b) => b.closed - a.closed || a.setter.localeCompare(b.setter))
+    : [];
 
   return {
     cashMtd: payments.reduce((s, p) => s + p.amountPence, 0),
     pending,
     setters,
+    setterPipeline,
+    pipelineMeasurable: hasCallData,
+    dmQualifiedMtd: dmQualified,
+    /** Per-setter DM attribution is not in Call/LeadThread schema. */
+    dmPerSetterMeasurable: false,
     tiers,
     targetPence: 8_500_000,
   };
 }
 
 export async function getTrainingPageData() {
-  const active = await db.programmeEnrolment.count({
-    where: { line: "training", status: "active" },
-  });
-  const mrr = await db.programmeEnrolment.aggregate({
-    where: { line: "training", status: "active" },
-    _sum: { pricePence: true },
-  });
-  const byWeek = await db.programmeEnrolment.groupBy({
-    by: ["currentWeek"],
-    where: { line: "training", status: "active" },
-    _count: true,
-  });
-  const silent = await db.programmeEnrolment.findMany({
-    where: { line: "training", status: "active", currentWeek: { gte: 1 } },
-    include: { person: true },
-    take: 5,
-    orderBy: { updatedAt: "asc" },
-  });
+  const now = await requestNow();
+  const silentBefore = new Date(now.getTime() - 3 * 24 * 60 * 60_000);
+
+  const [active, mrr, byWeek, silentCount, silent, n8nConnector, coachHealth] =
+    await Promise.all([
+      db.programmeEnrolment.count({
+        where: { line: "training", status: "active" },
+      }),
+      db.programmeEnrolment.aggregate({
+        where: { line: "training", status: "active" },
+        _sum: { pricePence: true },
+      }),
+      db.programmeEnrolment.groupBy({
+        by: ["currentWeek"],
+        where: { line: "training", status: "active" },
+        _count: true,
+      }),
+      db.programmeEnrolment.count({
+        where: {
+          line: "training",
+          status: "active",
+          updatedAt: { lte: silentBefore },
+        },
+      }),
+      db.programmeEnrolment.findMany({
+        where: {
+          line: "training",
+          status: "active",
+          updatedAt: { lte: silentBefore },
+        },
+        include: { person: true },
+        take: 20,
+        orderBy: { updatedAt: "asc" },
+      }),
+      db.connectorRun.findUnique({
+        where: { sourceId: "S6" },
+        select: { lastSuccessAt: true, status: true, name: true },
+      }),
+      getWhatsAppCoachHealth(now),
+    ]);
+
+  const leaderboardAt = n8nConnector?.lastSuccessAt ?? null;
+  const leaderboardFreshness = leaderboardAt
+    ? relativeFreshness(leaderboardAt)
+    : null;
 
   return {
     active,
     mrr: mrr._sum.pricePence ?? 0,
     byWeek,
     silent,
+    silentCount,
+    silentDays: 3,
+    leaderboard: {
+      measurable: Boolean(leaderboardAt),
+      freshness: leaderboardFreshness,
+      at: leaderboardAt,
+      source: n8nConnector?.name ?? "n8n",
+    },
+    coachHealth,
+  };
+}
+
+type AdDailyWindowAgg = {
+  avgSpendPence: number | null;
+  avgRoas: number | null;
+  days: number;
+};
+
+function emptyAdDailyWindow(): AdDailyWindowAgg {
+  return { avgSpendPence: null, avgRoas: null, days: 0 };
+}
+
+/** Aggregate AdDaily rows into avg daily spend + window ROAS (value/spend). */
+function summarizeAdDailyWindow(
+  rows: Array<{ date: Date; spendPence: number; purchaseValue7dPence: number }>,
+): AdDailyWindowAgg {
+  if (rows.length === 0) return emptyAdDailyWindow();
+  const byDate = new Map<string, { spend: number; value: number }>();
+  for (const row of rows) {
+    const key = row.date.toISOString().slice(0, 10);
+    const cur = byDate.get(key) ?? { spend: 0, value: 0 };
+    cur.spend += row.spendPence;
+    cur.value += row.purchaseValue7dPence;
+    byDate.set(key, cur);
+  }
+  const days = byDate.size;
+  let totalSpend = 0;
+  let totalValue = 0;
+  for (const d of byDate.values()) {
+    totalSpend += d.spend;
+    totalValue += d.value;
+  }
+  return {
+    days,
+    avgSpendPence: days ? totalSpend / days : null,
+    avgRoas: totalSpend > 0 ? totalValue / totalSpend : null,
   };
 }
 
@@ -186,6 +403,57 @@ export async function getMetaPageData() {
     orderBy: { occurredAt: "desc" },
     take: 10,
   });
+
+  const changeEventsWithSplits = await (async () => {
+    if (changeEvents.length === 0) return [];
+    const objectIds = [...new Set(changeEvents.map((e) => e.objectId))];
+    let minStart: Date | null = null;
+    let maxEnd: Date | null = null;
+    for (const ev of changeEvents) {
+      const day = startOfUtcDay(ev.occurredAt);
+      const beforeStart = new Date(day);
+      beforeStart.setUTCDate(beforeStart.getUTCDate() - 7);
+      const afterEnd = new Date(day);
+      afterEnd.setUTCDate(afterEnd.getUTCDate() + 7);
+      if (!minStart || beforeStart < minStart) minStart = beforeStart;
+      if (!maxEnd || afterEnd > maxEnd) maxEnd = afterEnd;
+    }
+    const history = await db.adDaily.findMany({
+      where: {
+        adSetId: { in: objectIds },
+        date: {
+          gte: minStart ?? undefined,
+          lt: maxEnd ?? undefined,
+        },
+      },
+      select: {
+        adSetId: true,
+        date: true,
+        spendPence: true,
+        purchaseValue7dPence: true,
+      },
+    });
+    return changeEvents.map((ev) => {
+      const day = startOfUtcDay(ev.occurredAt);
+      const beforeStart = new Date(day);
+      beforeStart.setUTCDate(beforeStart.getUTCDate() - 7);
+      const afterEnd = new Date(day);
+      afterEnd.setUTCDate(afterEnd.getUTCDate() + 7);
+      const forSet = history.filter((r) => r.adSetId === ev.objectId);
+      const beforeRows = forSet.filter(
+        (r) => r.date >= beforeStart && r.date < day,
+      );
+      const afterRows = forSet.filter(
+        (r) => r.date >= day && r.date < afterEnd,
+      );
+      return {
+        ...ev,
+        before: summarizeAdDailyWindow(beforeRows),
+        after: summarizeAdDailyWindow(afterRows),
+      };
+    });
+  })();
+
   const totalSpend = [...bySet.values()].reduce((s, r) => s + r.spend, 0);
   const totalValue = [...bySet.values()].reduce((s, r) => s + r.value7d, 0);
 
@@ -196,7 +464,7 @@ export async function getMetaPageData() {
       amer7d: v.spend ? v.value7d / v.spend : 0,
       amerIncr: v.spend ? v.valueIncr / v.spend : 0,
     })),
-    changeEvents,
+    changeEvents: changeEventsWithSplits,
     totalSpend,
     amer: totalSpend ? totalValue / totalSpend : 0,
   };

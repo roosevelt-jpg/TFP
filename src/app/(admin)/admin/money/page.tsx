@@ -40,6 +40,58 @@ export default async function MoneyPage() {
             </div>
           </div>
         ))}
+        {data.runwayDays != null ? (
+          <div className="cmd-kpi-card">
+            <div className="cmd-kpi-label" data-cms="money.kpi.runway">
+              {cms["money.kpi.runway"] ?? "Runway estimate"}
+            </div>
+            <div className="cmd-kpi-value">{data.runwayDays}d</div>
+            <div className="cmd-kpi-foot">
+              <span className="cmd-badge cmd-badge-calculated">
+                Cash {formatGbp(data.cashGbp)} · burn{" "}
+                {formatGbp(data.dailyBurnPence)}/d
+              </span>
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="cmd-panel" style={{ marginBottom: "1.25rem" }}>
+        <div className="cmd-panel-head">
+          <div>
+            <div className="cmd-panel-title" data-cms="money.panel.pnl">
+              {cms["money.panel.pnl"] ?? "MTD P&L by business line"}
+            </div>
+            <div className="cmd-panel-sub" data-cms="money.panel.pnlSub">
+              {cms["money.panel.pnlSub"] ??
+                "Orders + finance txns · team pay hidden for non-Kane"}
+            </div>
+          </div>
+        </div>
+        <div className="cmd-panel-body flush">
+          <table>
+            <thead>
+              <tr>
+                <th>Line</th>
+                <th className="num">Revenue</th>
+                <th className="num">Direct cost</th>
+                <th className="num">Finance net</th>
+                <th className="num">Contribution</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.pnlByLine.map((row) => (
+                <tr key={row.businessLine}>
+                  <td className="cell-strong">{row.businessLine}</td>
+                  <td className="num">{formatGbp(row.revenuePence)}</td>
+                  <td className="num">{formatGbp(row.directCostPence)}</td>
+                  <td className="num">{formatGbp(row.financeNetPence)}</td>
+                  <td className="num">{formatGbp(row.contributionPence)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div className="cmd-two-col">

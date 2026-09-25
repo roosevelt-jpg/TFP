@@ -3,7 +3,9 @@ import * as z from "zod";
 
 import {
   pullMetaAdInsights,
+  pullShopifyInventory,
   pullShopifyOrders,
+  pullShopifySubscriptionContracts,
   pullStripeMoney,
 } from "@/lib/connectors/pulls";
 import { pullGhlLeadThreads, pullKlaviyoCampaigns } from "@/lib/connectors/ghl-klaviyo";
@@ -12,6 +14,7 @@ import { pullRevolutBalances } from "@/lib/connectors/revolut";
 import { triageGmailInbox } from "@/lib/connectors/gmail";
 import { pullCalendlyEvents } from "@/lib/connectors/calendly";
 import { rebuildDailySnapshot } from "@/lib/metrics/economics";
+import { pullPublishedPostMetrics } from "@/lib/content/metrics-pull";
 
 export const pullShopifyTask = schemaTask({
   id: "command.pull-shopify",
@@ -21,6 +24,20 @@ export const pullShopifyTask = schemaTask({
     await rebuildDailySnapshot();
     return result;
   },
+});
+
+/** Manual inventory-only pull (also runs inside pullShopifyOrders). */
+export const pullShopifyInventoryTask = schemaTask({
+  id: "command.pull-shopify-inventory",
+  schema: z.object({}),
+  run: async () => pullShopifyInventory(),
+});
+
+/** Manual READ-ONLY subscription contract mirror. */
+export const pullShopifySubscriptionsTask = schemaTask({
+  id: "command.pull-shopify-subscriptions",
+  schema: z.object({}),
+  run: async () => pullShopifySubscriptionContracts(),
 });
 
 export const pullMetaTask = schemaTask({
@@ -99,4 +116,17 @@ export const pullCalendlyTask = schemaTask({
   id: "command.pull-calendly",
   schema: z.object({}),
   run: async () => pullCalendlyEvents(),
+});
+
+/** Daily post metrics — IG insights when possible, else placeholder zeros. */
+export const pullPostMetricsTask = schemaTask({
+  id: "command.pull-post-metrics",
+  schema: z.object({}),
+  run: async () => pullPublishedPostMetrics(),
+});
+
+export const postMetricsSchedule = schedules.task({
+  id: "command.post-metrics-daily",
+  cron: { pattern: "45 4 * * *", environments: ["PRODUCTION"] },
+  run: async () => pullPublishedPostMetrics(),
 });

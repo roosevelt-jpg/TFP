@@ -251,8 +251,43 @@ async function seedWarehouse() {
   }
 
   await db.adDaily.deleteMany({ where: { adSetId: { startsWith: "seed-" } } });
+  await db.changeEvent.deleteMany({
+    where: { objectId: { startsWith: "seed-" } },
+  });
+
+  // Change midpoint 8 days ago so 7d before/after windows both have AdDaily rows.
+  const changeDay = new Date(y);
+  changeDay.setUTCDate(changeDay.getUTCDate() - 8);
+  const changeOccurredAt = new Date(changeDay);
+  changeOccurredAt.setUTCHours(10, 0, 0, 0);
+
+  for (let offset = -7; offset < 7; offset++) {
+    const d = new Date(changeDay);
+    d.setUTCDate(d.getUTCDate() + offset);
+    // Before budget edit: lower spend, weaker ROAS; after: higher spend, stronger ROAS.
+    const before = offset < 0;
+    const spend = before ? 40_000 : 64_000;
+    const value7d = before ? 48_000 : 89_600;
+    const valueIncr = before ? 36_000 : 70_400;
+    await db.adDaily.create({
+      data: {
+        date: d,
+        adSetId: "seed-cold-v3",
+        adSetName: "Cold — Reels — Stack V3",
+        adId: "seed-cold-v3-ad",
+        spendPence: spend,
+        purchaseValue7dPence: value7d,
+        purchaseValueIncrPence: valueIncr,
+        purchases7d: Math.round(value7d / 4300),
+        impressions: 40_000,
+        clicks: 800,
+        label: "verified",
+        sourceFreshAt: new Date(),
+      },
+    });
+  }
+
   for (const [id, name, spend, value7d, valueIncr] of [
-    ["seed-cold-v3", "Cold — Reels — Stack V3", 64_000, 89_600, 70_400],
     ["seed-retarget", "Retarget — ATC 7d", 21_000, 142_800, 109_200],
     ["seed-ugc", "Cold — UGC — Testimonial", 48_000, 144_000, 124_800],
   ] as const) {
@@ -279,7 +314,7 @@ async function seedWarehouse() {
       objectType: "ad_set",
       objectId: "seed-cold-v3",
       changeType: "budget_edit",
-      occurredAt: new Date("2026-09-12T10:00:00Z"),
+      occurredAt: changeOccurredAt,
       meta: { note: "Budget edit — split averages before/after" },
     },
   });
@@ -429,15 +464,21 @@ async function seedWarehouse() {
     });
   }
 
-  for (const [ruleId, label, value, unit] of [
-    ["L1", "High-intent DM reply window (minutes)", 60, "min"],
-    ["ST1", "Stack cover alert (days)", 30, "days"],
-    ["M5", "Cold frequency alert", 2, "freq"],
-  ] as const) {
+  // Seed every Part 03 threshold default from rules-config (create-only).
+  const { DEFAULT_ALERT_THRESHOLDS } = await import(
+    "../src/lib/alerts/rules-config"
+  );
+  for (const [ruleId, def] of Object.entries(DEFAULT_ALERT_THRESHOLDS)) {
     await db.alertThreshold.upsert({
       where: { ruleId },
-      create: { ruleId, label, value, unit, enabled: true },
-      update: { label, value, unit },
+      create: {
+        ruleId,
+        label: def.label,
+        value: def.value,
+        unit: def.unit,
+        enabled: true,
+      },
+      update: {},
     });
   }
 

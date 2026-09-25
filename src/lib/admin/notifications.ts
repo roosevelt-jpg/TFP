@@ -52,7 +52,7 @@ export async function getNotificationFeed(): Promise<NotificationFeed> {
     take: 8,
   });
   const posts = await db.postCard.findMany({
-    where: { status: { in: ["awaiting_kane", "compliance"] } },
+    where: { status: { in: ["awaiting_kane", "compliance", "changes_requested", "ready"] } },
     include: { asset: true },
     orderBy: { updatedAt: "desc" },
     take: 8,

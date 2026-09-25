@@ -79,6 +79,7 @@ export const env = createEnv({
     TELEGRAM_BOT_USERNAME: z.string().min(1).optional(),
     TELEGRAM_KANE_CHAT_ID: z.string().min(1).optional(),
     TELEGRAM_LEAH_CHAT_ID: z.string().min(1).optional(),
+    TELEGRAM_LEMONI_CHAT_ID: z.string().min(1).optional(),
 
     // Phase 1+ read connectors (optional until Step 0 credentials land).
     SHOPIFY_SHOP_DOMAIN: z.string().min(1).optional(),

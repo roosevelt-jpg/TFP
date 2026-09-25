@@ -341,14 +341,28 @@ enum ConnectorStatus {
 }
 
 enum ContentAssetState {
+  /// Part 07 intake — preferred over legacy `uploaded`
+  draft
   uploaded
   tagged
+  /// Part 07 mid-states
+  in_plan
+  brief_locked
+  /// Preferred over legacy `editing`
+  in_edit
   editing
+  in_qc
+  changes_requested
   review
   compliance
+  ready
   awaiting_kane
   scheduled
+  /// Part 07 publish confirmation — preferred over legacy `posted`
+  published
   posted
+  /// Platform / pipeline failure — preferred over legacy `rejected`
+  failed
   archived
   rejected
 }

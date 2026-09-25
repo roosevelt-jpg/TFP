@@ -56,9 +56,13 @@ export async function getLeahTelegramChatId() {
   return resolveSecret("TELEGRAM_LEAH_CHAT_ID");
 }
 
+export async function getLemoniTelegramChatId() {
+  return resolveSecret("TELEGRAM_LEMONI_CHAT_ID");
+}
+
 export async function isAllowedTelegramChat(chatId: string): Promise<{
   allowed: boolean;
-  role: "kane" | "leah" | null;
+  role: "kane" | "leah" | "lemoni" | null;
 }> {
   const kaneId = await getKaneTelegramChatId();
   if (kaneId && chatId === kaneId) {
@@ -68,5 +72,53 @@ export async function isAllowedTelegramChat(chatId: string): Promise<{
   if (leahId && chatId === leahId) {
     return { allowed: true, role: "leah" };
   }
+  const lemoniId = await getLemoniTelegramChatId();
+  if (lemoniId && chatId === lemoniId) {
+    return { allowed: true, role: "lemoni" };
+  }
   return { allowed: false, role: null };
+}
+
+/** Resolve a Telegram file_id to a downloadable file_path. */
+export async function getTelegramFile(fileId: string) {
+  const botToken = await resolveSecret("TELEGRAM_BOT_TOKEN");
+  if (!botToken) {
+    return { ok: false as const, reason: "no_token" as const };
+  }
+
+  const res = await fetch(
+    `https://api.telegram.org/bot${botToken}/getFile?file_id=${encodeURIComponent(fileId)}`,
+  );
+  const json = (await res.json()) as {
+    ok?: boolean;
+    result?: { file_path?: string; file_size?: number };
+  };
+  if (!res.ok || !json.ok || !json.result?.file_path) {
+    return { ok: false as const, reason: "get_file_failed" as const, json };
+  }
+  return {
+    ok: true as const,
+    filePath: json.result.file_path,
+    fileSize: json.result.file_size,
+  };
+}
+
+/** Download Telegram file contents as text (CSV ingest). Max ~20MB bot limit. */
+export async function downloadTelegramFileText(fileId: string) {
+  const botToken = await resolveSecret("TELEGRAM_BOT_TOKEN");
+  if (!botToken) {
+    return { ok: false as const, reason: "no_token" as const };
+  }
+
+  const meta = await getTelegramFile(fileId);
+  if (!meta.ok) return meta;
+
+  const res = await fetch(
+    `https://api.telegram.org/file/bot${botToken}/${meta.filePath}`,
+  );
+  if (!res.ok) {
+    return { ok: false as const, reason: "download_failed" as const };
+  }
+  const text = await res.text();
+  return { ok: true as const, text, filePath: meta.filePath };
 }

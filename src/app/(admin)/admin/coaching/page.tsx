@@ -20,6 +20,96 @@ export default async function CoachingPage() {
         </div>
       </div>
 
+      <div className="cmd-kpi-grid">
+        <div className="cmd-kpi-card">
+          <div className="cmd-kpi-label">DMs qualified MTD</div>
+          <div className="cmd-kpi-value">{data.dmQualifiedMtd}</div>
+          <div className="cmd-kpi-foot">
+            <span className="cmd-badge cmd-badge-recorded">
+              High-intent threads · blended
+            </span>
+          </div>
+        </div>
+        {!data.dmPerSetterMeasurable ? (
+          <div className="cmd-kpi-card">
+            <div className="cmd-kpi-label">DMs per setter</div>
+            <div className="cmd-kpi-value" style={{ fontSize: "1.1rem" }}>
+              not measurable yet
+            </div>
+            <div className="cmd-kpi-foot">
+              <span className="cmd-badge cmd-badge-calculated">
+                LeadThread has no setter
+              </span>
+            </div>
+          </div>
+        ) : null}
+        {!data.pipelineMeasurable ? (
+          <div className="cmd-kpi-card">
+            <div className="cmd-kpi-label">Setter pipeline</div>
+            <div className="cmd-kpi-value" style={{ fontSize: "1.1rem" }}>
+              not measurable yet
+            </div>
+            <div className="cmd-kpi-foot">
+              <span className="cmd-badge cmd-badge-calculated">
+                No Call rows MTD
+              </span>
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      {data.pipelineMeasurable ? (
+        <div className="cmd-panel" style={{ marginBottom: "1.25rem" }}>
+          <div className="cmd-panel-head">
+            <div>
+              <div
+                className="cmd-panel-title"
+                data-cms="coaching.panel.setters"
+              >
+                {cms["coaching.panel.setters"] ?? "Per-setter pipeline (MTD)"}
+              </div>
+              <div
+                className="cmd-panel-sub"
+                data-cms="coaching.panel.settersSub"
+              >
+                {cms["coaching.panel.settersSub"] ??
+                  "From Call outcomes · paid stage not attributable"}
+              </div>
+            </div>
+          </div>
+          <div className="cmd-panel-body flush">
+            <table>
+              <thead>
+                <tr>
+                  <th>Setter</th>
+                  <th className="num">Booked</th>
+                  <th className="num">Held</th>
+                  <th className="num">Closed</th>
+                  <th className="num">No-show</th>
+                  <th className="num">Cash on calls</th>
+                  <th>DMs / paid</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.setterPipeline.map((row) => (
+                  <tr key={row.setter}>
+                    <td className="cell-strong">{row.setter}</td>
+                    <td className="num">{row.booked}</td>
+                    <td className="num">{row.held}</td>
+                    <td className="num">{row.closed}</td>
+                    <td className="num">{row.noShow}</td>
+                    <td className="num">
+                      {formatGbp(row.cashCollectedPence)}
+                    </td>
+                    <td className="cell-muted">not measurable yet</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
+
       <div className="cmd-two-col">
         <div className="cmd-panel">
           <div className="cmd-panel-head">

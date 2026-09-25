@@ -4,10 +4,8 @@ import * as z from "zod";
 
 import { decideApproval, executeApprovedAction } from "@/lib/admin/approvals";
 import { requireAdminSession } from "@/lib/auth/session";
-import { publishPostCard } from "@/lib/content/publish";
 import { actionClient } from "@/lib/safe-action";
 import { db } from "@/db";
-import type { Prisma } from "@/generated/prisma/client";
 
 const decideSchema = z.object({
   id: z.string().min(1),
@@ -29,21 +27,11 @@ export const decideApprovalAction = actionClient
       const executed = await executeApprovedAction({
         id: updated.id,
         actor: session.user.email,
-        verificationResult: "Approval executed",
       });
-
-      const objectIds = executed.objectIds as Prisma.JsonObject;
-      if (typeof objectIds.postCardId === "string") {
-        const published = await publishPostCard(objectIds.postCardId);
-        await db.approvalRequest.update({
-          where: { id: executed.id },
-          data: {
-            verificationResult: `Scheduled · ${published.postUrl}`,
-          },
-        });
-      }
-
-      return { status: "executed" as const };
+      return {
+        status: "executed" as const,
+        verification: executed.verificationResult,
+      };
     }
 
     return { status: updated.status };

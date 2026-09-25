@@ -1,6 +1,7 @@
 import "server-only";
 
 import { db } from "@/db";
+import { ContentState } from "@/lib/content/states";
 import {
   getKaneTelegramChatId,
   sendTelegramMessage,
@@ -10,12 +11,48 @@ import {
  * Social media manager agent — plans only. No publish tool.
  */
 export async function buildMondayContentPlan() {
-  const awaiting = await db.postCard.count({
-    where: { status: "awaiting_kane" },
+  const pendingCards = await db.postCard.findMany({
+    where: {
+      status: {
+        in: [ContentState.awaitingKane, "awaiting_kane", ContentState.draft],
+      },
+    },
+    include: { asset: true },
+    orderBy: { updatedAt: "desc" },
+    take: 15,
   });
+
+  const complianceFails = await db.postCard.findMany({
+    where: {
+      OR: [
+        { compliancePass: false },
+        {
+          status: {
+            in: [
+              ContentState.failed,
+              "rejected",
+              ContentState.compliance,
+              ContentState.changesRequested,
+            ],
+          },
+        },
+        {
+          asset: {
+            state: {
+              in: [ContentState.compliance, ContentState.changesRequested],
+            },
+          },
+        },
+      ],
+    },
+    include: { asset: true },
+    orderBy: { updatedAt: "desc" },
+    take: 10,
+  });
+
   const scheduled = await db.postCard.findMany({
     where: {
-      status: "scheduled",
+      status: { in: [ContentState.scheduled, "scheduled"] },
       scheduledAt: {
         gte: new Date(),
         lte: new Date(Date.now() + 7 * 86_400_000),
@@ -28,8 +65,25 @@ export async function buildMondayContentPlan() {
 
   const pack = [
     "<b>Monday content plan pack</b>",
-    `Awaiting Kane: ${awaiting}`,
+    `Pending Kane cards: ${pendingCards.length}`,
+    `Compliance fails: ${complianceFails.length}`,
     `Scheduled next 7d: ${scheduled.length}`,
+    "",
+    "<b>Pending post cards</b>",
+    ...(pendingCards.length
+      ? pendingCards.map(
+          (c) =>
+            `· ${c.platform}/${c.account} · ${c.asset.title} · ${c.status}`,
+        )
+      : ["· none"]),
+    "",
+    "<b>Compliance fails</b>",
+    ...(complianceFails.length
+      ? complianceFails.map(
+          (c) =>
+            `· ${c.asset.title} · ${c.complianceResult ?? c.status}`,
+        )
+      : ["· none"]),
     "",
     "<b>Filming shot list (Wed + Sun)</b>",
     "1. Gym cue — deadlift setup (vertical)",
@@ -53,7 +107,11 @@ export async function buildMondayContentPlan() {
     data: {
       actor: "social-media-manager",
       action: "content.monday_plan",
-      meta: { awaiting, scheduled: scheduled.length },
+      meta: {
+        pending: pendingCards.length,
+        complianceFails: complianceFails.length,
+        scheduled: scheduled.length,
+      },
     },
   });
 
@@ -65,7 +123,12 @@ export async function buildMondayContentPlan() {
     });
   }
 
-  return { pack, awaiting, scheduled: scheduled.length };
+  return {
+    pack,
+    awaiting: pendingCards.length,
+    complianceFails: complianceFails.length,
+    scheduled: scheduled.length,
+  };
 }
 
 export async function buildAffiliateMondayPrompt() {

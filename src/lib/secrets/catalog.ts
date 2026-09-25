@@ -290,6 +290,11 @@ export const CREDENTIAL_GROUPS: CredentialGroup[] = [
       { key: "TELEGRAM_BOT_TOKEN", label: "Bot token", secret: true },
       { key: "TELEGRAM_KANE_CHAT_ID", label: "Kane chat ID", secret: false },
       { key: "TELEGRAM_LEAH_CHAT_ID", label: "Leah chat ID", secret: false },
+      {
+        key: "TELEGRAM_LEMONI_CHAT_ID",
+        label: "Lemoni chat ID",
+        secret: false,
+      },
     ],
   },
   {

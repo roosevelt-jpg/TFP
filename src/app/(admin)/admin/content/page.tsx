@@ -6,11 +6,19 @@ import { requireAdminSession } from "@/lib/auth/session";
 import { getCmsMap } from "@/lib/cms/store";
 
 const STATES = [
-  "uploaded",
-  "editing",
+  "draft",
+  "tagged",
+  "in_plan",
+  "brief_locked",
+  "in_edit",
+  "in_qc",
+  "changes_requested",
   "compliance",
+  "ready",
   "awaiting_kane",
   "scheduled",
+  "published",
+  "failed",
 ] as const;
 
 export default async function ContentPage() {
@@ -48,7 +56,15 @@ export default async function ContentPage() {
               <div className="cmd-pipe-col" key={state}>
                 <h4>{state.replaceAll("_", " ")}</h4>
                 {data.assets
-                  .filter((a) => a.state === state)
+                  .filter((a) => {
+                    if (a.state === state) return true;
+                    if (state === "draft" && a.state === "uploaded") return true;
+                    if (state === "in_edit" && a.state === "editing") return true;
+                    if (state === "in_qc" && a.state === "review") return true;
+                    if (state === "published" && a.state === "posted") return true;
+                    if (state === "failed" && a.state === "rejected") return true;
+                    return false;
+                  })
                   .slice(0, 4)
                   .map((asset) => (
                     <div className="cmd-pipe-card" key={asset.id}>

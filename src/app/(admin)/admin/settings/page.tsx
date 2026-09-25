@@ -5,11 +5,13 @@ import { StaffAccessPanel } from "@/components/admin/StaffAccessPanel";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { db } from "@/db";
 import { listOpenInvites, listStaffUsers } from "@/lib/admin/invites";
+import { ensureAlertThresholds } from "@/lib/alerts/ensure-thresholds";
 import { requireAdminSession } from "@/lib/auth/session";
 import { getCmsMap } from "@/lib/cms/store";
 
 export default async function SettingsPage() {
   const session = await requireAdminSession(["kane"]);
+  await ensureAlertThresholds();
   const [thresholds, cms, users, invites] = await Promise.all([
     db.alertThreshold.findMany({
       orderBy: { ruleId: "asc" },

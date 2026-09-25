@@ -3,12 +3,14 @@ import { NextResponse } from "next/server";
 import { decideApproval, executeApprovedAction } from "@/lib/admin/approvals";
 import { db } from "@/db";
 import { env } from "@/env";
+import { persistLeahFinanceCsv } from "@/lib/finance/persist-leah-csv";
 import {
   linkChannelIdentity,
   recordFunnelEvent,
 } from "@/lib/funnel/records";
 import { parseTelegramActivationToken } from "@/lib/telegram/activation";
 import {
+  downloadTelegramFileText,
   isAllowedTelegramChat,
   sendTelegramMessage,
 } from "@/lib/telegram/client";
@@ -17,7 +19,11 @@ type TelegramUpdate = {
   message?: {
     chat: { id: number };
     text?: string;
-    document?: { file_id: string; file_name?: string };
+    document?: {
+      file_id: string;
+      file_name?: string;
+      mime_type?: string;
+    };
     from?: { id: number; username?: string };
   };
   callback_query?: {
@@ -27,6 +33,78 @@ type TelegramUpdate = {
     message?: { chat: { id: number } };
   };
 };
+
+function looksLikeCsv(doc: {
+  file_name?: string;
+  mime_type?: string;
+}): boolean {
+  const name = (doc.file_name ?? "").toLowerCase();
+  const mime = (doc.mime_type ?? "").toLowerCase();
+  return (
+    name.endsWith(".csv") ||
+    mime.includes("csv") ||
+    mime === "text/plain" ||
+    mime === "application/vnd.ms-excel"
+  );
+}
+
+async function handleLeahFinanceDocument(
+  chatId: string,
+  doc: { file_id: string; file_name?: string; mime_type?: string },
+) {
+  if (!looksLikeCsv(doc)) {
+    await sendTelegramMessage({
+      chatId,
+      text:
+        "Got the file, but it doesn’t look like a CSV. Send Leah’s daily finance template as `.csv` (Appendix A columns), or upload on /admin/money.",
+    });
+    return;
+  }
+
+  const downloaded = await downloadTelegramFileText(doc.file_id);
+  if (!downloaded.ok) {
+    await sendTelegramMessage({
+      chatId,
+      text: `Couldn’t download that file (${downloaded.reason}). Try again or upload on /admin/money.`,
+    });
+    return;
+  }
+
+  const result = await persistLeahFinanceCsv({
+    csv: downloaded.text,
+    actor: `telegram:leah:${chatId}`,
+  });
+
+  if (!result.ok) {
+    const sample = result.errors
+      .slice(0, 5)
+      .map((e) => `row ${e.row}: ${e.reason}`)
+      .join("\n");
+    await sendTelegramMessage({
+      chatId,
+      text: `CSV rejected — ${result.errors.length} error(s).\n${sample}`,
+    });
+    return;
+  }
+
+  const flagNote =
+    result.flags.length > 0
+      ? `\nFlags: ${result.flags.slice(0, 3).join("; ")}`
+      : "";
+  await sendTelegramMessage({
+    chatId,
+    text: [
+      "<b>Finance CSV ingested</b>",
+      `Rows: ${result.rows}`,
+      `Dues created: ${result.duesCreated}`,
+      `Payouts matched: ${result.payoutsReconciled}`,
+      `Batch: ${result.batchId}`,
+      flagNote,
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  });
+}
 
 async function handleCustomerStart(chatId: string, text: string) {
   const enabled =
@@ -143,20 +221,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
     const id = update.callback_query.data.slice("approve:".length);
-    await decideApproval({
-      id,
-      decision: "approved",
-      actor: `telegram:${chatId}`,
-    });
-    await executeApprovedAction({
-      id,
-      actor: `telegram:${chatId}`,
-      verificationResult: "Telegram approval recorded; executor verify pending",
-    });
-    await sendTelegramMessage({
-      chatId,
-      text: `Approved ${id}`,
-    });
+    try {
+      await decideApproval({
+        id,
+        decision: "approved",
+        actor: `telegram:${chatId}`,
+      });
+      const executed = await executeApprovedAction({
+        id,
+        actor: `telegram:${chatId}`,
+      });
+      await sendTelegramMessage({
+        chatId,
+        text: `Approved ✓\n${executed.verificationResult ?? "Executed"}`,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Approve failed";
+      await sendTelegramMessage({
+        chatId,
+        text: `Approve failed: ${message}`,
+      });
+    }
     return NextResponse.json({ ok: true });
   }
 
@@ -175,11 +260,8 @@ export async function POST(request: Request) {
   }
 
   if (update.message?.document && access.role === "leah") {
-    await sendTelegramMessage({
-      chatId,
-      text: "Finance file received. Upload it on /admin/money (CSV template) for validation in Phase 3 parser — Telegram file ingest stores the receipt.",
-    });
-    return NextResponse.json({ ok: true });
+    await handleLeahFinanceDocument(chatId, update.message.document);
+    return NextResponse.json({ ok: true, finance: true });
   }
 
   if (update.message?.text === "/status") {
