@@ -1,15 +1,22 @@
 import "server-only";
 
 import { db } from "@/db";
-import { DEFAULT_ALERT_THRESHOLDS } from "@/lib/alerts/rules-config";
+import {
+  listSeedableThresholdIds,
+  thresholdDefaultFor,
+} from "@/lib/alerts/rules-config";
 
 /**
  * Create missing AlertThreshold rows from rules-config defaults.
+ * Covers every Part 03 rule id + numeric helper keys (CT1_HOURS, M3_OVER, …).
  * Does not overwrite Kane-edited values.
  */
 export async function ensureAlertThresholds() {
   let created = 0;
-  for (const [ruleId, def] of Object.entries(DEFAULT_ALERT_THRESHOLDS)) {
+  const ids = listSeedableThresholdIds();
+  for (const ruleId of ids) {
+    const def = thresholdDefaultFor(ruleId);
+    if (!def) continue;
     const existing = await db.alertThreshold.findUnique({ where: { ruleId } });
     if (existing) continue;
     await db.alertThreshold.create({
@@ -23,5 +30,5 @@ export async function ensureAlertThresholds() {
     });
     created += 1;
   }
-  return { created, total: Object.keys(DEFAULT_ALERT_THRESHOLDS).length };
+  return { created, total: ids.length };
 }

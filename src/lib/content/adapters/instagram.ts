@@ -24,12 +24,45 @@ function accountUrl(account: string) {
   return `https://www.instagram.com/${account.replace(/^@/, "")}/`;
 }
 
+function isVideoMime(mime: string | null | undefined) {
+  return Boolean(mime && /^video\//i.test(mime));
+}
+
+async function waitForIgContainer(input: {
+  creationId: string;
+  token: string;
+  attempts?: number;
+}) {
+  const attempts = input.attempts ?? 12;
+  for (let i = 0; i < attempts; i++) {
+    const res = await fetch(
+      `https://graph.facebook.com/v21.0/${input.creationId}?fields=status_code,status&access_token=${encodeURIComponent(input.token)}`,
+    );
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Instagram container status failed: ${res.status} ${body}`);
+    }
+    const data = (await res.json()) as {
+      status_code?: string;
+      status?: string;
+    };
+    const code = (data.status_code ?? data.status ?? "").toUpperCase();
+    if (code === "FINISHED" || code === "PUBLISHED") return;
+    if (code === "ERROR" || code === "EXPIRED") {
+      throw new Error(`Instagram container ${code}: ${data.status ?? ""}`);
+    }
+    await new Promise((r) => setTimeout(r, 2500));
+  }
+  throw new Error("Instagram container not ready in time");
+}
+
 async function publishInstagram(
   postCard: AdapterPostCard,
 ): Promise<PublishAdapterResult> {
   const { token, igUserId } = await igCredentials();
   const mediaUrl = postCard.coverUrl;
   const caption = postCard.caption ?? "";
+  const video = isVideoMime(postCard.mimeType);
 
   if (!token || !igUserId) {
     return {
@@ -47,16 +80,28 @@ async function publishInstagram(
     };
   }
 
+  const containerBody = video
+    ? {
+        video_url: mediaUrl,
+        // Reels for short-form video; VIDEO also accepted by Graph for feed clips.
+        media_type: postCard.platform.toLowerCase().includes("video") && !postCard.platform.toLowerCase().includes("reel")
+          ? "VIDEO"
+          : "REELS",
+        caption,
+        access_token: token,
+      }
+    : {
+        image_url: mediaUrl,
+        caption,
+        access_token: token,
+      };
+
   const createRes = await fetch(
     `https://graph.facebook.com/v21.0/${igUserId}/media`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        image_url: mediaUrl,
-        caption,
-        access_token: token,
-      }),
+      body: JSON.stringify(containerBody),
     },
   );
   if (!createRes.ok) {
@@ -65,6 +110,10 @@ async function publishInstagram(
   }
   const created = (await createRes.json()) as { id?: string };
   if (!created.id) throw new Error("Instagram media id missing");
+
+  if (video) {
+    await waitForIgContainer({ creationId: created.id, token });
+  }
 
   const pubRes = await fetch(
     `https://graph.facebook.com/v21.0/${igUserId}/media_publish`,
@@ -81,7 +130,9 @@ async function publishInstagram(
   const published = (await pubRes.json()) as { id?: string };
   const externalId = published.id ?? created.id;
   return {
-    url: `https://www.instagram.com/p/${externalId}/`,
+    url: video
+      ? `https://www.instagram.com/reel/${externalId}/`
+      : `https://www.instagram.com/p/${externalId}/`,
     published: true,
     externalId,
   };
@@ -97,6 +148,7 @@ async function verifyInstagram(
 
   const mediaId =
     postCard.postUrl?.match(/\/p\/([^/]+)/)?.[1] ??
+    postCard.postUrl?.match(/\/reel\/([^/]+)/)?.[1] ??
     postCard.postUrl?.match(/media_id=(\d+)/)?.[1];
   if (!mediaId) {
     return {

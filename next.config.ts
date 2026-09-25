@@ -90,6 +90,12 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   cacheComponents: true,
   poweredByHeader: false,
+  experimental: {
+    serverActions: {
+      // Content intake: optional video/image base64 via ContentUploadForm.
+      bodySizeLimit: "32mb",
+    },
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

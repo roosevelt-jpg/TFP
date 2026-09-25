@@ -9,6 +9,10 @@ import {
   getFrameAsset,
 } from "@/lib/content/frame-client";
 import {
+  qcResultsToAssetTags,
+  runAutomatedQcChecks,
+} from "@/lib/content/qc-checks";
+import {
   ContentState,
   mapFrameStatusToContentState,
 } from "@/lib/content/states";
@@ -96,7 +100,6 @@ export async function POST(request: Request) {
           orderBy: { updatedAt: "desc" },
         });
 
-    // Best-effort Frame enrichment (transcript / OCR meta) when token is set.
     let frameBag: Record<string, unknown> | null = null;
     if (body.resource?.id) {
       const frameAsset = await getFrameAsset(body.resource.id, {
@@ -108,45 +111,64 @@ export async function POST(request: Request) {
     }
 
     for (const asset of assets) {
-      const tags = frameBag
+      let tags = frameBag
         ? mergeTags(asset.tags, frameBag)
         : (asset.tags as Prisma.InputJsonValue | undefined);
-
-      if (frameBag) {
-        await db.contentAsset.update({
-          where: { id: asset.id },
-          data: { tags },
-        });
-      }
 
       const ocrHook = runOcrTranscriptCompliance(tags ?? asset.tags);
       const cards = await db.postCard.findMany({ where: { assetId: asset.id } });
       let anyFail = false;
+
       for (const card of cards) {
         const check = runComplianceCheck({
           caption: card.caption,
           assetMeta: tags ?? asset.tags,
         });
-        // Prefer OCR/transcript FAIL detail when the hook ran and failed.
         const result =
           ocrHook.ran && !ocrHook.pass ? ocrHook.result : check.result;
-        const pass = check.pass && ocrHook.pass;
+        const compliancePass = check.pass && ocrHook.pass;
+
+        const qc = runAutomatedQcChecks({
+          caption: card.caption,
+          brief: asset.brief,
+          assetMeta: tags ?? asset.tags,
+          compliancePass,
+          complianceResult: result,
+          platform: card.platform,
+        });
+        tags = mergeTags(tags ?? asset.tags, qcResultsToAssetTags(qc));
+
+        const pass = compliancePass && qc.pass;
         anyFail = anyFail || !pass;
         await db.postCard.update({
           where: { id: card.id },
           data: {
             compliancePass: pass,
-            complianceResult: result,
+            complianceResult: pass
+              ? result
+              : !compliancePass
+                ? result
+                : `QC fail — ${qc.results
+                    .filter((r) => r.status === "fail")
+                    .map((r) => r.label)
+                    .join(", ")}`,
             status: pass
               ? ContentState.awaitingKane
               : ContentState.changesRequested,
           },
         });
       }
+
+      if (frameBag || tags) {
+        await db.contentAsset.update({
+          where: { id: asset.id },
+          data: { tags: tags as Prisma.InputJsonValue },
+        });
+      }
+
       await db.contentAsset.update({
         where: { id: asset.id },
         data: {
-          // Compliance pass → READY; if Kane cards exist, advance to AWAITING_KANE
           state: anyFail
             ? ContentState.changesRequested
             : cards.length > 0

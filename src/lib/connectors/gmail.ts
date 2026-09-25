@@ -5,15 +5,32 @@ import { createApprovalRequest } from "@/lib/admin/approvals";
 import { runSpecialistCheck } from "@/lib/cto/specialist";
 import { resolveSecret } from "@/lib/secrets/store";
 
+type GmailPart = {
+  mimeType?: string;
+  body?: { data?: string; size?: number };
+  parts?: GmailPart[];
+  headers?: Array<{ name: string; value: string }>;
+};
+
 type GmailMessage = {
   id: string;
   threadId: string;
   snippet?: string;
-  payload?: { headers?: Array<{ name: string; value: string }> };
+  payload?: GmailPart;
 };
+
+const IMPORTANT_SENDER_RE =
+  /\b(stripe|shopify|meta|facebook|klaviyo|google|revolut|hmrc|companies house|fulfilfulfil|multichannel|fulfil.?ment|affiliate)\b/i;
+const IMPORTANT_URGENT_RE =
+  /\b(payment failed|suspension|suspend|legal|deadline|chargeback|dispute)\b/i;
+const NEEDS_KANE_RE =
+  /\b(kane|please reply|needs? (your|kane)|for kane|kane'?s (input|decision|reply))\b/i;
+const HEALTH_RE =
+  /side effect|adverse|reaction|hospital|allergic/i;
 
 /**
  * Gmail triage — read + draft only. Sending is gated by Kane approval.
+ * Fetches full message body for E1/E2 keyword classification and snippet storage.
  */
 export async function triageGmailInbox() {
   const clientId = await resolveSecret("GMAIL_CLIENT_ID");
@@ -58,20 +75,49 @@ export async function triageGmailInbox() {
 
   for (const msg of list.messages ?? []) {
     const detailRes = await fetch(
-      `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From`,
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}?format=full`,
       { headers: { Authorization: `Bearer ${token}` } },
     );
     if (!detailRes.ok) continue;
     const detail = (await detailRes.json()) as GmailMessage;
     const subject =
-      detail.payload?.headers?.find((h) => h.name === "Subject")?.value ??
-      "(no subject)";
+      detail.payload?.headers?.find((h) => h.name.toLowerCase() === "subject")
+        ?.value ?? "(no subject)";
     const from =
-      detail.payload?.headers?.find((h) => h.name === "From")?.value ?? "";
-    const snippet = detail.snippet ?? "";
+      detail.payload?.headers?.find((h) => h.name.toLowerCase() === "from")
+        ?.value ?? "";
+    const bodyText = extractPlainText(detail.payload);
+    const snippet = (bodyText || detail.snippet || "").slice(0, 280);
+    const classifyBlob = `${from} ${subject} ${bodyText}`;
+
+    await db.leadThread.upsert({
+      where: {
+        channel_externalId: {
+          channel: "email",
+          externalId: detail.threadId,
+        },
+      },
+      create: {
+        channel: "email",
+        externalId: detail.threadId,
+        contactName: from.slice(0, 200) || null,
+        snippet,
+        lastInboundAt: new Date(),
+        highIntent: IMPORTANT_SENDER_RE.test(classifyBlob),
+        label: "verified",
+        sourceFreshAt: new Date(),
+      },
+      update: {
+        contactName: from.slice(0, 200) || undefined,
+        snippet,
+        lastInboundAt: new Date(),
+        highIntent: IMPORTANT_SENDER_RE.test(classifyBlob),
+        sourceFreshAt: new Date(),
+      },
+    });
 
     // Health / adverse-reaction → P1, no draft on the substance.
-    if (/side effect|adverse|reaction|hospital|allergic/i.test(snippet + subject)) {
+    if (HEALTH_RE.test(classifyBlob)) {
       const threadKey = `GMAIL-C2-${detail.threadId}`;
       const existing = await db.alert.findFirst({
         where: { threadKey, status: { in: ["open", "acknowledged"] } },
@@ -90,6 +136,46 @@ export async function triageGmailInbox() {
       continue;
     }
 
+    // E1 — important sender keywords on full body
+    if (IMPORTANT_SENDER_RE.test(classifyBlob)) {
+      const urgent = IMPORTANT_URGENT_RE.test(classifyBlob);
+      const threadKey = `E1-${detail.threadId}`;
+      const existing = await db.alert.findFirst({
+        where: { threadKey, status: { in: ["open", "acknowledged"] } },
+      });
+      if (!existing) {
+        await db.alert.create({
+          data: {
+            ruleId: "E1",
+            severity: urgent ? "p1" : "p2",
+            title: `Important sender email: ${subject}`,
+            payload: { messageId: detail.id, from, snippet },
+            threadKey,
+          },
+        });
+      }
+    }
+
+    // E2 — needs Kane reply (still draft + specialist + approval)
+    const needsKane = NEEDS_KANE_RE.test(classifyBlob);
+    if (needsKane) {
+      const threadKey = `E2-${detail.threadId}`;
+      const existing = await db.alert.findFirst({
+        where: { threadKey, status: { in: ["open", "acknowledged"] } },
+      });
+      if (!existing) {
+        await db.alert.create({
+          data: {
+            ruleId: "E2",
+            severity: "p2",
+            title: `Needs Kane reply: ${subject}`,
+            payload: { messageId: detail.id, from, snippet },
+            threadKey,
+          },
+        });
+      }
+    }
+
     const draftBody = [
       `Thanks for your email.`,
       ``,
@@ -102,7 +188,7 @@ export async function triageGmailInbox() {
       action: `Send drafted Gmail reply: ${subject}`,
       objectIds: { messageId: detail.id, threadId: detail.threadId },
       domain: "gmail",
-      afterState: { draftBody },
+      afterState: { draftBody, snippet, e1: IMPORTANT_SENDER_RE.test(classifyBlob), e2: needsKane },
     });
 
     if (!check.ok) continue;
@@ -133,6 +219,54 @@ export async function triageGmailInbox() {
   });
 
   return { drafted };
+}
+
+function extractPlainText(payload?: GmailPart): string {
+  if (!payload) return "";
+  const chunks: string[] = [];
+  walkParts(payload, chunks);
+  return chunks.join("\n").replace(/\s+/g, " ").trim();
+}
+
+function walkParts(part: GmailPart, out: string[]) {
+  const mime = (part.mimeType ?? "").toLowerCase();
+  if (mime === "text/plain" && part.body?.data) {
+    out.push(decodeBase64Url(part.body.data));
+  } else if (mime === "text/html" && part.body?.data && out.length === 0) {
+    out.push(stripHtml(decodeBase64Url(part.body.data)));
+  }
+  for (const child of part.parts ?? []) {
+    walkParts(child, out);
+  }
+  // Single-part message with body at the root
+  if (!part.parts?.length && part.body?.data && !mime.startsWith("multipart/")) {
+    if (mime.includes("html")) {
+      if (out.length === 0) out.push(stripHtml(decodeBase64Url(part.body.data)));
+    } else if (out.length === 0) {
+      out.push(decodeBase64Url(part.body.data));
+    }
+  }
+}
+
+function decodeBase64Url(data: string): string {
+  const padded = data.replace(/-/g, "+").replace(/_/g, "/");
+  try {
+    return Buffer.from(padded, "base64").toString("utf8");
+  } catch {
+    return "";
+  }
+}
+
+function stripHtml(html: string): string {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"');
 }
 
 async function refreshGmailAccessToken(creds: {

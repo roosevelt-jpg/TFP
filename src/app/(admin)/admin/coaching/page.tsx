@@ -38,11 +38,25 @@ export default async function CoachingPage() {
             </div>
             <div className="cmd-kpi-foot">
               <span className="cmd-badge cmd-badge-calculated">
-                LeadThread has no setter
+                LeadThread.setterKey unset
               </span>
             </div>
           </div>
-        ) : null}
+        ) : (
+          <div className="cmd-kpi-card">
+            <div className="cmd-kpi-label">DMs per setter (MTD)</div>
+            <div className="cmd-kpi-value" style={{ fontSize: "1.1rem" }}>
+              {data.dmBySetter
+                .map((r) => `${r.setter}: ${r.count}`)
+                .join(" · ")}
+            </div>
+            <div className="cmd-kpi-foot">
+              <span className="cmd-badge cmd-badge-verified">
+                LeadThread.setterKey
+              </span>
+            </div>
+          </div>
+        )}
         {!data.pipelineMeasurable ? (
           <div className="cmd-kpi-card">
             <div className="cmd-kpi-label">Setter pipeline</div>
@@ -101,7 +115,11 @@ export default async function CoachingPage() {
                     <td className="num">
                       {formatGbp(row.cashCollectedPence)}
                     </td>
-                    <td className="cell-muted">not measurable yet</td>
+                    <td className="cell-muted">
+                      {row.dmsQualifiedMeasurable
+                        ? `${row.dmsQualified} DM${row.dmsQualified === 1 ? "" : "s"} / paid not measurable yet`
+                        : "DMs not measurable yet / paid not measurable yet"}
+                    </td>
                   </tr>
                 ))}
               </tbody>

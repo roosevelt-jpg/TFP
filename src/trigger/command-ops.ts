@@ -5,14 +5,23 @@ import { db } from "@/db";
 import { createApprovalRequest } from "@/lib/admin/approvals";
 import { evaluateAlertRules } from "@/lib/alerts/engine";
 import { buildDailyReport, buildDailyTodo } from "@/lib/alerts/daily-report";
+import {
+  checkLemoniReportDue,
+  sendMondayWeekOnWeek,
+  sendMonthPnlTelegram,
+  sendSundayPlanningAgenda,
+} from "@/lib/alerts/cadence";
 import { sendP2Digest } from "@/lib/alerts/p2-digest";
 import { sendTomorrowCallDigest } from "@/lib/alerts/call-digest";
 import { runSpecialistCheck } from "@/lib/cto/specialist";
 import {
   buildAffiliateMondayPrompt,
   buildMondayContentPlan,
+  sendFilmingDayReminder,
 } from "@/lib/content/social-manager";
+import { computeAndStoreSmmScores } from "@/lib/content/smm-score";
 import { sendTomorrowPostsDigest } from "@/lib/content/tomorrow-digest";
+import { publishDuePostCards } from "@/lib/content/publish";
 import { deliverSundayQuoteBatchForApproval } from "@/lib/training/quote-batch";
 import {
   getKaneTelegramChatId,
@@ -93,6 +102,41 @@ export const sundayQuoteBatchTask = schedules.task({
   run: async () => deliverSundayQuoteBatchForApproval(),
 });
 
+/** Sunday 11:00 Dubai ≈ 07:00 UTC — planning agenda for 12:00 session. */
+export const sundayPlanningAgendaTask = schedules.task({
+  id: "command.sunday-planning-agenda",
+  cron: { pattern: "0 7 * * 0", environments: ["PRODUCTION"] },
+  run: async () => sendSundayPlanningAgenda(),
+});
+
+/** Saturday 20:00 Dubai ≈ 16:00 UTC — Lemoni weekly report due check. */
+export const saturdayLemoniReportTask = schedules.task({
+  id: "command.saturday-lemoni-report",
+  cron: { pattern: "0 16 * * 6", environments: ["PRODUCTION"] },
+  run: async () => checkLemoniReportDue(),
+});
+
+/** Monday 09:00 Dubai ≈ 05:00 UTC — week-on-week by business line. */
+export const mondayWeekOnWeekTask = schedules.task({
+  id: "command.monday-week-on-week",
+  cron: { pattern: "5 5 * * 1", environments: ["PRODUCTION"] },
+  run: async () => sendMondayWeekOnWeek(),
+});
+
+/** 1st of month 09:00 Dubai ≈ 05:00 UTC — prior-month P&L telegram. */
+export const monthPnlTask = schedules.task({
+  id: "command.month-pnl",
+  cron: { pattern: "0 5 1 * *", environments: ["PRODUCTION"] },
+  run: async () => sendMonthPnlTelegram(),
+});
+
+/** Tue/Sat 18:00 Dubai ≈ 14:00 UTC — day-before filming reminder (Wed/Sun). */
+export const filmingReminderTask = schedules.task({
+  id: "command.filming-reminder",
+  cron: { pattern: "0 14 * * 2,6", environments: ["PRODUCTION"] },
+  run: async () => sendFilmingDayReminder(),
+});
+
 /** CL4 — 20:00 Dubai ≈ 16:00 UTC — tomorrow's call list to Kane + Lemoni. */
 export const tomorrowCallDigestTask = schedules.task({
   id: "command.tomorrow-call-digest",
@@ -105,6 +149,19 @@ export const tomorrowPostsDigestTask = schedules.task({
   id: "command.tomorrow-posts-digest",
   cron: { pattern: "0 16 * * *", environments: ["PRODUCTION"] },
   run: async () => sendTomorrowPostsDigest(),
+});
+
+/** Slot publisher — due scheduled/ready post cards every 5 minutes. */
+export const publishDuePostsTask = schemaTask({
+  id: "command.publish-due-posts",
+  schema: z.object({}),
+  run: async () => publishDuePostCards(),
+});
+
+export const publishDuePostsSchedule = schedules.task({
+  id: "command.publish-due-posts-schedule",
+  cron: { pattern: "*/5 * * * *", environments: ["PRODUCTION"] },
+  run: async () => publishDuePostCards(),
 });
 
 /**
@@ -205,4 +262,17 @@ export const scorecardsSchedule = schedules.task({
   id: "command.scorecards-daily",
   cron: { pattern: "15 3 * * *", environments: ["PRODUCTION"] },
   run: async () => computeAndStoreScorecards(),
+});
+
+/** SMM scores (plan-on-time, calendar fill, compliance first-pass) → KpiValue. */
+export const smmScoreTask = schemaTask({
+  id: "command.compute-smm-scores",
+  schema: z.object({}),
+  run: async () => computeAndStoreSmmScores(),
+});
+
+export const smmScoreSchedule = schedules.task({
+  id: "command.smm-scores-daily",
+  cron: { pattern: "20 3 * * *", environments: ["PRODUCTION"] },
+  run: async () => computeAndStoreSmmScores(),
 });

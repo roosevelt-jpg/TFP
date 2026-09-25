@@ -3,7 +3,50 @@ import "server-only";
 import { db } from "@/db";
 import { resolveSecret } from "@/lib/secrets/store";
 
-/** Revolut Business balances — Phase 5 read-only cash feed. */
+function startOfUtcToday() {
+  const d = new Date();
+  d.setUTCHours(0, 0, 0, 0);
+  return d;
+}
+
+/** Sum GBP CashBalance rows into today's DailySnapshot for CA1/CA2 + Finance. */
+export async function syncCashBalancesToDailySnapshot() {
+  const cash = await db.cashBalance.findMany({
+    where: { currency: "gbp" },
+  });
+  const cashBalancePence = cash.reduce((s, c) => s + c.balanceMinor, 0);
+  const date = startOfUtcToday();
+  const existing = await db.dailySnapshot.findUnique({ where: { date } });
+  const prevPayload =
+    existing?.payload && typeof existing.payload === "object"
+      ? (existing.payload as Record<string, unknown>)
+      : {};
+
+  await db.dailySnapshot.upsert({
+    where: { date },
+    create: {
+      date,
+      cashBalancePence,
+      label: "calculated",
+      payload: {
+        cashSyncedAt: new Date().toISOString(),
+        cashSource: "cash_balance_sync",
+      },
+    },
+    update: {
+      cashBalancePence,
+      payload: {
+        ...prevPayload,
+        cashSyncedAt: new Date().toISOString(),
+        cashSource: "cash_balance_sync",
+      },
+    },
+  });
+
+  return { date, cashBalancePence, accounts: cash.length };
+}
+
+/** Revolut Business balances — Phase 5 read-only cash feed into Finance + DailySnapshot. */
 export async function pullRevolutBalances() {
   const token = await resolveSecret("REVOLUT_API_TOKEN");
   if (!token) {
@@ -63,6 +106,9 @@ export async function pullRevolutBalances() {
     });
   }
 
+  // CA1/CA2 read DailySnapshot.cashBalancePence; Money page reads CashBalance.
+  const snap = await syncCashBalancesToDailySnapshot();
+
   await db.connectorRun.update({
     where: { sourceId: "S12" },
     data: {
@@ -70,8 +116,12 @@ export async function pullRevolutBalances() {
       lastSuccessAt: new Date(),
       lastError: null,
       status: "healthy",
+      scheduleNote: `Cash snapshot £${(snap.cashBalancePence / 100).toFixed(0)} (${snap.accounts} GBP accounts)`,
     },
   });
 
-  return { accounts: accounts.length };
+  return {
+    accounts: accounts.length,
+    cashBalancePence: snap.cashBalancePence,
+  };
 }

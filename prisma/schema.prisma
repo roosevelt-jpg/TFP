@@ -540,6 +540,8 @@ model WarehouseOrder {
   person         PersonCustomer? @relation(fields: [personId], references: [id], onDelete: SetNull)
   businessLine   BusinessLine @default(supplements)
   orderName      String?
+  /// Shopify discount / affiliate code when present (links to AffiliateCode.code).
+  discountCode   String?
   grossPence     Int
   discountPence  Int          @default(0)
   netPence       Int
@@ -563,6 +565,7 @@ model WarehouseOrder {
   @@index([paidAt])
   @@index([personId])
   @@index([businessLine, paidAt])
+  @@index([discountCode])
 }
 
 model OrderLine {
@@ -668,6 +671,8 @@ model LeadThread {
   lastInboundAt DateTime?   @db.Timestamptz
   lastReplyAt   DateTime?   @db.Timestamptz
   highIntent    Boolean     @default(false)
+  /// Optional setter attribution when GHL/CRM provides it — coaching DMs per setter.
+  setterKey     String?
   label         DataLabel   @default(verified)
   sourceFreshAt DateTime?   @db.Timestamptz
   createdAt     DateTime    @default(now()) @db.Timestamptz
@@ -675,6 +680,7 @@ model LeadThread {
 
   @@unique([channel, externalId])
   @@index([lastInboundAt])
+  @@index([setterKey])
 }
 
 model Affiliate {
@@ -902,9 +908,14 @@ model ChangeEvent {
 model ContentAsset {
   id             String            @id @default(cuid())
   hubAssetId     String?           @unique
+  mediaUrl       String?
+  mimeType       String?
+  byteSize       Int?
   uploader       String
   tags           Json?
   creatorLicence Boolean           @default(false)
+  /// Recorded consent when a customer / member of the public is on camera.
+  publicConsent  Boolean           @default(false)
   state          ContentAssetState @default(uploaded)
   brief          String?
   filmingDay     DateTime?         @db.Date
@@ -927,6 +938,7 @@ model PostCard {
   complianceResult String?
   compliancePass   Boolean           @default(false)
   paidBoostFlag    Boolean           @default(false)
+  held             Boolean           @default(false)
   approvalId       String?
   postUrl          String?
   status           ContentAssetState @default(awaiting_kane)
@@ -937,6 +949,7 @@ model PostCard {
 
   @@index([status, scheduledAt])
   @@index([assetId])
+  @@index([held, status, scheduledAt])
 }
 
 model PostMetric {
@@ -966,6 +979,20 @@ model Channel {
   updatedAt       DateTime  @updatedAt @db.Timestamptz
 
   @@unique([platform, account])
+}
+
+/// Monday Weekly Posting Plan (WPP) — strategy/slots agreed by Kane; does not publish.
+model WeeklyPostingPlan {
+  id        String   @id @default(cuid())
+  /// Monday of the plan week (UTC date).
+  weekStart DateTime @unique @db.Date
+  status    String   @default("draft") // draft | agreed | rejected
+  notes     String?
+  agreedAt  DateTime? @db.Timestamptz
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  @@index([status, weekStart])
 }
 
 model AuditLog {

@@ -55,7 +55,15 @@ export const CREDENTIAL_GROUPS: CredentialGroup[] = [
     id: "S4",
     name: "Klaviyo",
     description: "Email performance daily",
-    fields: [{ key: "KLAVIYO_API_KEY", label: "Private API key", secret: true }],
+    fields: [
+      { key: "KLAVIYO_API_KEY", label: "Private API key", secret: true },
+      {
+        key: "KLAVIYO_CONVERSION_METRIC_ID",
+        label: "Conversion metric ID (Placed Order)",
+        secret: false,
+        placeholder: "metric id — auto-resolved if blank",
+      },
+    ],
   },
   {
     id: "S5",
@@ -246,8 +254,22 @@ export const CREDENTIAL_GROUPS: CredentialGroup[] = [
   {
     id: "S13",
     name: "Frame.io",
-    description: "Content hub webhooks",
-    fields: [{ key: "FRAME_IO_TOKEN", label: "API token", secret: true }],
+    description: "Content hub webhooks + remote upload",
+    fields: [
+      { key: "FRAME_IO_TOKEN", label: "API token", secret: true },
+      {
+        key: "FRAME_IO_ACCOUNT_ID",
+        label: "Account id (optional)",
+        secret: false,
+        placeholder: "UUID from Frame.io",
+      },
+      {
+        key: "FRAME_IO_FOLDER_ID",
+        label: "Intake folder id (remote upload)",
+        secret: false,
+        placeholder: "Folder UUID for phone uploads",
+      },
+    ],
   },
   {
     id: "S14",
@@ -314,6 +336,24 @@ export const CREDENTIAL_GROUPS: CredentialGroup[] = [
         key: "ANTHROPIC_API_KEY",
         label: "Anthropic API key (fallback)",
         secret: true,
+      },
+    ],
+  },
+  {
+    id: "Blob",
+    name: "Media blob storage",
+    description:
+      "Vercel Blob for phone/creator uploads (Content Studio). Add later if unset — uploads skip media until present.",
+    fields: [
+      {
+        key: "BLOB_READ_WRITE_TOKEN",
+        label: "Vercel Blob read/write token",
+        secret: true,
+      },
+      {
+        key: "FORMULA_BLOB_STORE_ID",
+        label: "Blob store id (optional)",
+        secret: false,
       },
     ],
   },

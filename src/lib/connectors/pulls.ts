@@ -73,7 +73,23 @@ type ShopifyOrderNode = {
   } | null;
   lineItems: { edges: Array<{ node: ShopifyLineNode }> };
   fulfillments?: ShopifyFulfillment[] | null;
+  discountApplications?: {
+    edges: Array<{
+      node: {
+        __typename?: string;
+        code?: string | null;
+      };
+    }>;
+  } | null;
 };
+
+function readShopifyDiscountCode(node: ShopifyOrderNode): string | null {
+  for (const edge of node.discountApplications?.edges ?? []) {
+    const code = edge.node.code?.trim();
+    if (code) return code;
+  }
+  return null;
+}
 
 type GqlError = { message?: string; extensions?: { code?: string } };
 
@@ -153,6 +169,14 @@ export async function pullShopifyOrders() {
             displayFulfillmentStatus
             totalPriceSet { shopMoney { amount currencyCode } }
             totalDiscountsSet { shopMoney { amount } }
+            discountApplications(first: 5) {
+              edges {
+                node {
+                  __typename
+                  ... on DiscountCodeApplication { code }
+                }
+              }
+            }
             shippingAddress { countryCodeV2 }
             customer { email phone displayName numberOfOrders }
             lineItems(first: 50) {
@@ -314,12 +338,15 @@ export async function pullShopifyOrders() {
         ? node.customer.numberOfOrders <= 1
         : false;
 
+    const discountCode = readShopifyDiscountCode(node);
+
     const order = await db.warehouseOrder.upsert({
       where: { shopifyOrderId: node.id },
       create: {
         shopifyOrderId: node.id,
         orderName: node.name,
         personId,
+        discountCode,
         grossPence: netPence + discountPence,
         discountPence,
         netPence,
@@ -333,6 +360,7 @@ export async function pullShopifyOrders() {
       },
       update: {
         orderName: node.name,
+        discountCode,
         netPence,
         discountPence,
         grossPence: netPence + discountPence,
@@ -864,8 +892,170 @@ export async function pullMetaAdInsights() {
     upserts += 1;
   }
 
+  const statusResult = await pullMetaAdSetStatus({
+    accessToken: token,
+    accountId,
+  });
+
   await markRun("S3", true);
-  return { upserts };
+  return { upserts, changeEvents: statusResult.changeEvents };
+}
+
+type MetaAdSetRow = {
+  id: string;
+  name?: string;
+  status?: string;
+  effective_status?: string;
+  daily_budget?: string;
+  lifetime_budget?: string;
+};
+
+/**
+ * Compare live ad set status/budget to last known ChangeEvent meta.
+ * Writes pause / activate / budget_edit events; seeds silent `observed` baselines.
+ */
+export async function pullMetaAdSetStatus(opts?: {
+  accessToken?: string;
+  accountId?: string;
+}) {
+  const accessToken =
+    opts?.accessToken ?? (await resolveSecret("META_ACCESS_TOKEN"));
+  const adAccountId =
+    opts?.accountId ??
+    (await resolveSecret("META_AD_ACCOUNT_ID"))?.replace(/^act_/, "");
+  if (!accessToken || !adAccountId) {
+    return { skipped: true as const, changeEvents: 0 };
+  }
+
+  const adSets: MetaAdSetRow[] = [];
+  let url: string | null =
+    `https://graph.facebook.com/v21.0/act_${adAccountId}/adsets?` +
+    new URLSearchParams({
+      fields: "id,name,status,effective_status,daily_budget,lifetime_budget",
+      limit: "200",
+      access_token: accessToken,
+    }).toString();
+
+  while (url) {
+    const res = await fetch(url);
+    const text = await res.text();
+    if (!res.ok) {
+      throw new Error(`Meta ad set status pull failed: ${res.status} ${text.slice(0, 300)}`);
+    }
+    const json = JSON.parse(text) as {
+      data?: MetaAdSetRow[];
+      paging?: { next?: string };
+    };
+    adSets.push(...(json.data ?? []));
+    url = json.paging?.next ?? null;
+  }
+
+  let changeEvents = 0;
+  const now = new Date();
+
+  for (const adSet of adSets) {
+    const status = adSet.effective_status ?? adSet.status ?? "unknown";
+    const dailyBudgetPence = adSet.daily_budget
+      ? Number(adSet.daily_budget)
+      : null;
+    const lifetimeBudgetPence = adSet.lifetime_budget
+      ? Number(adSet.lifetime_budget)
+      : null;
+    const budgetPence = dailyBudgetPence ?? lifetimeBudgetPence;
+
+    const prior = await db.changeEvent.findFirst({
+      where: { objectType: "ad_set", objectId: adSet.id },
+      orderBy: { occurredAt: "desc" },
+    });
+    const priorMeta = (prior?.meta ?? null) as {
+      afterStatus?: string;
+      afterBudgetPence?: number | null;
+      name?: string | null;
+    } | null;
+
+    if (!priorMeta?.afterStatus) {
+      await db.changeEvent.create({
+        data: {
+          objectType: "ad_set",
+          objectId: adSet.id,
+          changeType: "observed",
+          occurredAt: now,
+          meta: {
+            afterStatus: status,
+            afterBudgetPence: budgetPence,
+            name: adSet.name ?? null,
+            source: "meta_status_pull",
+            silent: true,
+          },
+        },
+      });
+      continue;
+    }
+
+    const beforeStatus = priorMeta.afterStatus;
+    const beforeBudget = priorMeta.afterBudgetPence ?? null;
+    const statusChanged = beforeStatus !== status;
+    const budgetChanged =
+      beforeBudget != null &&
+      budgetPence != null &&
+      beforeBudget > 0 &&
+      Math.abs(budgetPence - beforeBudget) / beforeBudget >= 0.2;
+
+    if (!statusChanged && !budgetChanged) continue;
+
+    if (statusChanged) {
+      const paused =
+        status === "PAUSED" || status === "CAMPAIGN_PAUSED";
+      const wasPaused =
+        beforeStatus === "PAUSED" || beforeStatus === "CAMPAIGN_PAUSED";
+      const changeType =
+        paused && !wasPaused
+          ? "pause"
+          : !paused && wasPaused
+            ? "activate"
+            : "status_change";
+      await db.changeEvent.create({
+        data: {
+          objectType: "ad_set",
+          objectId: adSet.id,
+          changeType,
+          occurredAt: now,
+          meta: {
+            beforeStatus,
+            afterStatus: status,
+            beforeBudgetPence: beforeBudget,
+            afterBudgetPence: budgetPence,
+            name: adSet.name ?? null,
+            source: "meta_status_pull",
+          },
+        },
+      });
+      changeEvents += 1;
+    }
+
+    if (budgetChanged) {
+      await db.changeEvent.create({
+        data: {
+          objectType: "ad_set",
+          objectId: adSet.id,
+          changeType: "budget_edit",
+          occurredAt: now,
+          meta: {
+            beforeStatus: status,
+            afterStatus: status,
+            beforeBudgetPence: beforeBudget,
+            afterBudgetPence: budgetPence,
+            name: adSet.name ?? null,
+            source: "meta_status_pull",
+            note: `Budget ${beforeBudget} → ${budgetPence} (≥20% move)`,
+          },
+        },
+      });
+      changeEvents += 1;
+    }
+  }
+
+  return { skipped: false as const, changeEvents, adSets: adSets.length };
 }
 
 /** Stripe balance + recent charges into warehouse payments. */

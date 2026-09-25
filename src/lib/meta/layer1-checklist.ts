@@ -31,7 +31,10 @@ export async function getNathanLayer1Checklist(): Promise<{
     }),
     calculateBreakEvenAmer(),
     db.changeEvent.count({
-      where: { occurredAt: { gte: since } },
+      where: {
+        occurredAt: { gte: since },
+        changeType: { not: "observed" },
+      },
     }),
     db.dailySnapshot.findFirst({
       orderBy: { date: "desc" },

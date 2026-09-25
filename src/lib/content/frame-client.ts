@@ -233,3 +233,72 @@ export function frameMetaToComplianceBag(meta: FrameAssetMeta): {
     ...(meta.caption ? { caption: meta.caption } : {}),
   };
 }
+
+async function frameFolderId(): Promise<string | undefined> {
+  return (
+    (await resolveSecret("FRAME_IO_FOLDER_ID")) ??
+    process.env.FRAME_IO_FOLDER_ID
+  );
+}
+
+/**
+ * Create a Frame.io file via remote upload from a public source URL.
+ * Requires FRAME_IO_TOKEN + folder id (FRAME_IO_FOLDER_ID). Returns null when
+ * credentials/folder are missing — caller should keep the blob URL and set
+ * hubAssetId later from the Frame webhook.
+ */
+export async function uploadFrameAsset(input: {
+  name: string;
+  sourceUrl: string;
+  accountId?: string;
+  folderId?: string;
+}): Promise<FrameAssetMeta | null> {
+  const headers = await authHeaders();
+  if (!headers) {
+    logger.info("FRAME_IO_TOKEN missing — skip Frame remote upload");
+    return null;
+  }
+
+  const accountId = await resolveAccountId(input.accountId);
+  const folderId = input.folderId ?? (await frameFolderId());
+  if (!accountId || !folderId) {
+    logger.info(
+      "Frame.io account/folder unresolved — skip remote upload; hubAssetId later via webhook",
+      { hasAccount: Boolean(accountId), hasFolder: Boolean(folderId) },
+    );
+    return null;
+  }
+
+  const res = await fetch(
+    `${FRAME_API}/accounts/${accountId}/folders/${encodeURIComponent(folderId)}/files/remote_upload`,
+    {
+      method: "POST",
+      headers: {
+        ...headers,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        data: {
+          name: input.name,
+          source_url: input.sourceUrl,
+        },
+      }),
+    },
+  );
+
+  if (!res.ok) {
+    logger.warn("Frame.io remote upload failed", {
+      status: res.status,
+      name: input.name,
+    });
+    return null;
+  }
+
+  const body = (await res.json()) as {
+    data?: Record<string, unknown>;
+  };
+  if (!body.data) return null;
+  const id =
+    typeof body.data.id === "string" ? body.data.id : input.name;
+  return toAssetMeta(id, body.data);
+}

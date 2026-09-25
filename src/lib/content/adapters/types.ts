@@ -11,6 +11,8 @@ export type AdapterPostCard = {
   caption?: string | null;
   coverUrl?: string | null;
   postUrl?: string | null;
+  /** Asset mime — guides IG image vs REELS/VIDEO container. */
+  mimeType?: string | null;
 };
 
 export type PublishAdapterResult = {

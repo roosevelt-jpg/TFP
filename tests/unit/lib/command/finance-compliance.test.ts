@@ -49,4 +49,12 @@ describe("runComplianceCheck", () => {
     expect(result.pass).toBe(false);
     expect(result.result).toMatch(/t=0:00/);
   });
+
+  it("uses Gemini timed line markers in FAIL timecode", () => {
+    const result = runComplianceCheck({
+      ocr: "[0:12] Boost your testosterone naturally",
+    });
+    expect(result.pass).toBe(false);
+    expect(result.result).toMatch(/t=00:12/);
+  });
 });

@@ -465,10 +465,12 @@ async function seedWarehouse() {
   }
 
   // Seed every Part 03 threshold default from rules-config (create-only).
-  const { DEFAULT_ALERT_THRESHOLDS } = await import(
+  const { listSeedableThresholdIds, thresholdDefaultFor } = await import(
     "../src/lib/alerts/rules-config"
   );
-  for (const [ruleId, def] of Object.entries(DEFAULT_ALERT_THRESHOLDS)) {
+  for (const ruleId of listSeedableThresholdIds()) {
+    const def = thresholdDefaultFor(ruleId);
+    if (!def) continue;
     await db.alertThreshold.upsert({
       where: { ruleId },
       create: {
@@ -499,6 +501,7 @@ async function seedWarehouse() {
       uploader: "Kane",
       state: "awaiting_kane",
       creatorLicence: true,
+      publicConsent: true,
       tags: { concept: "check-in" },
     },
   });

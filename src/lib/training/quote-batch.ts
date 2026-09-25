@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { createApprovalRequest } from "@/lib/admin/approvals";
 import { ContentState } from "@/lib/content/states";
 import { runSpecialistCheck } from "@/lib/cto/specialist";
+import { resolveSecret } from "@/lib/secrets/store";
 import {
   getKaneTelegramChatId,
   sendTelegramMessage,
@@ -20,7 +21,7 @@ export type QuoteBatchDraft = {
   draftText: string;
 };
 
-/** Starter quotes — replace with LLM draft when CTO quote tool is wired. */
+/** Starter quotes — used when GEMINI_API_KEY is unset or generation fails. */
 const STARTER_QUOTES = [
   "Show up when it is quiet. That is where consistency is built.",
   "Train the plan in front of you. Not the one you wish you had.",
@@ -49,9 +50,58 @@ function validateQuote(q: string): string | null {
   return null;
 }
 
+async function generateQuotesWithGemini(): Promise<string[] | null> {
+  const apiKey = await resolveSecret("GEMINI_API_KEY");
+  if (!apiKey) return null;
+
+  const model =
+    (await resolveSecret("GEMINI_MODEL")) ?? "gemini-2.5-flash";
+  const prompt = `Generate exactly 7 short motivation quotes for a training WhatsApp group for The Formula Performance.
+Voice: disciplined, confident, no hype.
+Hard rules: no health or body-transformation claims; no banned words (secret, miracle, hack, trick, literally, honestly); no exclamation marks; no em-dashes or en-dashes; no testosterone/TRT/hormone claims.
+Each quote: one sentence, under 120 characters.
+Return ONLY a JSON array of 7 strings.`;
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-goog-api-key": apiKey,
+        },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: {
+            maxOutputTokens: 800,
+            responseMimeType: "application/json",
+          },
+        }),
+      },
+    );
+    if (!res.ok) return null;
+    const json = (await res.json()) as {
+      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+    };
+    const text = json.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    const parsed = JSON.parse(text) as unknown;
+    if (!Array.isArray(parsed)) return null;
+    const quotes = parsed
+      .filter((q): q is string => typeof q === "string")
+      .map((q) => q.trim())
+      .filter(Boolean)
+      .slice(0, 7);
+    return quotes.length >= 7 ? quotes : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Part 03 §4 — Sunday quote batch for Kane approval.
  * Draft only: does **not** send to WhatsApp / GHL.
+ * Uses Gemini when GEMINI_API_KEY is set; otherwise starter quotes.
  */
 export async function buildSundayQuoteBatchDraft(opts?: {
   weekStarting?: string;
@@ -59,7 +109,19 @@ export async function buildSundayQuoteBatchDraft(opts?: {
 }): Promise<QuoteBatchDraft> {
   const weekStarting = opts?.weekStarting ?? nextMondayIso();
   const batchId = `QB-${weekStarting}`;
-  const quotes = (opts?.quotes ?? STARTER_QUOTES).slice(0, 7);
+
+  let source: "provided" | "gemini" | "starter" = "provided";
+  let quotes = opts?.quotes?.slice(0, 7);
+  if (!quotes?.length) {
+    const generated = await generateQuotesWithGemini();
+    if (generated) {
+      quotes = generated;
+      source = "gemini";
+    } else {
+      quotes = STARTER_QUOTES.slice(0, 7);
+      source = "starter";
+    }
+  }
 
   const issues: string[] = [];
   for (let i = 0; i < quotes.length; i++) {
@@ -76,7 +138,7 @@ export async function buildSundayQuoteBatchDraft(opts?: {
     "",
     issues.length
       ? `Validation flags:\n${issues.map((x) => `· ${x}`).join("\n")}`
-      : "Validation: voice rules OK (starter set).",
+      : `Validation: voice rules OK (${source} set).`,
     "",
     "Send path (GHL / Indigo) is not wired. Approving stores the draft only.",
   ].join("\n");
@@ -85,7 +147,7 @@ export async function buildSundayQuoteBatchDraft(opts?: {
     data: {
       actor: "training.quote-batch",
       action: "training.quote_batch.draft",
-      meta: { batchId, weekStarting, count: quotes.length, issues },
+      meta: { batchId, weekStarting, count: quotes.length, issues, source },
     },
   });
 

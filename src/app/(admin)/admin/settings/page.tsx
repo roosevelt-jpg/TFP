@@ -1,25 +1,50 @@
 import { AccountSettingsForm } from "@/components/admin/AccountSettingsForm";
+import { AutopilotSettingsForm } from "@/components/admin/AutopilotSettingsForm";
 import { ThresholdEditor } from "@/components/admin/ThresholdEditor";
+import { AlertTestFirePanel } from "@/components/admin/AlertTestFirePanel";
 import { PausePostingButton } from "@/components/admin/PausePostingButton";
 import { StaffAccessPanel } from "@/components/admin/StaffAccessPanel";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { db } from "@/db";
 import { listOpenInvites, listStaffUsers } from "@/lib/admin/invites";
 import { ensureAlertThresholds } from "@/lib/alerts/ensure-thresholds";
+import {
+  ALERT_RULE_SEVERITIES,
+  DEFAULT_ALERT_THRESHOLDS,
+  listAlertRuleIds,
+} from "@/lib/alerts/rules-config";
+import { approvalModeEligibility } from "@/lib/content/approval-mode";
 import { requireAdminSession } from "@/lib/auth/session";
 import { getCmsMap } from "@/lib/cms/store";
 
 export default async function SettingsPage() {
   const session = await requireAdminSession(["kane"]);
   await ensureAlertThresholds();
-  const [thresholds, cms, users, invites] = await Promise.all([
+  const [thresholds, cms, users, invites, channels] = await Promise.all([
     db.alertThreshold.findMany({
       orderBy: { ruleId: "asc" },
     }),
     getCmsMap("admin"),
     listStaffUsers(),
     listOpenInvites(),
+    db.channel.findMany({ orderBy: [{ platform: "asc" }, { account: "asc" }] }),
   ]);
+
+  const autopilotRows = await Promise.all(
+    channels.map(async (ch) => {
+      const el = await approvalModeEligibility(ch.platform, ch.account);
+      return {
+        id: ch.id,
+        platform: ch.platform,
+        account: ch.account,
+        approvalMode: el.approvalMode,
+        eligible: el.eligible,
+        daysOnEveryPost: el.stats.daysOnEveryPost,
+        firstPassComplianceRate: el.stats.firstPassComplianceRate,
+        rejectedCount: el.stats.rejectedCount,
+      };
+    }),
+  );
 
   return (
     <AdminShell titleKey="settings">
@@ -72,6 +97,27 @@ export default async function SettingsPage() {
           </div>
           <PausePostingButton />
         </div>
+      </div>
+
+      <div className="cmd-panel">
+        <div className="cmd-panel-head">
+          <div>
+            <div
+              className="cmd-panel-title"
+              data-cms="settings.panel.approvalMode"
+            >
+              {cms["settings.panel.approvalMode"] ?? "Content approval mode"}
+            </div>
+            <div
+              className="cmd-panel-sub"
+              data-cms="settings.panel.approvalModeSub"
+            >
+              {cms["settings.panel.approvalModeSub"] ??
+                "Kane-only. Default every_post. Autopilot never turns on by itself."}
+            </div>
+          </div>
+        </div>
+        <AutopilotSettingsForm channels={autopilotRows} />
       </div>
 
       <div className="cmd-two-col">
@@ -148,6 +194,32 @@ export default async function SettingsPage() {
         </div>
       </div>
 
+      <div className="cmd-panel">
+        <div className="cmd-panel-head">
+          <div>
+            <div
+              className="cmd-panel-title"
+              data-cms="settings.panel.alertTestFire"
+            >
+              {cms["settings.panel.alertTestFire"] ?? "Alert test fire"}
+            </div>
+            <div
+              className="cmd-panel-sub"
+              data-cms="settings.panel.alertTestFireSub"
+            >
+              {cms["settings.panel.alertTestFireSub"] ??
+                "Kane-only: create a TEST FIRE alert for each rule id."}
+            </div>
+          </div>
+        </div>
+        <AlertTestFirePanel
+          rules={listAlertRuleIds().map((ruleId) => ({
+            ruleId,
+            severity: ALERT_RULE_SEVERITIES[ruleId] ?? "p2",
+            label: DEFAULT_ALERT_THRESHOLDS[ruleId]?.label,
+          }))}
+        />
+      </div>
       <div className="cmd-footer-note" data-cms="settings.footer">
         {cms["settings.footer"] ??
           "TFP Command · /admin · build specification 15 Sep 2026"}

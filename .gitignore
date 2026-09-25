@@ -62,6 +62,7 @@ docs/*
 !docs/waitlist-deprecation.md
 !docs/editor-knowledge-base.md
 !docs/leah-daily-finance-template.csv
+!docs/command-runbook.md
 
 # prisma generated client (rebuilt via prisma generate / postinstall)
 /src/generated/prisma/

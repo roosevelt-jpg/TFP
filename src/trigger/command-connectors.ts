@@ -15,6 +15,7 @@ import { triageGmailInbox } from "@/lib/connectors/gmail";
 import { pullCalendlyEvents } from "@/lib/connectors/calendly";
 import { rebuildDailySnapshot } from "@/lib/metrics/economics";
 import { pullPublishedPostMetrics } from "@/lib/content/metrics-pull";
+import { pullInstagramPublishingLimits } from "@/lib/content/publishing-limit";
 
 export const pullShopifyTask = schemaTask({
   id: "command.pull-shopify",
@@ -45,7 +46,6 @@ export const pullMetaTask = schemaTask({
   schema: z.object({}),
   run: async () => pullMetaAdInsights(),
 });
-
 export const pullStripeTask = schemaTask({
   id: "command.pull-stripe",
   schema: z.object({}),
@@ -129,4 +129,17 @@ export const postMetricsSchedule = schedules.task({
   id: "command.post-metrics-daily",
   cron: { pattern: "45 4 * * *", environments: ["PRODUCTION"] },
   run: async () => pullPublishedPostMetrics(),
+});
+
+/** Hourly IG content_publishing_limit → Channel.publishingLimit (CT9). */
+export const publishingLimitTask = schemaTask({
+  id: "command.pull-publishing-limit",
+  schema: z.object({}),
+  run: async () => pullInstagramPublishingLimits(),
+});
+
+export const publishingLimitSchedule = schedules.task({
+  id: "command.publishing-limit-hourly",
+  cron: { pattern: "25 * * * *", environments: ["PRODUCTION"] },
+  run: async () => pullInstagramPublishingLimits(),
 });

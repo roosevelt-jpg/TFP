@@ -31,6 +31,7 @@
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
     "db:seed:command": "tsx scripts/seed-command.ts",
+    "verify:money-meta": "tsx scripts/verify-money-meta-parity.ts",
     "redrive": "tsx scripts/redrive-leads.ts",
     "redrive:purchases": "tsx scripts/redrive-purchases.ts",
     "stripe:bootstrap": "tsx scripts/stripe-bootstrap.ts",

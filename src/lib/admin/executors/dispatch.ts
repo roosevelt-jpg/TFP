@@ -3,7 +3,7 @@ import "server-only";
 import { db } from "@/db";
 import { executeGmailSend } from "@/lib/admin/executors/gmail-send";
 import { executeMetaAdSetPause } from "@/lib/admin/executors/meta-pause";
-import { publishPostCard } from "@/lib/content/publish";
+import { scheduleApprovedPostCard } from "@/lib/content/publish";
 import { executeApprovedQuoteBatch } from "@/lib/training/quote-batch";
 import type { Prisma } from "@/generated/prisma/client";
 
@@ -32,10 +32,16 @@ export async function dispatchApprovedAction(
   }
 
   if (typeof objectIds.postCardId === "string") {
-    const published = await publishPostCard(objectIds.postCardId);
+    const scheduled = await scheduleApprovedPostCard(
+      objectIds.postCardId,
+      approvalId,
+    );
+    const slot = scheduled.scheduledAt
+      ? scheduled.scheduledAt.toISOString()
+      : "asap";
     return {
       ok: true,
-      verification: `Content scheduled · ${published.postUrl ?? objectIds.postCardId}`,
+      verification: `Content scheduled for slot · ${slot} · ${objectIds.postCardId}`,
     };
   }
 

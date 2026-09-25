@@ -3,6 +3,7 @@ import "server-only";
 import { db } from "@/db";
 import { formatGbp, relativeFreshness } from "@/lib/admin/format";
 import { requestNow, startOfUtcDay } from "@/lib/admin/request-time";
+import { dubaiWeekStartMonday } from "@/lib/content/social-manager";
 import { getWhatsAppCoachHealth } from "@/lib/training/coach-health";
 
 /** Categories that must not appear for non-Kane (team pay). */
@@ -185,7 +186,7 @@ export async function getCoachingPageData() {
     include: { person: true },
     take: 10,
   });
-  const [setters, tiers, callCash, dmQualified] = await Promise.all([
+  const [setters, tiers, callCash, dmQualified, dmBySetter] = await Promise.all([
     db.call.groupBy({
       by: ["setter", "outcome"],
       where: { scheduledAt: { gte: mtdStart } },
@@ -212,6 +213,18 @@ export async function getCoachingPageData() {
         ],
       },
     }),
+    db.leadThread.groupBy({
+      by: ["setterKey"],
+      where: {
+        highIntent: true,
+        setterKey: { not: null },
+        OR: [
+          { lastInboundAt: { gte: mtdStart } },
+          { createdAt: { gte: mtdStart } },
+        ],
+      },
+      _count: { _all: true },
+    }),
   ]);
 
   const outcomeBySetter = new Map<
@@ -233,34 +246,61 @@ export async function getCoachingPageData() {
     outcomeBySetter.set(key, cur);
   }
 
+  const dmSetterMap = new Map(
+    dmBySetter
+      .filter((r) => r.setterKey)
+      .map((r) => [r.setterKey!.trim(), r._count._all]),
+  );
+  const dmPerSetterMeasurable = dmSetterMap.size > 0;
+
   const hasCallData = setters.length > 0;
-  // LeadThread has no setter attribution — DMs qualified per setter is not measurable.
-  const setterPipeline = hasCallData
-    ? [...outcomeBySetter.entries()]
-        .map(([setter, counts]) => {
-          const cash = callCash.find(
-            (c) => (c.setter?.trim() || "Unassigned") === setter,
-          );
-          return {
-            setter,
-            ...counts,
-            cashCollectedPence: cash?._sum.cashCollectedPence ?? 0,
-            dmsQualifiedMeasurable: false as const,
-            paidMeasurable: false as const,
-          };
-        })
-        .sort((a, b) => b.closed - a.closed || a.setter.localeCompare(b.setter))
-    : [];
+  const setterKeys = new Set([
+    ...outcomeBySetter.keys(),
+    ...dmSetterMap.keys(),
+  ]);
+  // Ensure Unassigned only when we have call data without a better key
+  if (hasCallData && setterKeys.size === 0) setterKeys.add("Unassigned");
+
+  const setterPipeline =
+    setterKeys.size > 0
+      ? [...setterKeys]
+          .map((setter) => {
+            const counts = outcomeBySetter.get(setter) ?? {
+              booked: 0,
+              held: 0,
+              closed: 0,
+              noShow: 0,
+            };
+            const cash = callCash.find(
+              (c) => (c.setter?.trim() || "Unassigned") === setter,
+            );
+            const dms = dmSetterMap.get(setter);
+            return {
+              setter,
+              ...counts,
+              cashCollectedPence: cash?._sum.cashCollectedPence ?? 0,
+              dmsQualified: dms ?? null,
+              dmsQualifiedMeasurable: dms != null,
+              paidMeasurable: false as const,
+            };
+          })
+          .sort(
+            (a, b) => b.closed - a.closed || a.setter.localeCompare(b.setter),
+          )
+      : [];
 
   return {
     cashMtd: payments.reduce((s, p) => s + p.amountPence, 0),
     pending,
     setters,
     setterPipeline,
-    pipelineMeasurable: hasCallData,
+    pipelineMeasurable: hasCallData || dmPerSetterMeasurable,
     dmQualifiedMtd: dmQualified,
-    /** Per-setter DM attribution is not in Call/LeadThread schema. */
-    dmPerSetterMeasurable: false,
+    dmPerSetterMeasurable,
+    dmBySetter: [...dmSetterMap.entries()].map(([setter, count]) => ({
+      setter,
+      count,
+    })),
     tiers,
     targetPence: 8_500_000,
   };
@@ -399,7 +439,11 @@ export async function getMetaPageData() {
     bySet.set(row.adSetId, cur);
   }
   const changeEvents = await db.changeEvent.findMany({
-    where: { objectType: "ad_set" },
+    where: {
+      objectType: "ad_set",
+      // Silent baselines from Meta status pull — not decision overlays.
+      changeType: { not: "observed" },
+    },
     orderBy: { occurredAt: "desc" },
     take: 10,
   });
@@ -537,17 +581,111 @@ export async function getAlertsPageData() {
 }
 
 export async function getContentPageData() {
-  const assets = await db.contentAsset.findMany({
-    include: { postCards: { include: { metrics: true } } },
-    orderBy: { updatedAt: "desc" },
-    take: 100,
-  });
-  const awaiting = await db.postCard.findMany({
-    where: { status: "awaiting_kane" },
-    include: { asset: true },
-    orderBy: { createdAt: "asc" },
-  });
-  return { assets, awaiting };
+  const weekStart = dubaiWeekStartMonday();
+  const since7 = startOfUtcDay(await requestNow());
+  since7.setUTCDate(since7.getUTCDate() - 7);
+
+  const [assets, awaiting, weeklyPlan, recentMetrics] = await Promise.all([
+    db.contentAsset.findMany({
+      include: { postCards: { include: { metrics: true } } },
+      orderBy: { updatedAt: "desc" },
+      take: 100,
+    }),
+    db.postCard.findMany({
+      where: { status: "awaiting_kane" },
+      include: { asset: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    db.weeklyPostingPlan.findUnique({ where: { weekStart } }),
+    db.postMetric.findMany({
+      where: { capturedAt: { gte: since7 } },
+      orderBy: { views: "desc" },
+      take: 40,
+      include: {
+        postCard: {
+          select: {
+            id: true,
+            platform: true,
+            account: true,
+            status: true,
+            asset: { select: { title: true } },
+          },
+        },
+      },
+    }),
+  ]);
+
+  // Best metric row per post card (highest views)
+  const bestByCard = new Map<string, (typeof recentMetrics)[number]>();
+  for (const m of recentMetrics) {
+    const prev = bestByCard.get(m.postCardId);
+    if (!prev || m.views > prev.views) bestByCard.set(m.postCardId, m);
+  }
+  const postMetrics = [...bestByCard.values()].sort(
+    (a, b) => b.views - a.views,
+  );
+
+  type Bucket = "instagram" | "tiktok" | "youtube_shorts" | "youtube" | "other";
+  const bucket = (platform: string): Bucket => {
+    const p = platform.toLowerCase();
+    if (p.includes("instagram") || p === "ig") return "instagram";
+    if (p.includes("tiktok")) return "tiktok";
+    if (p.includes("short")) return "youtube_shorts";
+    if (p.includes("youtube") || p === "yt") return "youtube";
+    return "other";
+  };
+
+  const bestByType = new Map<
+    Bucket,
+    {
+      platform: string;
+      account: string;
+      title: string;
+      checkpoint: string;
+      views: number;
+      likes: number;
+      comments: number;
+      shares: number;
+    }
+  >();
+  for (const m of postMetrics) {
+    const b = bucket(m.postCard.platform);
+    const cur = bestByType.get(b);
+    if (!cur || m.views > cur.views) {
+      bestByType.set(b, {
+        platform: m.postCard.platform,
+        account: m.postCard.account,
+        title: m.postCard.asset.title,
+        checkpoint: m.checkpoint,
+        views: m.views,
+        likes: m.likes,
+        comments: m.comments,
+        shares: m.shares,
+      });
+    }
+  }
+
+  return {
+    assets,
+    awaiting,
+    weeklyPlan,
+    postMetrics: postMetrics.slice(0, 15).map((m) => ({
+      postCardId: m.postCardId,
+      title: m.postCard.asset.title,
+      platform: m.postCard.platform,
+      account: m.postCard.account,
+      checkpoint: m.checkpoint,
+      views: m.views,
+      likes: m.likes,
+      comments: m.comments,
+      shares: m.shares,
+      capturedAt: m.capturedAt,
+    })),
+    bestByType: [...bestByType.entries()].map(([type, row]) => ({
+      type,
+      ...row,
+    })),
+  };
 }
 
 export async function getIntegrationsPageData() {

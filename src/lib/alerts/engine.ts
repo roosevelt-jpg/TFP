@@ -6,8 +6,12 @@ import {
   sendTelegramMessage,
 } from "@/lib/telegram/client";
 import { calculateBreakEvenAmer } from "@/lib/metrics/economics";
-import { resolveThreshold } from "@/lib/alerts/rules-config";
+import {
+  resolveRuleSeverity,
+  resolveThreshold,
+} from "@/lib/alerts/rules-config";
 import { getWhatsAppCoachHealth } from "@/lib/training/coach-health";
+import { dubaiWeekStartMonday } from "@/lib/content/social-manager";
 import type { Prisma } from "@/generated/prisma/client";
 
 function dubaiHour() {
@@ -1238,6 +1242,10 @@ export async function evaluateAlertRules(): Promise<AlertEvalSummary> {
       },
     });
     if (scheduledTomorrow === 0) {
+      const { proposeCt6ReplacementCards } = await import(
+        "@/lib/content/social-manager"
+      );
+      const proposals = await proposeCt6ReplacementCards(1);
       summary.ctExtra += 1;
       await track(
         fireAlert({
@@ -1245,6 +1253,10 @@ export async function evaluateAlertRules(): Promise<AlertEvalSummary> {
           severity: "p2",
           title: `Calendar gap — no scheduled posts for tomorrow`,
           threadKey: `CT6-${dubaiDate}`,
+          payload: {
+            proposals: [...proposals],
+            note: "Social media manager proposes replacement post cards (text only)",
+          },
         }),
       );
     }
@@ -1274,6 +1286,16 @@ export async function evaluateAlertRules(): Promise<AlertEvalSummary> {
         bypassQuiet: true,
       }),
     );
+    try {
+      const { maybeAutoPauseAccount } = await import("@/lib/content/ops");
+      await maybeAutoPauseAccount({
+        platform: card.platform,
+        account: card.account,
+        reason: "CT7",
+      });
+    } catch {
+      // Auto-pause is best-effort; alert already fired.
+    }
   }
 
   const tokenDays = thr("CT8_DAYS");
@@ -1351,6 +1373,16 @@ export async function evaluateAlertRules(): Promise<AlertEvalSummary> {
             bypassQuiet: true,
           }),
         );
+        try {
+          const { maybeAutoPauseAccount } = await import("@/lib/content/ops");
+          await maybeAutoPauseAccount({
+            platform: m.postCard.platform,
+            account: m.postCard.account,
+            reason: "CT10",
+          });
+        } catch {
+          // Auto-pause is best-effort; alert already fired.
+        }
       }
     }
   }
@@ -1358,24 +1390,11 @@ export async function evaluateAlertRules(): Promise<AlertEvalSummary> {
   // CT11 — plan not agreed by Monday 18:00 Dubai
   const dubaiDow = dubaiWeekday(); // 0=Sun … 1=Mon
   if (dubaiDow === 1 && dubaiHour() >= 18) {
-    const weekStart = startOfUtcDay();
-    const planApproval = await db.approvalRequest.count({
-      where: {
-        createdAt: { gte: weekStart },
-        OR: [
-          { action: { contains: "Weekly Posting Plan", mode: "insensitive" } },
-          { action: { contains: "content plan", mode: "insensitive" } },
-        ],
-        status: { in: ["pending", "approved"] },
-      },
+    const weekStart = dubaiWeekStartMonday();
+    const agreedPlan = await db.weeklyPostingPlan.findFirst({
+      where: { weekStart, status: "agreed" },
     });
-    const scheduledThisWeek = await db.postCard.count({
-      where: {
-        status: "scheduled",
-        scheduledAt: { gte: weekStart },
-      },
-    });
-    if (planApproval === 0 && scheduledThisWeek === 0) {
+    if (!agreedPlan) {
       summary.ctExtra += 1;
       await track(
         fireAlert({
@@ -1534,6 +1553,7 @@ export async function evaluateAlertRules(): Promise<AlertEvalSummary> {
           objectType: "ad_set",
           objectId: adSetId,
           occurredAt: { gte: windowStart },
+          changeType: { not: "observed" },
         },
       });
       if (change) continue;
@@ -1744,4 +1764,20 @@ export async function evaluateAlertRules(): Promise<AlertEvalSummary> {
   }
 
   return summary;
+}
+
+/**
+ * Kane test-fire: create an alert for a rule without waiting for the cron path.
+ * Uses a unique threadKey so each test is a fresh row.
+ */
+export async function testFireAlert(ruleId: string) {
+  const severity = resolveRuleSeverity(ruleId);
+  return fireAlert({
+    ruleId,
+    severity,
+    title: `TEST FIRE ${ruleId}`,
+    threadKey: `test-fire:${ruleId}:${Date.now()}`,
+    payload: { test: true, firedAt: new Date().toISOString() },
+    bypassQuiet: true,
+  });
 }
