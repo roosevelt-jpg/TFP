@@ -1,5 +1,6 @@
 "use client";
 
+import { upload } from "@vercel/blob/client";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState, useTransition } from "react";
 
@@ -45,18 +46,25 @@ export function LandingCmsForm({ groups }: Props) {
   }
 
   async function saveImage(key: string, file: File) {
-    const dataUrl = await fileToDataUrl(file);
-    const comma = dataUrl.indexOf(",");
-    const base64 = comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl;
     startTransition(async () => {
-      const res = await uploadCmsMediaAction({
-        key,
-        dataBase64: base64,
-        contentType: file.type || "image/png",
-        fileName: file.name,
-      });
-      if (res?.data?.url) setMsg(`Uploaded ${key}`);
-      router.refresh();
+      try {
+        const blob = await upload(`cms/${Date.now()}-${file.name}`, file, {
+          access: "public",
+          handleUploadUrl: "/api/admin/cms/blob-upload",
+          multipart: true,
+          contentType: file.type || "image/png",
+        });
+        const res = await uploadCmsMediaAction({
+          key,
+          mediaUrl: blob.url,
+          contentType: file.type || "image/png",
+        });
+        if (res?.data?.url) setMsg(`Uploaded ${key}`);
+        else setMsg(res?.serverError ?? `Failed ${key}`);
+        router.refresh();
+      } catch (cause) {
+        setMsg(cause instanceof Error ? cause.message : `Failed ${key}`);
+      }
     });
   }
 
@@ -263,13 +271,4 @@ function FieldEditor({
       </button>
     </form>
   );
-}
-
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("read failed"));
-    reader.onload = () => resolve(String(reader.result ?? ""));
-    reader.readAsDataURL(file);
-  });
 }

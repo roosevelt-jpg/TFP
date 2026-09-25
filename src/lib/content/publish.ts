@@ -6,6 +6,10 @@ import { isAllPostingPaused, autoPauseAfterConsecutivePublishFails } from "@/lib
 import { instagramAdapter } from "@/lib/content/adapters/instagram";
 import { tiktokAdapter } from "@/lib/content/adapters/tiktok";
 import { youtubeAdapter } from "@/lib/content/adapters/youtube";
+import {
+  auditedProviderAdapter,
+  useAuditedPublishProvider,
+} from "@/lib/content/adapters/audited-provider";
 import type {
   AdapterPostCard,
   PublishAdapter,
@@ -22,7 +26,12 @@ type PublishResult = {
   error?: string;
 };
 
-export function getPublishAdapter(platform: string): PublishAdapter | null {
+export async function getPublishAdapter(
+  platform: string,
+): Promise<PublishAdapter | null> {
+  if (await useAuditedPublishProvider()) {
+    return auditedProviderAdapter;
+  }
   const p = platform.toLowerCase();
   if (p.includes("instagram") || p === "ig") return instagramAdapter;
   if (p.includes("tiktok")) return tiktokAdapter;
@@ -152,7 +161,7 @@ export async function publishPostCard(postCardId: string): Promise<PublishResult
     throw new Error("Channel paused");
   }
 
-  const adapter = getPublishAdapter(card.platform);
+  const adapter = await getPublishAdapter(card.platform);
   const adapterCard = toAdapterCard({
     ...card,
     mimeType: card.asset?.mimeType ?? null,

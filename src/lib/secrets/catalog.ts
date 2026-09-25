@@ -343,7 +343,7 @@ export const CREDENTIAL_GROUPS: CredentialGroup[] = [
     id: "Blob",
     name: "Media blob storage",
     description:
-      "Vercel Blob for phone/creator uploads (Content Studio). Add later if unset — uploads skip media until present.",
+      "Vercel Blob for phone/creator uploads (Content Studio). Multipart client upload supports 4K up to 2GB.",
     fields: [
       {
         key: "BLOB_READ_WRITE_TOKEN",
@@ -354,6 +354,25 @@ export const CREDENTIAL_GROUPS: CredentialGroup[] = [
         key: "FORMULA_BLOB_STORE_ID",
         label: "Blob store id (optional)",
         secret: false,
+      },
+    ],
+  },
+  {
+    id: "PublishProvider",
+    name: "Audited publish provider (interim)",
+    description:
+      "Optional third-party social publisher until Meta/TikTok/YouTube audits complete. When URL is set, all platforms route through this adapter.",
+    fields: [
+      {
+        key: "CONTENT_PUBLISH_PROVIDER_URL",
+        label: "Provider API base URL",
+        secret: false,
+        placeholder: "https://publisher.example.com",
+      },
+      {
+        key: "CONTENT_PUBLISH_PROVIDER_TOKEN",
+        label: "Provider API token",
+        secret: true,
       },
     ],
   },

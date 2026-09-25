@@ -3,10 +3,11 @@ import { Reveal } from "@/components/brand/Reveal";
 import { SectionHeader } from "@/components/brand/SectionHeader";
 import { Section } from "@/components/layout/Section";
 import { BorderBeam } from "@/components/ui/border-beam";
-import { SIGNUP_HREF } from "@/lib/launch";
+import { PAYMENTS_LIVE, SIGNUP_HREF } from "@/lib/launch";
 import type { ResolvedOffer } from "@/lib/offers/resolve";
 import {
   CURRENCY,
+  FOUNDER_PRICE_TODAY,
   LAUNCH_PROMOTION_LIMIT,
   PRICE_TODAY,
   PROGRAMME_WEEKS,
@@ -20,8 +21,14 @@ type Props = {
 };
 
 export function FounderOfferSection({ seatsLeft, offer, ctaLabel }: Props) {
-  const founderPrice = formatGbpAmount(offer.amountDueToday);
-  const soldOut = seatsLeft === 0 || !offer.founderActive;
+  const founderPrice = formatGbpAmount(
+    PAYMENTS_LIVE ? offer.amountDueToday : FOUNDER_PRICE_TODAY,
+  );
+  // Pre-launch (waitlist): never claim sold-out — Stripe seats aren't live yet.
+  // Live: sold out when redemptions hit the cap or the founder promo isn't active.
+  const soldOut = PAYMENTS_LIVE
+    ? seatsLeft === 0 || !offer.founderActive
+    : false;
 
   const heading = soldOut
     ? "Founder places are sold out."
@@ -38,10 +45,12 @@ export function FounderOfferSection({ seatsLeft, offer, ctaLabel }: Props) {
       title: "50% off the Complete Stack",
       body: "The Formula Male or Female stack, at half price alongside your programme.",
     },
-  {
-    title: "Applied at checkout",
-    body: "Your founder discount is attached when you start checkout from this page.",
-  },
+    {
+      title: PAYMENTS_LIVE ? "Applied at checkout" : "Locked in at launch",
+      body: PAYMENTS_LIVE
+        ? "Your founder discount is attached when you start checkout from this page."
+        : "Join the waitlist now — founder pricing unlocks when checkout opens.",
+    },
   ];
 
   // when soldOut we still show CTA; perks only when founder active

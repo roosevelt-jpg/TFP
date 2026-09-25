@@ -8,7 +8,8 @@ import { LAUNCH_PROMOTION_CODE } from "@/lib/pricing";
 // Zod env schema into the browser bundle. Compared explicitly: the string
 // "false" must not open the payments gate.
 export const PAYMENTS_LIVE =
-  process.env.PAYMENTS_LIVE === "true";
+  process.env.PAYMENTS_LIVE === "true" ||
+  process.env.NEXT_PUBLIC_PAYMENTS_LIVE === "true";
 
 // Where "start / finish signing up" CTAs point: the waitlist form pre-launch,
 // the paid checkout once payments are live. Keeps label and destination in sync.
@@ -17,8 +18,8 @@ export const PAYMENTS_LIVE =
 // Stripe remains the authority — it caps redemptions at 50 and rejects the code
 // once they are gone, so the link can't over-promise.
 //
-// Note: PAYMENTS_LIVE is not NEXT_PUBLIC_, so client bundles see it as unset and
-// correctly keep pre-launch CTAs on /join until a server render supplies live.
+// Prefer server PAYMENTS_LIVE; NEXT_PUBLIC_PAYMENTS_LIVE lets client CTAs match
+// when the public flag is intentionally set for launch.
 export const SIGNUP_HREF = PAYMENTS_LIVE
   ? `/checkout?promo=${LAUNCH_PROMOTION_CODE}`
   : "/join";

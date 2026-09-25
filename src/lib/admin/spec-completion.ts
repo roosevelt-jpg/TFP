@@ -236,7 +236,7 @@ export function getSpecCompletionChecklist(): SpecCompletionReport {
       phase: 4,
       title: "Person scorecards + Team + My Desk",
       status: "done",
-      note: "compute scorecards; KPIs show not measurable yet when empty",
+      note: "Canonical K*/AK*/PK*/UK*/IK*/F* ids; unmeasurable KPIs labelled not measurable yet",
       paths: [
         "src/lib/scorecards/compute.ts",
         "src/lib/scorecards/weekly-review.ts",
@@ -376,10 +376,12 @@ export function getSpecCompletionChecklist(): SpecCompletionReport {
       phase: 6,
       title: "Content Studio UI + upload + states",
       status: "done",
-      note: "Phone/creator upload, tagging, workflow states, calendar",
+      note: "Phone/creator upload; multipart Blob for 4K; register licence lookup",
       paths: [
         "src/app/(admin)/admin/content/page.tsx",
         "src/actions/admin/content-upload.action.ts",
+        "src/lib/content/creator-licence.ts",
+        "src/app/api/admin/content/blob-upload/route.ts",
         "src/lib/content/states.ts",
       ],
     },
@@ -388,8 +390,11 @@ export function getSpecCompletionChecklist(): SpecCompletionReport {
       phase: 6,
       title: "Blob media storage for uploads",
       status: "waiting_on_keys",
-      note: "Uploads skip media until BLOB_READ_WRITE_TOKEN present",
-      paths: ["src/lib/content/media-storage.ts"],
+      note: "Client multipart up to 2GB when BLOB_READ_WRITE_TOKEN present",
+      paths: [
+        "src/lib/content/media-storage.ts",
+        "src/app/api/admin/content/blob-upload/route.ts",
+      ],
     },
     {
       id: "p6-compliance",
@@ -418,13 +423,14 @@ export function getSpecCompletionChecklist(): SpecCompletionReport {
     {
       id: "p6-adapters",
       phase: 6,
-      title: "IG / TikTok / YouTube publish adapters",
+      title: "IG / TikTok / YouTube publish adapters + audited provider",
       status: "waiting_on_kane_live",
-      note: "Code ready; TT/YT stay private until platform audits; needs live publish demo",
+      note: "Direct adapters ready; CONTENT_PUBLISH_PROVIDER_URL routes all platforms until audits",
       paths: [
         "src/lib/content/adapters/instagram.ts",
         "src/lib/content/adapters/tiktok.ts",
         "src/lib/content/adapters/youtube.ts",
+        "src/lib/content/adapters/audited-provider.ts",
       ],
     },
     {
@@ -457,9 +463,9 @@ export function getSpecCompletionChecklist(): SpecCompletionReport {
     {
       id: "p6-runbook",
       phase: 6,
-      title: "Command runbook + keys catalogue",
+      title: "Command runbook + keys catalogue + cost estimate",
       status: "done",
-      note: "docs/command-runbook.md Keys to paste lists every vault group",
+      note: "docs/command-runbook.md — Keys to paste + monthly cost ballpark",
       paths: ["docs/command-runbook.md", "src/lib/secrets/catalog.ts"],
     },
     {
@@ -475,6 +481,14 @@ export function getSpecCompletionChecklist(): SpecCompletionReport {
       title: "Meta / TikTok / YouTube publish audits",
       status: "waiting_on_kane_live",
       note: "External app review — cannot be code-fixed",
+    },
+    {
+      id: "p5-quote-ghl-send",
+      phase: 5,
+      title: "Quote batch WhatsApp send via GHL",
+      status: "out_of_scope",
+      note: "Queues for Indigo after Kane approve — Roosevelt does not edit GHL send",
+      paths: ["src/lib/training/quote-batch.ts"],
     },
   ];
 

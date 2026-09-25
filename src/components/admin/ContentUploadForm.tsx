@@ -1,25 +1,17 @@
 "use client";
 
+import { upload } from "@vercel/blob/client";
 import { useState, useTransition } from "react";
 
 import { uploadContentAssetAction } from "@/actions/admin/content-upload.action";
 
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("Could not read file"));
-    reader.onload = () => {
-      const result = String(reader.result ?? "");
-      const comma = result.indexOf(",");
-      resolve(comma >= 0 ? result.slice(comma + 1) : result);
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
+/**
+ * Always direct-to-Blob multipart — never base64 through the server action.
+ */
 export function ContentUploadForm() {
   const [pending, startTransition] = useTransition();
   const [note, setNote] = useState<string | null>(null);
+  const [progress, setProgress] = useState<number | null>(null);
 
   return (
     <div className="cmd-panel">
@@ -28,6 +20,11 @@ export function ContentUploadForm() {
       </div>
       <div className="cmd-panel-body">
         {note ? <div className="cmd-section-note">{note}</div> : null}
+        {progress !== null ? (
+          <div className="cmd-list-sub" style={{ marginBottom: 8 }}>
+            Upload {Math.round(progress)}%
+          </div>
+        ) : null}
         <form
           onSubmit={(event) => {
             event.preventDefault();
@@ -39,14 +36,37 @@ export function ContentUploadForm() {
 
             startTransition(async () => {
               try {
-                let mediaBase64: string | undefined;
                 let mediaContentType: string | undefined;
                 let mediaFileName: string | undefined;
+                let mediaUrl: string | undefined;
+                let mediaByteSize: number | undefined;
+
                 if (file) {
-                  mediaBase64 = await fileToBase64(file);
                   mediaContentType = file.type || undefined;
                   mediaFileName = file.name;
+                  mediaByteSize = file.size;
+                  setProgress(0);
+                  const blob = await upload(
+                    `content/${Date.now()}-${file.name}`,
+                    file,
+                    {
+                      access: "public",
+                      handleUploadUrl: "/api/admin/content/blob-upload",
+                      multipart: true,
+                      contentType: file.type || undefined,
+                      onUploadProgress: (p) => setProgress(p.percentage),
+                    },
+                  );
+                  mediaUrl = blob.url;
+                  setProgress(null);
                 }
+
+                const creatorName = String(
+                  formData.get("creatorName") ?? "",
+                ).trim();
+                const creatorEmail = String(
+                  formData.get("creatorEmail") ?? "",
+                ).trim();
 
                 const res = await uploadContentAssetAction({
                   title: String(formData.get("title") ?? ""),
@@ -58,21 +78,31 @@ export function ContentUploadForm() {
                     | "youtube_shorts"
                     | "youtube",
                   account: String(formData.get("account") ?? ""),
+                  creatorName: creatorName || undefined,
+                  creatorEmail: creatorEmail || undefined,
                   creatorLicence: formData.get("licence") === "on",
                   publicConsent: formData.get("consent") === "on",
-                  mediaBase64,
                   mediaContentType,
                   mediaFileName,
+                  mediaUrl,
+                  mediaByteSize,
                 });
                 setNote(
                   res?.data
                     ? `Saved ${res.data.id} · ${res.data.state}${
                         res.data.mediaUrl ? " · media uploaded" : ""
+                      }${
+                        "note" in (res.data ?? {}) && res.data?.note
+                          ? ` · ${res.data.note}`
+                          : ""
                       }`
                     : (res?.serverError ?? "Upload failed"),
                 );
-                if (res?.data) form.reset();
+                if (res?.data && !("note" in res.data && res.data.note)) {
+                  form.reset();
+                }
               } catch (cause) {
+                setProgress(null);
                 setNote(
                   cause instanceof Error ? cause.message : "Upload failed",
                 );
@@ -87,6 +117,18 @@ export function ContentUploadForm() {
           <div className="cmd-field">
             <label htmlFor="uploader">Uploader</label>
             <input id="uploader" name="uploader" required />
+          </div>
+          <div className="cmd-field">
+            <label htmlFor="creatorName">Creator name (affiliate register)</label>
+            <input
+              id="creatorName"
+              name="creatorName"
+              placeholder="Blank for Kane / own footage"
+            />
+          </div>
+          <div className="cmd-field">
+            <label htmlFor="creatorEmail">Creator email (optional)</label>
+            <input id="creatorEmail" name="creatorEmail" type="email" />
           </div>
           <div className="cmd-field">
             <label htmlFor="caption">Caption</label>
@@ -119,19 +161,21 @@ export function ContentUploadForm() {
               accept="image/*,video/*"
             />
             <div className="cmd-list-sub" style={{ marginTop: 4 }}>
-              Image or video · max 32MB · stored on Blob
+              Direct multipart upload to Blob (images + 4K video up to 2GB).
+              Requires BLOB_READ_WRITE_TOKEN.
             </div>
           </div>
           <label className="cmd-list-sub">
             <input name="licence" type="checkbox" defaultChecked /> Creator
-            licence signed
+            licence signed (Kane/own only — ignored when creator is on register)
           </label>
           <label className="cmd-list-sub" style={{ display: "block", marginTop: 8 }}>
             <input name="consent" type="checkbox" /> Public / on-camera consent
             recorded
           </label>
           <div className="cmd-list-sub" style={{ marginTop: 4 }}>
-            Both required before the card can leave TAGGED or be approved.
+            Named creators: register must show a signed agreement. Consent always
+            required before leaving TAGGED.
           </div>
           <div style={{ marginTop: 12 }}>
             <button

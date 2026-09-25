@@ -205,8 +205,28 @@ Prefer Growth → WhatsApp → Templates in admin; these are env fallbacks only.
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob read/write |
 | `FORMULA_BLOB_STORE_ID` | Optional store id |
 
+### PublishProvider — Audited publish provider (interim)
+
+| Key | Notes |
+|---|---|
+| `CONTENT_PUBLISH_PROVIDER_URL` | Base URL Kane chooses until platform audits complete |
+| `CONTENT_PUBLISH_PROVIDER_TOKEN` | Provider API token |
+
 ---
 
 ## Monthly running-cost (estimate)
 
-Before Phase 5 go-live, record approximate monthly spend for: Vercel hosting, Neon Postgres, Gemini/Anthropic API, Telegram (free), Trigger.dev, Blob storage. Update this section when Kane confirms actual invoices.
+Recorded for handover (update when Kane confirms invoices). Figures are **order-of-magnitude GBP/month** at Command scale — not a quote.
+
+| Line | Est. £/mo | Notes |
+|---|---:|---|
+| Vercel (Pro + Blob) | 20–80 | App + Blob storage/bandwidth |
+| Neon Postgres | 0–50 | Scale-to-zero / launch; rises with warehouse size |
+| Trigger.dev | 0–40 | Schedules + connector pulls |
+| Gemini API (CTO + OCR/ASR) | 10–60 | Usage-tied; Anthropic fallback optional |
+| Telegram Bot API | 0 | Free |
+| Meta / TikTok / YouTube API | 0 | Platform APIs; ads spend separate |
+| Audited publish provider (interim) | TBD | Kane chooses; paste URL under Integrations |
+| **Ballpark total (infra)** | **~50–230** | Excludes Meta ad spend, Shopify, GHL, Indigo |
+
+Update this table after the first full calendar month in production.

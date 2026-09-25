@@ -8,12 +8,12 @@ import {
   enrichComplianceFromMedia,
   mergeComplianceEnrichment,
 } from "@/lib/content/compliance-enrich";
+import { resolveCreatorLicence } from "@/lib/content/creator-licence";
 import {
   frameMetaToComplianceBag,
   uploadFrameAsset,
 } from "@/lib/content/frame-client";
 import { loadPostCardFlags } from "@/lib/content/load-flags";
-import { putContentMedia } from "@/lib/content/media-storage";
 import {
   qcResultsToAssetTags,
   runAutomatedQcChecks,
@@ -34,15 +34,24 @@ const schema = z.object({
   caption: z.string().max(2200).optional(),
   platform: z.enum(["instagram", "tiktok", "youtube_shorts", "youtube"]),
   account: z.string().min(1).max(80),
+  /** Creator name for affiliate register licence lookup. Blank = Kane/own. */
+  creatorName: z.string().max(120).optional(),
+  creatorEmail: z
+    .string()
+    .optional()
+    .transform((v) => (v && v.trim() ? v.trim() : undefined))
+    .pipe(z.string().email().optional()),
+  /** Manual checkbox — only used when no creator is named. */
   creatorLicence: z.boolean().default(true),
   publicConsent: z.boolean().default(false),
-  /** Optional media — base64 without data: prefix. */
-  mediaBase64: z.string().min(32).optional(),
   mediaContentType: z
     .string()
     .regex(/^(image|video)\//i, "Image or video only")
     .optional(),
   mediaFileName: z.string().min(1).max(160).optional(),
+  /** From client multipart Blob upload only — no base64 through the action. */
+  mediaUrl: z.string().url().optional(),
+  mediaByteSize: z.number().int().positive().optional(),
 });
 
 function captionSnippet(caption: string | undefined, max = 140) {
@@ -57,37 +66,42 @@ export const uploadContentAssetAction = actionClient
   .action(async ({ parsedInput }) => {
     const session = await requireAdminSession(["kane", "lemoni"]);
 
-    let mediaUrl: string | null = null;
-    let mimeType: string | null = null;
-    let byteSize: number | null = null;
+    const licence = await resolveCreatorLicence({
+      creatorName: parsedInput.creatorName,
+      creatorEmail: parsedInput.creatorEmail || null,
+      checkboxClaim: parsedInput.creatorLicence,
+    });
+
+    let mediaUrl: string | null = parsedInput.mediaUrl ?? null;
+    let mimeType: string | null = parsedInput.mediaContentType ?? null;
+    let byteSize: number | null = parsedInput.mediaByteSize ?? null;
     let hubAssetId: string | null = null;
     let assetTags: Prisma.InputJsonValue | undefined;
 
-    if (parsedInput.mediaBase64) {
-      const contentType =
-        parsedInput.mediaContentType?.toLowerCase() ?? "application/octet-stream";
-      if (!/^(image|video)\//i.test(contentType)) {
-        throw new Error("Media must be an image or video");
-      }
-      const bytes = Buffer.from(parsedInput.mediaBase64, "base64");
-      const stored = await putContentMedia({
-        bytes,
-        fileName: parsedInput.mediaFileName ?? "upload.bin",
-        contentType,
-      });
-      mediaUrl = stored.url;
-      mimeType = contentType;
-      byteSize = stored.byteSize;
-
+    if (mediaUrl) {
       const frame = await uploadFrameAsset({
         name: parsedInput.mediaFileName ?? parsedInput.title,
-        sourceUrl: stored.url,
+        sourceUrl: mediaUrl,
       });
       if (frame) {
         hubAssetId = frame.id;
         assetTags = frameMetaToComplianceBag(frame) as Prisma.InputJsonValue;
       }
     }
+
+    assetTags = {
+      ...(typeof assetTags === "object" &&
+      assetTags &&
+      !Array.isArray(assetTags)
+        ? (assetTags as Record<string, unknown>)
+        : {}),
+      licenceSource: licence.source,
+      licenceNote: licence.note,
+      ...(licence.affiliateId ? { affiliateId: licence.affiliateId } : {}),
+      ...(parsedInput.creatorName
+        ? { creatorName: parsedInput.creatorName }
+        : {}),
+    } as Prisma.InputJsonValue;
 
     const enrichment = await enrichComplianceFromMedia({
       mediaUrl,
@@ -102,13 +116,13 @@ export const uploadContentAssetAction = actionClient
       ) as Prisma.InputJsonValue;
     }
 
-    if (!parsedInput.creatorLicence || !parsedInput.publicConsent) {
+    if (!licence.licensed || !parsedInput.publicConsent) {
       const asset = await db.contentAsset.create({
         data: {
           title: parsedInput.title,
           uploader: parsedInput.uploader,
           state: ContentState.tagged,
-          creatorLicence: parsedInput.creatorLicence,
+          creatorLicence: licence.licensed,
           publicConsent: parsedInput.publicConsent,
           mediaUrl,
           mimeType,
@@ -119,7 +133,7 @@ export const uploadContentAssetAction = actionClient
       });
       const missing = [
         !parsedInput.publicConsent ? "public consent" : null,
-        !parsedInput.creatorLicence ? "creator licence" : null,
+        !licence.licensed ? "creator licence (register)" : null,
       ]
         .filter(Boolean)
         .join(" and ");
@@ -127,7 +141,7 @@ export const uploadContentAssetAction = actionClient
         id: asset.id,
         state: asset.state,
         mediaUrl,
-        note: `${missing} missing — cannot move past TAGGED / cannot approve`,
+        note: `${missing} — ${licence.note} · cannot move past TAGGED / cannot approve`,
       };
     }
 
