@@ -16,7 +16,7 @@ type ChannelRow = {
 };
 
 /**
- * Kane-only stub: per-account approval_mode (default every_post).
+ * Kane-only: per-account approval_mode (default every_post).
  * Autopilot can only be switched on here after eligibility — never automatically.
  */
 export function AutopilotSettingsForm({ channels }: { channels: ChannelRow[] }) {

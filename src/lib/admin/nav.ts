@@ -5,6 +5,8 @@ export type AdminNavItem = {
   icon: string;
   count?: number;
   urgent?: boolean;
+  /** When true, filterNavForRole only includes this item for Kane. */
+  kaneOnly?: boolean;
 };
 
 export type AdminNavGroup = {
@@ -126,6 +128,13 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         href: "/admin/cms",
         icon: "content",
       },
+      {
+        id: "spec-completion",
+        label: "Spec completion",
+        href: "/admin/spec-completion",
+        icon: "settings",
+        kaneOnly: true,
+      },
     ],
   },
 ];
@@ -152,6 +161,7 @@ export const ADMIN_TITLES: Record<string, string> = {
   integrations: "Integrations + API",
   settings: "Settings + access",
   cms: "Landing CMS",
+  "spec-completion": "Spec completion",
   login: "Sign in",
   "setup-2fa": "Set up 2FA",
   "accept-invite": "Accept invite",

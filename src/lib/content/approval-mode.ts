@@ -49,7 +49,7 @@ export async function mayAutopilotSchedule(input: {
   return mode === "autopilot";
 }
 
-/** Kane-only — settings stub stores every_post | autopilot on Channel. */
+/** Kane-only — settings UI stores every_post | autopilot on Channel. */
 export async function setChannelApprovalMode(input: {
   platform: string;
   account: string;
@@ -85,7 +85,7 @@ export async function setChannelApprovalMode(input: {
   return { mode: input.mode };
 }
 
-/** Rough eligibility snapshot for the settings enableForm stub. */
+/** Rough eligibility snapshot for the settings autopilot enable form. */
 export async function approvalModeEligibility(
   platform: string,
   account: string,

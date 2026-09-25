@@ -12,8 +12,8 @@ export type MetricsPullResult = {
   checkpoint: MetricsCheckpoint | string;
   source:
     | "ig_insights"
-    | "tt_stub"
-    | "yt_stub"
+    | "tt_insights"
+    | "yt_insights"
     | "placeholder"
     | "skipped_no_secret";
   views: number;
@@ -113,11 +113,101 @@ async function writeMetric(
   });
 }
 
+async function fetchTikTokInsights(videoId: string, token: string) {
+  const res = await fetch(
+    "https://open.tiktokapis.com/v2/video/query/?fields=id,view_count,like_count,comment_count,share_count",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json; charset=UTF-8",
+      },
+      body: JSON.stringify({ filters: { video_ids: [videoId] } }),
+    },
+  );
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`TT insights ${res.status}: ${body.slice(0, 160)}`);
+  }
+  const json = (await res.json()) as {
+    data?: {
+      videos?: Array<{
+        view_count?: number;
+        like_count?: number;
+        comment_count?: number;
+        share_count?: number;
+      }>;
+    };
+    error?: { message?: string };
+  };
+  if (json.error?.message) {
+    throw new Error(json.error.message);
+  }
+  const v = json.data?.videos?.[0];
+  if (!v) throw new Error("TikTok video not found in insights query");
+  return {
+    views: Number(v.view_count ?? 0),
+    likes: Number(v.like_count ?? 0),
+    comments: Number(v.comment_count ?? 0),
+    shares: Number(v.share_count ?? 0),
+  };
+}
+
+async function fetchYouTubeInsights(videoId: string, token: string) {
+  const res = await fetch(
+    `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${encodeURIComponent(videoId)}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`YT insights ${res.status}: ${body.slice(0, 160)}`);
+  }
+  const json = (await res.json()) as {
+    items?: Array<{
+      statistics?: {
+        viewCount?: string;
+        likeCount?: string;
+        commentCount?: string;
+      };
+    }>;
+  };
+  const stats = json.items?.[0]?.statistics;
+  if (!stats) throw new Error("YouTube video statistics missing");
+  return {
+    views: Number(stats.viewCount ?? 0),
+    likes: Number(stats.likeCount ?? 0),
+    comments: Number(stats.commentCount ?? 0),
+    shares: 0,
+  };
+}
+
+function extractTikTokVideoId(postUrl: string | null | undefined): string | null {
+  if (!postUrl) return null;
+  const m = postUrl.match(/\/video\/([^/?#]+)/);
+  return m?.[1] ?? null;
+}
+
+function extractYouTubeVideoId(postUrl: string | null | undefined): string | null {
+  if (!postUrl) return null;
+  try {
+    const u = new URL(postUrl);
+    const v = u.searchParams.get("v");
+    if (v) return v;
+    if (u.hostname.includes("youtu.be")) {
+      return u.pathname.split("/").filter(Boolean)[0] ?? null;
+    }
+    const shorts = u.pathname.match(/\/shorts\/([^/?#]+)/);
+    if (shorts?.[1]) return shorts[1];
+  } catch {
+    /* ignore */
+  }
+  return postUrl.match(/[?&]v=([^&]+)/)?.[1] ?? null;
+}
+
 /**
  * Stamp a PostMetric row for one published PostCard.
  * Checkpoints: 24h / 72h / 7d from publish age.
- * IG: Graph insights when token + media id available.
- * TT/YT: resolveSecret — skip with labelled placeholder when missing.
+ * IG / TT / YT: live insights when token + media id available; skip labelled when not.
  */
 export async function pullMetricsForPostCard(
   postCardId: string,
@@ -191,11 +281,13 @@ export async function pullMetricsForPostCard(
     };
   }
 
-  // ── TikTok stub ────────────────────────────────────────────────
+  // ── TikTok ─────────────────────────────────────────────────────
   if (isTt) {
     const token =
       (await resolveSecret("TIKTOK_ACCESS_TOKEN")) ??
       process.env.TIKTOK_ACCESS_TOKEN;
+    const videoId = extractTikTokVideoId(card.postUrl);
+
     if (!token) {
       const labelled = `${checkpoint}_tt_secret_missing`;
       await writeMetric(card.id, labelled, {
@@ -215,9 +307,30 @@ export async function pullMetricsForPostCard(
         label: "TikTok metrics skipped — TIKTOK_ACCESS_TOKEN missing",
       };
     }
-    // Live TT insights not wired — labelled stub (not silent zeros-as-truth)
-    const labelled = `${checkpoint}_tt_stub`;
-    await writeMetric(card.id, labelled, {
+
+    if (videoId) {
+      try {
+        const insights = await fetchTikTokInsights(videoId, token);
+        await writeMetric(card.id, checkpoint, insights);
+        return {
+          postCardId: card.id,
+          checkpoint,
+          source: "tt_insights",
+          ...insights,
+        };
+      } catch (error) {
+        logger.warn("TT insights pull failed; writing placeholder", {
+          postCardId: card.id,
+          checkpoint,
+          message: error instanceof Error ? error.message : "failed",
+        });
+      }
+    }
+
+    const label = !videoId
+      ? "placeholder · TikTok video id not in postUrl (audit / private)"
+      : "placeholder · TikTok insights failed";
+    await writeMetric(card.id, checkpoint, {
       views: 0,
       likes: 0,
       comments: 0,
@@ -225,21 +338,23 @@ export async function pullMetricsForPostCard(
     });
     return {
       postCardId: card.id,
-      checkpoint: labelled,
-      source: "tt_stub",
+      checkpoint,
+      source: "placeholder",
       views: 0,
       likes: 0,
       comments: 0,
       shares: 0,
-      label: "TikTok metrics placeholder — API stub",
+      label,
     };
   }
 
-  // ── YouTube / Shorts stub ──────────────────────────────────────
+  // ── YouTube / Shorts ───────────────────────────────────────────
   if (isYt) {
     const token =
       (await resolveSecret("YOUTUBE_ACCESS_TOKEN")) ??
       process.env.YOUTUBE_ACCESS_TOKEN;
+    const videoId = extractYouTubeVideoId(card.postUrl);
+
     if (!token) {
       const labelled = `${checkpoint}_yt_secret_missing`;
       await writeMetric(card.id, labelled, {
@@ -259,8 +374,30 @@ export async function pullMetricsForPostCard(
         label: "YouTube metrics skipped — YOUTUBE_ACCESS_TOKEN missing",
       };
     }
-    const labelled = `${checkpoint}_yt_stub`;
-    await writeMetric(card.id, labelled, {
+
+    if (videoId) {
+      try {
+        const insights = await fetchYouTubeInsights(videoId, token);
+        await writeMetric(card.id, checkpoint, insights);
+        return {
+          postCardId: card.id,
+          checkpoint,
+          source: "yt_insights",
+          ...insights,
+        };
+      } catch (error) {
+        logger.warn("YT insights pull failed; writing placeholder", {
+          postCardId: card.id,
+          checkpoint,
+          message: error instanceof Error ? error.message : "failed",
+        });
+      }
+    }
+
+    const label = !videoId
+      ? "placeholder · YouTube video id not in postUrl"
+      : "placeholder · YouTube insights failed";
+    await writeMetric(card.id, checkpoint, {
       views: 0,
       likes: 0,
       comments: 0,
@@ -268,13 +405,13 @@ export async function pullMetricsForPostCard(
     });
     return {
       postCardId: card.id,
-      checkpoint: labelled,
-      source: "yt_stub",
+      checkpoint,
+      source: "placeholder",
       views: 0,
       likes: 0,
       comments: 0,
       shares: 0,
-      label: "YouTube metrics placeholder — API stub",
+      label,
     };
   }
 
@@ -306,8 +443,9 @@ export async function pullPublishedPostMetrics(opts?: {
 }): Promise<{
   pulled: number;
   ig: number;
+  tt: number;
+  yt: number;
   placeholder: number;
-  stubs: number;
   skipped: number;
 }> {
   const cards = await db.postCard.findMany({
@@ -322,8 +460,9 @@ export async function pullPublishedPostMetrics(opts?: {
 
   let pulled = 0;
   let ig = 0;
+  let tt = 0;
+  let yt = 0;
   let placeholder = 0;
-  let stubs = 0;
   let skipped = 0;
 
   for (const card of cards) {
@@ -331,8 +470,8 @@ export async function pullPublishedPostMetrics(opts?: {
       const result = await pullMetricsForPostCard(card.id);
       pulled += 1;
       if (result.source === "ig_insights") ig += 1;
-      else if (result.source === "tt_stub" || result.source === "yt_stub")
-        stubs += 1;
+      else if (result.source === "tt_insights") tt += 1;
+      else if (result.source === "yt_insights") yt += 1;
       else if (result.source === "skipped_no_secret") skipped += 1;
       else placeholder += 1;
     } catch (error) {
@@ -343,5 +482,5 @@ export async function pullPublishedPostMetrics(opts?: {
     }
   }
 
-  return { pulled, ig, placeholder, stubs, skipped };
+  return { pulled, ig, tt, yt, placeholder, skipped };
 }

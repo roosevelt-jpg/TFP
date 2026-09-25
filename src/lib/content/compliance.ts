@@ -3,7 +3,7 @@ import "server-only";
 const BANNED =
   /\b(testosterone|trt|hormone|anabolic|steroid|clomid|enclomiphene)\b/i;
 
-/** Placeholder timecode until real OCR/ASR timestamps land. */
+/** Fallback when OCR/ASR text has no [M:SS] line marker. */
 export const COMPLIANCE_TIMECODE_PLACEHOLDER = "t=0:00";
 
 /** Match Gemini-style timed OCR lines: `[0:12] burned-in text`. */

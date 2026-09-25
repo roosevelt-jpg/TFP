@@ -163,7 +163,7 @@ export default async function ContentPage() {
               data-cms="content.panel.metricsSub"
             >
               {cms["content.panel.metricsSub"] ??
-                "24h / 72h / 7d checkpoints · IG insights when available · TT/YT labelled stubs"}
+                "24h / 72h / 7d checkpoints · IG / TT / YT insights when tokens + post URLs available"}
             </div>
           </div>
         </div>

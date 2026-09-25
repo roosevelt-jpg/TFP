@@ -135,6 +135,7 @@ export function filterNavForRole(role: StaffRole): AdminNavGroup[] {
 
   for (const group of ADMIN_NAV) {
     const items = group.items.filter((item) => {
+      if (item.kaneOnly) return false;
       if (item.href === "/admin") return false;
       return allowed.some(
         (prefix) =>

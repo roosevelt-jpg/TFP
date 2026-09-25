@@ -1,123 +1,212 @@
-# TFP Command ops runbook
+# Command runbook
 
-Operating guide for `/admin` (TFP Command) and the CTO Telegram loop.
-All times below are **Dubai (GST, UTC+4)** unless noted.
+How to operate TFP Command after handover: add a threshold, add a data source, rotate a key, restore the database. Credentials live in the encrypted vault (`/admin/integrations`) — prefer vault over env when both exist.
 
-## Daily Telegram cadence
+Connectors call `resolveSecret` and **skip gracefully** when a key is missing (no hard crash). Live acceptance still needs Kane to paste keys and run demos.
 
-| Dubai time | What |
+Also see: [go-live-checklist.md](./go-live-checklist.md), [payments-runbook.md](./payments-runbook.md), [editor-knowledge-base.md](./editor-knowledge-base.md). Spec completion UI: `/admin/spec-completion` (Kane-only).
+
+---
+
+## Add or change an alert threshold
+
+1. Sign in as Kane → **Settings + access**.
+2. Edit the threshold row for the rule id (from `src/lib/alerts/rules-config.ts`).
+3. Save — behaviour changes on the next `command.evaluate-alerts` cycle (about 5 minutes). No deploy.
+
+Test-fire from the same Settings panel (Alert test fire) for a one-shot delivery check.
+
+---
+
+## Add a data source
+
+1. Register the connector id in seed / warehouse registry if new (`scripts/seed-command.ts`).
+2. Add vault fields under `src/lib/secrets/catalog.ts` (`CREDENTIAL_GROUPS`).
+3. Implement a pull in `src/lib/connectors/*` using `resolveSecret` + graceful skip.
+4. Schedule or expose a Trigger task in `src/trigger/command-connectors.ts`.
+5. Kane pastes credentials (below) and confirms a successful run on **Integrations**.
+
+---
+
+## Rotate a key
+
+1. Kane unlocks the vault on **Integrations + API** (vault passcode).
+2. Paste the new value for the field; save.
+3. Confirm the next scheduled pull succeeds (Integrations run status / Trigger.dev).
+4. Revoke the old key in the upstream console (Shopify, Meta, Stripe, etc.).
+
+Env-only keys (Vercel / Trigger) must be rotated in both places when not mirrored through the vault.
+
+---
+
+## Restore the database
+
+1. Use Neon / Postgres point-in-time restore (or latest snapshot) for `DATABASE_URL`.
+2. Point `DIRECT_URL` at the restored direct connection for migrations.
+3. Run `pnpm db:deploy` if schema drift is expected.
+4. Re-unlock vault passcode if `VaultSettings` / encrypted secrets were restored from an older backup.
+5. Smoke: Kane login + 2FA, one connector pull, one alert evaluate.
+
+---
+
+## Keys to paste
+
+Paste each group under **Admin → Integrations + API** (Kane vault). Groups match `CREDENTIAL_GROUPS` in `src/lib/secrets/catalog.ts`.
+
+### S1 — Shopify
+
+| Key | Notes |
 |---|---|
-| ~07:30 | Daily to-do list (pinned / Telegram) |
-| 08:00 | Daily report |
-| 08:00–22:00 | P2 digests every 2 hours |
-| 09:00 Mon | Monday pack: content plan, affiliate reminder, weekly person reviews |
-| 18:00 Sun | Motivation quote batch draft (Kane approve — not sent yet) |
-| 20:00 | Tomorrow's calls (CL4) + tomorrow's posts (CT12) |
-| 23:00–07:00 | Quiet hours — only P1 marked **wake** breaks through |
+| `SHOPIFY_SHOP_DOMAIN` | `your-shop.myshopify.com` |
+| `SHOPIFY_ADMIN_TOKEN` | Admin API token |
 
-Cron schedules in Trigger.dev use UTC (Dubai − 4h). Example: Monday 09:00 Dubai ≈ `05:00 UTC`.
+### S2 — Stripe
 
-## How approvals work
-
-1. Something write-capable (CTO, Gmail triage, Meta pause draft, quote batch, content card) runs a **specialist check**.
-2. If the check passes, an `ApprovalRequest` is created (`pending`).
-3. Kane gets a Telegram card and/or a dashboard card with **Approve** / **Reject**.
-4. **Silence is never approval.** One approval authorises one action (or a named batch).
-5. Pending requests expire when `expiresAt` passes (`command.expire-approvals`).
-6. Organic social: Kane approves every finished **post card**; approval schedules it. The Weekly Posting Plan does **not** publish by itself.
-
-Gmail: triage drafts only. Send runs through specialist + Kane approval (`executeGmailSend`).
-
-## Vault unlock (Integrations)
-
-Connector credentials live encrypted in `IntegrationSecret`, managed on `/admin/integrations`.
-
-1. Set the vault passcode once (stored as `INTEGRATIONS_VAULT_PASSCODE`, never shown in the catalog).
-2. Enter the passcode to unlock — cookie `tfp_integrations_vault` lasts ~30 minutes.
-3. While unlocked, Kane can create/update/delete credential fields from the catalog.
-4. Writes without unlock throw: *Integrations vault is locked*.
-5. Runtime code uses `resolveSecret(key)`: **DB secret wins**, then process env.
-
-## Connector list
-
-| ID | Source | Cadence (approx) | Write gated |
-|---|---|---|---|
-| S1 | Shopify Admin GraphQL | 15 min + webhooks | No |
-| S2 | Stripe | Webhooks + hourly | No |
-| S3 | Meta Marketing API | Hourly | No (pause drafts need Kane) |
-| S4 | Klaviyo | Hourly | No |
-| S5 | GoHighLevel | 15 min | No (read CRM threads) |
-| S6 | n8n | 5 min | No |
-| S7 | Gmail | 5 min | Yes (send via approval) |
-| S8 | Calendly | 15 min / webhooks | No |
-| S9 | Instagram DMs (via GHL) | 15 min | No |
-| S10 | Leah finance template | Daily upload | No |
-| S11 | Uptime checks | 5 min | No |
-| S12 | Revolut Business | 6-hourly | No |
-| S13 | Frame.io V4 | Webhooks | No |
-| S14 | Instagram Graph publish | On schedule | Yes |
-| S15 | TikTok Content Posting | On schedule | Yes |
-| S16 | YouTube Data + Analytics | On schedule | Yes |
-
-Health: `/admin/integrations` and `ConnectorRun` rows. Stale source → alert **SY5** (default 6h without `lastSuccessAt`).
-
-Klaviyo conversion metric: set `KLAVIYO_CONVERSION_METRIC_ID`, or leave blank so the pull resolves **Placed Order** from the metrics API.
-
-## Alert thresholds
-
-Defaults live in `src/lib/alerts/rules-config.ts`. Live values are in `AlertThreshold`, editable under `/admin/settings`.
-
-Notable defaults:
-
-| Rule | Meaning | Default |
-|---|---|---|
-| R1 | Store quiet (no Shopify orders) | 6 hours |
-| R2 | Today revenue vs weekday baseline | 50% |
-| L1 | High-intent DM unanswered | 60 minutes |
-| CA1 / CA2 | Cash warning / critical | £10k / £5k |
-| ST1 / ST2 | Days of cover | 30 / 7 |
-| SY5 | Connector stale | 6 hours |
-| M3 | Daily Meta spend ceiling | £1000 (+15% over) |
-| T1_SILENT | Silent training members share | 20% |
-| CT2 | Awaiting Kane before slot | 12 hours |
-| CT10 | Negative comment spike | 3× baseline |
-| CT11 | Weekly Posting Plan not agreed | Mon ≥ 18:00 Dubai |
-
-Engine evaluates every 5 minutes (`command.alerts-schedule`).
-
-## Content publish flow
-
-1. **Upload** on `/admin/content` (Kane or Lemoni). Creator licence claimed → loose affiliate name/code check; if none found, licence is cleared with note *not on affiliate register* and asset stays at **tagged**.
-2. Compliance check on caption. Pass → **ready** / post card **awaiting_kane**. Fail → **changes_requested**.
-3. **Monday** social-media-manager creates a **Weekly Posting Plan** draft (`WeeklyPostingPlan`, status `draft`) and Telegram pack. Kane taps **Agree this week's plan** on Content (or will get CT11 after Mon 18:00 if not agreed).
-4. Kane **Approve & schedule** on each finished post card → schedules into its slot.
-5. Scheduler / publish adapter posts at the slot (`publishPostCard`). Failures mark **failed** and alert; no silent skip.
-6. **Pause all posting** / per-account pause on Settings; kill switch stops scheduled posts within the next cycle.
-7. Metrics pull stamps 24h / 72h / 7d checkpoints back onto post cards.
-
-Sunday quote batch (training WhatsApp) is drafted by Gemini when `GEMINI_API_KEY` is set, otherwise starters — still requires Kane approve before anything is queued.
-
-## Money / Meta parity (Phase 1)
-
-Offline checklist for warehouse vs Analytics / Ads Manager:
-
-```bash
-pnpm verify:money-meta
-# optional: yesterday's Shopify Analytics net in GBP pounds
-SHOPIFY_ANALYTICS_HINT=1234.56 pnpm verify:money-meta
-```
-
-Prints warehouse net, AdDaily spend by ad set, break-even inputs, and PASS/FAIL lines.
-Always exits 0 — FAIL is checklist status, not a process failure. Compare Meta totals to Ads Manager by eye (within £1).
-
-## Where to look when something is wrong
-
-| Question | Surface |
+| Key | Notes |
 |---|---|
-| Did Telegram fire? | Bot chat + Trigger.dev task runs |
-| Is a connector dead? | `/admin/integrations` · `ConnectorRun` |
-| Why no publish? | Post card status, channel `paused`, compliance, missing tokens |
-| Approval stuck? | `/admin` approvals · `ApprovalRequest.status` |
-| Alert spam / miss? | `/admin/settings` thresholds · `Alert` rows |
-| Vault can't save? | Unlock passcode first |
-| Shopify/Meta £1 match? | `pnpm verify:money-meta` |
+| `STRIPE_SECRET_KEY` | Secret / restricted key |
+| `STRIPE_WEBHOOK_SECRET` | Webhook signing secret |
+
+### S3 — Meta Ads
+
+| Key | Notes |
+|---|---|
+| `META_ACCESS_TOKEN` | Marketing API |
+| `META_AD_ACCOUNT_ID` | `act_…` |
+
+### S4 — Klaviyo
+
+| Key | Notes |
+|---|---|
+| `KLAVIYO_API_KEY` | Private API key |
+| `KLAVIYO_CONVERSION_METRIC_ID` | Placed Order metric (optional; auto-resolve if blank) |
+
+### S5 — GoHighLevel
+
+| Key | Notes |
+|---|---|
+| `GHL_INTEGRATION_TOKEN` | Private integration token (TFP-owned, not Indigo’s) |
+| `GHL_LOCATION_ID` | Location / sub-account ID |
+
+### S6 — n8n
+
+| Key | Notes |
+|---|---|
+| `N8N_API_URL` | API base URL |
+| `N8N_API_KEY` | API key (read/health only) |
+
+### S7 — Gmail
+
+| Key | Notes |
+|---|---|
+| `GMAIL_CLIENT_ID` | OAuth client ID |
+| `GMAIL_CLIENT_SECRET` | OAuth client secret |
+| `GMAIL_REFRESH_TOKEN` | Refresh token |
+
+### Mail — Mail drivers
+
+| Key | Notes |
+|---|---|
+| `GMAIL_SMTP_USER` | Gmail SMTP user / address |
+| `GMAIL_SMTP_PASS` | 16-char app password |
+| `GMAIL_SMTP_FROM` | Optional From |
+| `RESEND_API_KEY` | Resend API key |
+| `RESEND_FROM` | Resend From |
+
+### Funnel — Funnel & channels
+
+| Key | Notes |
+|---|---|
+| `COMPLETE_STACK_URL` | Complete Stack storefront URL |
+| `COMPLETE_STACK_MALE_URL` | Male stack URL |
+| `COMPLETE_STACK_FEMALE_URL` | Female stack URL |
+| `TELEGRAM_BOT_USERNAME` | Bot username (no `@`) |
+| `META_WEBHOOK_VERIFY_TOKEN` | Meta webhook verify token |
+| `META_APP_SECRET` | Meta app secret |
+| `META_PAGE_ACCESS_TOKEN` | Meta page access token |
+| `WHATSAPP_ACCESS_TOKEN` | WhatsApp Cloud API token |
+| `WHATSAPP_PHONE_NUMBER_ID` | Phone number ID |
+| `WHATSAPP_BUSINESS_ACCOUNT_ID` | Business account ID |
+
+### WhatsAppTemplates — WhatsApp templates (env fallback)
+
+Prefer Growth → WhatsApp → Templates in admin; these are env fallbacks only.
+
+| Key | Notes |
+|---|---|
+| `WHATSAPP_TEMPLATE_WAITLIST_WELCOME` | |
+| `WHATSAPP_TEMPLATE_CHECKOUT_RECOVERY` | |
+| `WHATSAPP_TEMPLATE_PURCHASE_CONFIRMATION` | |
+| `WHATSAPP_TEMPLATE_PURCHASE_ACTIVATION` | |
+| `WHATSAPP_TEMPLATE_ACTIVATION_REMINDER` | |
+| `WHATSAPP_TEMPLATE_SERVICE_REGISTERED` | |
+| `WHATSAPP_SEND_PURCHASE_ACTIVATION` | `true` / `false` |
+
+### S8 — Calendly
+
+| Key | Notes |
+|---|---|
+| `CALENDLY_TOKEN` | Personal access token |
+
+### S12 — Revolut
+
+| Key | Notes |
+|---|---|
+| `REVOLUT_API_TOKEN` | Business API (read-only cash) |
+
+### S13 — Frame.io
+
+| Key | Notes |
+|---|---|
+| `FRAME_IO_TOKEN` | API token |
+| `FRAME_IO_ACCOUNT_ID` | Optional account UUID |
+| `FRAME_IO_FOLDER_ID` | Intake folder for remote upload |
+
+### S14 — Instagram publish
+
+| Key | Notes |
+|---|---|
+| `META_INSTAGRAM_ACCOUNT_ID` | IG business account ID |
+| `META_PAGE_ACCESS_TOKEN` | Page access token (publish) |
+
+### S15 — TikTok publish
+
+| Key | Notes |
+|---|---|
+| `TIKTOK_ACCESS_TOKEN` | Content Posting API — private until TikTok audits the app |
+
+### S16 — YouTube publish
+
+| Key | Notes |
+|---|---|
+| `YOUTUBE_ACCESS_TOKEN` | Data API — private until Google audits the project |
+
+### Telegram
+
+| Key | Notes |
+|---|---|
+| `TELEGRAM_BOT_TOKEN` | Bot token |
+| `TELEGRAM_KANE_CHAT_ID` | Kane chat ID (bot ignores others) |
+| `TELEGRAM_LEAH_CHAT_ID` | Leah (uploads) |
+| `TELEGRAM_LEMONI_CHAT_ID` | Lemoni |
+
+### CTO — CTO agent
+
+| Key | Notes |
+|---|---|
+| `GEMINI_API_KEY` | Preferred for CTO drafts + compliance OCR/ASR |
+| `GEMINI_MODEL` | Optional (default `gemini-2.5-flash`) |
+| `ANTHROPIC_API_KEY` | Optional fallback if Gemini unset |
+
+### Blob — Media blob storage
+
+| Key | Notes |
+|---|---|
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob read/write |
+| `FORMULA_BLOB_STORE_ID` | Optional store id |
+
+---
+
+## Monthly running-cost (estimate)
+
+Before Phase 5 go-live, record approximate monthly spend for: Vercel hosting, Neon Postgres, Gemini/Anthropic API, Telegram (free), Trigger.dev, Blob storage. Update this section when Kane confirms actual invoices.
