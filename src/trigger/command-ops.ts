@@ -12,6 +12,7 @@ import {
   sendSundayPlanningAgenda,
 } from "@/lib/alerts/cadence";
 import { sendP2Digest } from "@/lib/alerts/p2-digest";
+import { buildFunnelDailyDigest } from "@/lib/funnel/daily-digest";
 import { sendTomorrowCallDigest } from "@/lib/alerts/call-digest";
 import { runSpecialistCheck } from "@/lib/cto/specialist";
 import {
@@ -80,6 +81,18 @@ export const dailyReportTask = schedules.task({
       chatId: kaneChatId,
       text,
     });
+  },
+});
+
+/** Spec §12.2 — funnel digest after the command daily report. */
+export const funnelDigestTask = schedules.task({
+  id: "funnel.daily-digest",
+  cron: { pattern: "30 4 * * *", environments: ["PRODUCTION"] },
+  run: async () => {
+    const kaneChatId = await getKaneTelegramChatId();
+    if (!kaneChatId) return;
+    const text = await buildFunnelDailyDigest();
+    await sendTelegramMessage({ chatId: kaneChatId, text });
   },
 });
 

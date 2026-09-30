@@ -1,5 +1,6 @@
 import type Stripe from "stripe";
 
+import { FUNNEL_VERSION } from "@/lib/funnel/version";
 import { TRIAL_DAYS } from "@/lib/pricing";
 
 type BuildParams = {
@@ -20,6 +21,8 @@ type BuildParams = {
   promotionCodeId?: string;
   /** Human-readable code (e.g. FORMULA50) for recovery messaging. */
   promotionCode?: string;
+  /** First-touch source copied onto the purchase for attribution coverage. */
+  acquisitionSource?: string;
 };
 
 // Random suffix required by the dahlia integration_identifier convention.
@@ -46,16 +49,19 @@ export function buildCheckoutSessionParams({
   stripeCustomerId,
   promotionCodeId,
   promotionCode,
+  acquisitionSource,
 }: BuildParams): Stripe.Checkout.SessionCreateParams {
   const metadata = {
     name,
     whatsapp,
     consentText,
     policyVersion,
+    funnelVersion: FUNNEL_VERSION,
     // Shared with the client-side pixel so Meta can dedup the Purchase.
     eventId,
     ...(waitlistId ? { waitlistId } : {}),
     ...(promotionCode ? { promoCode: promotionCode } : {}),
+    ...(acquisitionSource ? { acquisitionSource } : {}),
   };
 
   return {

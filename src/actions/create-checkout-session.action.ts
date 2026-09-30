@@ -27,12 +27,20 @@ import { cleanText } from "@/lib/sanitize/text";
 import { verifyTurnstile } from "@/lib/turnstile";
 import { checkoutSchema } from "@/lib/validation/checkout/schema";
 import { env } from "@/env";
+import { funnelFlags } from "@/lib/funnel/flags";
 import { recordConsent, recordFunnelEvent } from "@/lib/funnel/records";
 
 export const createCheckoutSession = actionClient
   .metadata({ actionName: "createCheckoutSession" })
   .inputSchema(checkoutSchema)
   .action(async ({ parsedInput }) => {
+    if (!funnelFlags.serverOffer() || !funnelFlags.funnelV2()) {
+      throw new AppError(
+        ERROR_CODES.UNKNOWN,
+        "Checkout is paused. The published price is unchanged.",
+      );
+    }
+
     const ip = await clientIp();
 
     if (!(await verifyTurnstile(parsedInput.turnstileToken, ip, "checkout"))) {
@@ -120,6 +128,7 @@ export const createCheckoutSession = actionClient
           promo?.state === "valid" && parsedInput.promoCode
             ? parsedInput.promoCode.trim().toUpperCase()
             : undefined,
+        acquisitionSource: "direct",
       }),
       idempotencyKey: checkoutIdempotencyKey(stripeCustomerId),
     });

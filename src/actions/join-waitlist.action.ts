@@ -5,6 +5,7 @@ import { returnValidationErrors } from "next-safe-action";
 
 import { trackServerEvent } from "@/lib/analytics-server";
 import { enqueueWaitlistNurture } from "@/lib/funnel/enqueue";
+import { funnelFlags } from "@/lib/funnel/flags";
 import { recordConsent, recordFunnelEvent } from "@/lib/funnel/records";
 import { logger } from "@/lib/logger";
 import { actionClient } from "@/lib/safe-action";
@@ -24,6 +25,12 @@ export const joinWaitlist = actionClient
   .metadata({ actionName: "joinWaitlist" })
   .inputSchema(waitlistSchema)
   .action(async ({ parsedInput }) => {
+    if (!funnelFlags.leadCapture()) {
+      returnValidationErrors(waitlistSchema, {
+        email: { _errors: ["Lead capture is paused."] },
+      });
+    }
+
     const ip = await clientIp();
 
     if (!(await verifyTurnstile(parsedInput.turnstileToken, ip, "join"))) {

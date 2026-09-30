@@ -188,6 +188,9 @@ async function writeFulfillment(
       purchaseRef: ref,
       amountTotal: details.amountTotal,
       currency: details.currency,
+      funnelVersion: details.funnelVersion,
+      acquisitionSource: details.acquisitionSource,
+      source: details.acquisitionSource,
     },
     eventId: `payment:${details.sessionId}`,
   });

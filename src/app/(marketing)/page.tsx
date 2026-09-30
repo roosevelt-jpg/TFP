@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { TrackCta } from "@/components/analytics/TrackCta";
+import { TrackLanding } from "@/components/analytics/TrackLanding";
 import { CtaButton } from "@/components/brand/CtaButton";
 import { StickyCtaBar } from "@/components/brand/StickyCtaBar";
 import { Testimonial } from "@/components/brand/Testimonial";
@@ -102,6 +103,7 @@ async function HomeContent() {
 
   return (
     <>
+      <TrackLanding />
       <SkipLink />
       {content.announcement.enabled ? (
         <AnnouncementBar href={SIGNUP_HREF}>

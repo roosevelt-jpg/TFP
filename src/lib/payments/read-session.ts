@@ -15,6 +15,8 @@ export type SessionDetails = {
   // Minted at checkout, shared with the browser pixel so a server-side twin
   // added later deduplicates against it.
   eventId: string | null;
+  funnelVersion: string | null;
+  acquisitionSource: string | null;
   amountTotal: number;
   discountTotal: number;
   currency: string;
@@ -56,6 +58,8 @@ export function readSessionDetails(
     policyVersion: metadata.policyVersion ?? "",
     waitlistId: metadata.waitlistId ?? null,
     eventId: metadata.eventId ?? null,
+    funnelVersion: metadata.funnelVersion ?? null,
+    acquisitionSource: metadata.acquisitionSource ?? null,
     amountTotal: session.amount_total ?? 0,
     discountTotal: session.total_details?.amount_discount ?? 0,
     currency: session.currency ?? "gbp",

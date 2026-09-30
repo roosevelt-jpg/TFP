@@ -136,19 +136,19 @@ async function sendResend(input: SendMailInput): Promise<SendMailResult> {
   return { id: result.data?.id ?? "resend", driver: "resend" };
 }
 
-/** True when at least one driver can send (preference differs by channel). */
+/** Admin invites can use Gmail. Automation (client) mail is Resend only. */
 export async function isMailChannelReady(
-  _channel: MailChannel,
+  channel: MailChannel,
 ): Promise<boolean> {
+  if (channel === "client") return resendConfigured();
   const smtpReady = Boolean(await getGmailSmtpConfig());
   const resendReady = await resendConfigured();
   return smtpReady || resendReady;
 }
 
 /**
- * Multi-driver mail:
- * - admin → Gmail SMTP preferred, Resend fallback
- * - client → Resend preferred, Gmail SMTP fallback
+ * Admin invites: Gmail SMTP, then Resend.
+ * Automation emails (channel client): Resend API only. No SMTP fallback.
  */
 export async function sendMail(input: SendMailInput): Promise<SendMailResult> {
   if (input.channel === "client" && input.eligibility) {
@@ -180,13 +180,23 @@ export async function sendMail(input: SendMailInput): Promise<SendMailResult> {
   }
 
   const html = await toHtml(input);
-  const smtpReady = Boolean(await getGmailSmtpConfig());
   const resendReady = await resendConfigured();
 
-  const preferSmtp = input.channel === "admin";
-  const order = preferSmtp
-    ? (["gmail_smtp", "resend"] as const)
-    : (["resend", "gmail_smtp"] as const);
+  if (input.channel === "client") {
+    if (!resendReady) {
+      throw new MailSendError(
+        "Automation email requires RESEND_API_KEY. Gmail SMTP is not used for these sends.",
+        { permanent: true, driver: "none" },
+      );
+    }
+    return sendResend({
+      ...input,
+      html: input.react ? undefined : html,
+    });
+  }
+
+  const smtpReady = Boolean(await getGmailSmtpConfig());
+  const order = ["gmail_smtp", "resend"] as const;
 
   const errors: string[] = [];
 
@@ -227,7 +237,7 @@ export async function sendMail(input: SendMailInput): Promise<SendMailResult> {
   }
 
   throw new MailSendError(
-    `No mail driver available for channel=${input.channel}. ${errors.join("; ") || "Configure GMAIL_SMTP_* and/or RESEND_API_KEY."}`,
+    `No mail driver available for channel=${input.channel}. ${errors.join("; ") || "Configure GMAIL_SMTP_* for admin invites, or RESEND_API_KEY for automation email."}`,
     { permanent: !smtpReady && !resendReady },
   );
 }

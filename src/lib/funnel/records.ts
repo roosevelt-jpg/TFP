@@ -18,7 +18,9 @@ export type FunnelEventName =
   | "renewal_approaching"
   | "subscription_cancelled"
   | "nurture_sent"
-  | "stack_upsell_clicked";
+  | "stack_upsell_clicked"
+  | "email_delivery"
+  | "instagram_inbound";
 
 export async function recordFunnelEvent(input: {
   eventName: FunnelEventName | string;

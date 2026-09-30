@@ -128,6 +128,12 @@ export const CREDENTIAL_GROUPS: CredentialGroup[] = [
       },
       { key: "RESEND_API_KEY", label: "Resend API key", secret: true },
       {
+        key: "EMAIL_WEBHOOK_SECRET",
+        label: "Resend webhook signing secret",
+        secret: true,
+        placeholder: "whsec_…",
+      },
+      {
         key: "RESEND_FROM",
         label: "Resend From",
         secret: false,

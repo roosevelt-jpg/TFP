@@ -32,10 +32,14 @@ export const env = createEnv({
     GHL_SYNC_ENABLED: z.stringbool().default(true),
     // Abandoned checkout recovery (30m / 6h / 24h / 48h).
     CHECKOUT_RECOVERY_ENABLED: z.stringbool().default(true),
-    // Funnel feature flags (spec §16).
+    // Funnel feature flags (spec §16.2). Set any to false to disable that family.
     FUNNEL_V2_ENABLED: z.stringbool().default(true),
+    SERVER_OFFER_RESOLUTION_ENABLED: z.stringbool().default(true),
+    LEAD_CAPTURE_ENABLED: z.stringbool().default(true),
     LEAD_NURTURE_ENABLED: z.stringbool().default(true),
     WHATSAPP_WORKFLOWS_ENABLED: z.stringbool().default(true),
+    AI_COACHING_RESPONSES_ENABLED: z.stringbool().default(false),
+    EMAIL_WEBHOOK_SECRET: z.string().min(1).optional(),
     // First-party purchase WhatsApp (confirmation + activation templates).
     // Default on — disable only if GHL must be the sole purchase WA sender.
     WHATSAPP_SEND_PURCHASE_ACTIVATION: z.stringbool().default(true),
