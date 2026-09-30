@@ -58,8 +58,8 @@ export default async function WorkflowPage() {
     <AdminShell titleKey="workflow">
       <div className="cmd-page-lead">
         <div className="cmd-page-lead-line">
-          The CTO reads each department, drafts, and stops. A specialist blocks
-          anything that moves money or edits automations. You approve the rest.
+          Click a desk or an action. The lit connectors are the path the CTO
+          actually takes — drafts stop at you, and the red line never connects.
         </div>
       </div>
       <CtoWorkflow activity={activity} pending={waiting} />

@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import {
   ACTION_LANES,
   DEPARTMENTS,
   HARD_WALLS,
-  WORKFLOW_STEPS,
   type DepartmentId,
   type WorkflowLaneId,
 } from "@/lib/cto/workflow";
@@ -23,82 +22,192 @@ type Props = {
   pending: CtoActivity[];
 };
 
+type NodeTone = "source" | "cto" | "action" | "gate" | "kane" | "stop" | "block";
+
+type FlowNode = {
+  id: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  kicker: string;
+  title: string;
+  sub: string;
+  tone: NodeTone;
+};
+
+type FlowEdge = {
+  id: string;
+  from: string;
+  to: string;
+  lane?: WorkflowLaneId | "in" | "block";
+  desks?: DepartmentId[];
+  blocked?: boolean;
+};
+
+const W = 1080;
+const H = 520;
+
+const NODES: FlowNode[] = [
+  { id: "warehouse", x: 16, y: 16, w: 188, h: 68, kicker: "Source", title: "Warehouse", sub: "Alerts, cash, stock", tone: "source" },
+  { id: "leah", x: 16, y: 104, w: 188, h: 68, kicker: "Desk", title: "Leah", sub: "Finance & service", tone: "source" },
+  { id: "lemoni", x: 16, y: 192, w: 188, h: 68, kicker: "Desk", title: "Lemoni", sub: "Affiliates & content", tone: "source" },
+  { id: "indigo", x: 16, y: 280, w: 188, h: 68, kicker: "Desk", title: "Indigo", sub: "GHL / n8n status", tone: "source" },
+  { id: "asim", x: 16, y: 368, w: 188, h: 68, kicker: "Desk", title: "Asim", sub: "Pick & pack", tone: "source" },
+  { id: "cto", x: 292, y: 176, w: 200, h: 96, kicker: "Operator", title: "CTO agent", sub: "Reads and drafts only", tone: "cto" },
+  { id: "read", x: 580, y: 16, w: 188, h: 68, kicker: "Action", title: "Read numbers", sub: "No write", tone: "action" },
+  { id: "meta", x: 580, y: 122, w: 188, h: 68, kicker: "Action", title: "Draft Meta pause", sub: "One ad set", tone: "action" },
+  { id: "email", x: 580, y: 228, w: 188, h: 68, kicker: "Action", title: "Draft Gmail reply", sub: "Does not send", tone: "action" },
+  { id: "desk", x: 580, y: 334, w: 188, h: 68, kicker: "Action", title: "Flag a team gap", sub: "Todo on that desk", tone: "action" },
+  { id: "brief", x: 860, y: 16, w: 200, h: 68, kicker: "End", title: "Brief", sub: "Kane sees the numbers", tone: "stop" },
+  { id: "specialist", x: 860, y: 150, w: 200, h: 72, kicker: "Gate", title: "Specialist", sub: "Rules check", tone: "gate" },
+  { id: "kane", x: 860, y: 252, w: 200, h: 72, kicker: "Approve", title: "Kane", sub: "Nothing sends until this", tone: "kane" },
+  { id: "todo", x: 860, y: 334, w: 200, h: 68, kicker: "End", title: "Desk todo", sub: "Internal only", tone: "stop" },
+  { id: "blocked", x: 292, y: 420, w: 200, h: 72, kicker: "No connection", title: "Hard stop", sub: "Money, subs, n8n edits", tone: "block" },
+];
+
+const EDGES: FlowEdge[] = [
+  { id: "wh-cto", from: "warehouse", to: "cto", lane: "in" },
+  { id: "leah-cto", from: "leah", to: "cto", lane: "in", desks: ["leah"] },
+  { id: "lemoni-cto", from: "lemoni", to: "cto", lane: "in", desks: ["lemoni"] },
+  { id: "indigo-cto", from: "indigo", to: "cto", lane: "in", desks: ["indigo"] },
+  { id: "asim-cto", from: "asim", to: "cto", lane: "in", desks: ["asim"] },
+  { id: "cto-read", from: "cto", to: "read", lane: "read" },
+  { id: "cto-meta", from: "cto", to: "meta", lane: "meta" },
+  { id: "cto-email", from: "cto", to: "email", lane: "email", desks: ["leah"] },
+  { id: "cto-desk", from: "cto", to: "desk", lane: "desk" },
+  { id: "read-brief", from: "read", to: "brief", lane: "read" },
+  { id: "meta-spec", from: "meta", to: "specialist", lane: "meta" },
+  { id: "email-spec", from: "email", to: "specialist", lane: "email", desks: ["leah"] },
+  { id: "spec-kane", from: "specialist", to: "kane", lane: "meta" },
+  { id: "spec-kane-email", from: "specialist", to: "kane", lane: "email", desks: ["leah"] },
+  { id: "desk-todo", from: "desk", to: "todo", lane: "desk" },
+  { id: "cto-block", from: "cto", to: "blocked", lane: "block", blocked: true },
+];
+
+function nodeById(id: string) {
+  const node = NODES.find((item) => item.id === id);
+  if (!node) throw new Error(`Missing workflow node ${id}`);
+  return node;
+}
+
+function curve(edge: FlowEdge) {
+  const from = nodeById(edge.from);
+  const to = nodeById(edge.to);
+  const vertical = edge.blocked;
+  const x1 = vertical ? from.x + from.w / 2 : from.x + from.w;
+  const y1 = vertical ? from.y + from.h : from.y + from.h / 2;
+  const x2 = vertical ? to.x + to.w / 2 : to.x;
+  const y2 = vertical ? to.y : to.y + to.h / 2;
+  const bend = Math.max(36, Math.abs(x2 - x1) * 0.45);
+  if (vertical) {
+    return `M ${x1} ${y1} C ${x1} ${y1 + 28}, ${x2} ${y2 - 28}, ${x2} ${y2}`;
+  }
+  return `M ${x1} ${y1} C ${x1 + bend} ${y1}, ${x2 - bend} ${y2}, ${x2} ${y2}`;
+}
+
 export function CtoWorkflow({ activity, pending }: Props) {
   const [desk, setDesk] = useState<DepartmentId | "all">("all");
-  const [lane, setLane] = useState<WorkflowLaneId>("meta");
+  const [lane, setLane] = useState<WorkflowLaneId | "all">("all");
 
-  const selected = DEPARTMENTS.find((d) => d.id === desk);
-  const activeLanes =
-    selected?.lanes ?? ACTION_LANES.map((item) => item.id);
-  const shownLane = activeLanes.includes(lane) ? lane : activeLanes[0]!;
-  const laneMeta = ACTION_LANES.find((item) => item.id === shownLane)!;
+  const selected = DEPARTMENTS.find((item) => item.id === desk);
+  const laneMeta = ACTION_LANES.find((item) => item.id === lane);
+
+  const hot = useMemo(() => {
+    const lanesForDesk =
+      selected?.lanes ?? ACTION_LANES.map((item) => item.id);
+    return new Set(
+      EDGES.filter((edge) => {
+        if (edge.blocked || edge.lane === "block") return false;
+        if (edge.lane === "in") {
+          if (edge.from === "warehouse") return true;
+          if (desk !== "all") return edge.from === desk;
+          if (lane === "email") return edge.from === "leah";
+          if (lane === "meta") return false;
+          return true;
+        }
+        if (desk !== "all" && edge.lane && !lanesForDesk.includes(edge.lane as WorkflowLaneId)) {
+          return false;
+        }
+        if (lane !== "all" && edge.lane !== lane) return false;
+        return true;
+      }).map((edge) => edge.id),
+    );
+  }, [desk, lane, selected]);
+
+  function pickDesk(id: DepartmentId) {
+    setDesk((current) => (current === id ? "all" : id));
+    setLane("all");
+  }
+
+  function pickLane(id: WorkflowLaneId) {
+    if (selected && !selected.lanes.includes(id)) return;
+    setLane((current) => (current === id ? "all" : id));
+  }
 
   return (
     <div className="wf">
-      <div className="wf-board" aria-label="How the CTO works">
-        <div className="wf-col">
-          <div className="wf-kicker">Watches</div>
-          {DEPARTMENTS.map((dept) => {
-            const on = desk === "all" || desk === dept.id;
-            return (
-              <button
-                key={dept.id}
-                type="button"
-                className={`wf-card${on ? " is-on" : ""}${desk === dept.id ? " is-picked" : ""}`}
-                onClick={() =>
-                  setDesk((current) => (current === dept.id ? "all" : dept.id))
-                }
-              >
-                <span className="wf-avatar">{dept.name[0]}</span>
-                <span>
-                  <span className="wf-name">{dept.name}</span>
-                  <span className="wf-role">{dept.title}</span>
-                </span>
-              </button>
+      <div className="wf-canvas-scroll">
+        <div className="wf-canvas" style={{ width: W, height: H }} aria-label="CTO workflow">
+          <svg className="wf-wires" viewBox={`0 0 ${W} ${H}`} width={W} height={H}>
+            {EDGES.map((edge) => {
+              const on = hot.has(edge.id);
+              return (
+                <path
+                  key={edge.id}
+                  d={curve(edge)}
+                  className={`wf-edge${on ? " is-hot" : ""}${edge.blocked ? " is-blocked" : ""}`}
+                />
+              );
+            })}
+          </svg>
+          {NODES.map((node) => {
+            const isDesk = DEPARTMENTS.some((item) => item.id === node.id);
+            const isLane = ACTION_LANES.some((item) => item.id === node.id);
+            const picked =
+              (isDesk && desk === node.id) || (isLane && lane === node.id);
+            const dim =
+              (desk !== "all" && isDesk && desk !== node.id) ||
+              (lane !== "all" && isLane && lane !== node.id) ||
+              (selected &&
+                isLane &&
+                !selected.lanes.includes(node.id as WorkflowLaneId));
+            const className = `wf-node tone-${node.tone}${picked ? " is-picked" : ""}${dim ? " is-dim" : ""}`;
+            const style = { left: node.x, top: node.y, width: node.w, height: node.h };
+            const hasIn = EDGES.some((edge) => edge.to === node.id && !edge.blocked);
+            const hasOut = EDGES.some((edge) => edge.from === node.id && !edge.blocked);
+            const ports = (
+              <>
+                {node.tone === "block" ? <span className="wf-port up" /> : null}
+                {hasIn ? <span className="wf-port in" /> : null}
+                {hasOut ? <span className="wf-port out" /> : null}
+                {node.id === "cto" ? <span className="wf-port down" /> : null}
+                <span className="wf-kicker">{node.kicker}</span>
+                <span className="wf-name">{node.title}</span>
+                <span className="wf-role">{node.sub}</span>
+              </>
             );
-          })}
-        </div>
-
-        <div className="wf-rail" aria-hidden="true" />
-
-        <div className="wf-col wf-col-center">
-          <div className="wf-kicker">Operators</div>
-          {WORKFLOW_STEPS.map((step, index) => (
-            <div key={step.id} className={`wf-step wf-step-${step.id}`}>
-              <div className="wf-step-index">{index + 1}</div>
-              <div>
-                <div className="wf-name">{step.label}</div>
-                <div className="wf-role">{step.detail}</div>
-              </div>
-              {index < WORKFLOW_STEPS.length - 1 ? (
-                <span className="wf-arrow" aria-hidden="true" />
-              ) : null}
-            </div>
-          ))}
-        </div>
-
-        <div className="wf-rail" aria-hidden="true" />
-
-        <div className="wf-col">
-          <div className="wf-kicker">In action</div>
-          {ACTION_LANES.map((item) => {
-            const available = activeLanes.includes(item.id);
+            if (isDesk || isLane) {
+              return (
+                <button
+                  key={node.id}
+                  type="button"
+                  className={className}
+                  style={style}
+                  onClick={() =>
+                    isDesk
+                      ? pickDesk(node.id as DepartmentId)
+                      : pickLane(node.id as WorkflowLaneId)
+                  }
+                >
+                  {ports}
+                </button>
+              );
+            }
             return (
-              <button
-                key={item.id}
-                type="button"
-                className={`wf-card${shownLane === item.id ? " is-picked" : ""}${available ? "" : " is-off"}`}
-                disabled={!available}
-                onClick={() => setLane(item.id)}
-              >
-                <span>
-                  <span className="wf-name">{item.label}</span>
-                  <span className="wf-role">{item.reaches}</span>
-                </span>
-                <span className={`wf-pill${item.needsKane ? " needs" : ""}`}>
-                  {item.needsKane ? "Kane" : "Draft"}
-                </span>
-              </button>
+              <div key={node.id} className={className} style={style}>
+                {ports}
+              </div>
             );
           })}
         </div>
@@ -107,15 +216,16 @@ export function CtoWorkflow({ activity, pending }: Props) {
       <div className="wf-detail">
         <div>
           <div className="wf-kicker">
-            {selected ? selected.name : "Every desk"} · {laneMeta.label}
+            {selected ? selected.name : "All desks"}
+            {laneMeta ? ` · ${laneMeta.label}` : ""}
           </div>
           <p className="wf-lead">
             {selected
               ? selected.ctoDoes
-              : "The CTO reads every desk, then only drafts. Writes stop at Kane."}
+              : "Each desk connects into the CTO. Drafts that leave the building go through the specialist, then stop at Kane."}
           </p>
           <p className="wf-never">
-            {selected ? selected.never : HARD_WALLS.join(" · ")}
+            {selected ? selected.never : "Click a desk or an action to light that path."}
           </p>
           {selected ? (
             <ul className="wf-watch">
@@ -125,32 +235,11 @@ export function CtoWorkflow({ activity, pending }: Props) {
             </ul>
           ) : null}
         </div>
-        <ol className="wf-path">
-          <li>CTO reads the warehouse and this desk.</li>
-          <li>
-            {shownLane === "read"
-              ? "It returns the numbers. Nothing is written."
-              : shownLane === "desk"
-                ? "It drops a todo on the person’s desk."
-                : `It drafts “${laneMeta.label.replace(/^Draft a /, "")}”.`}
-          </li>
-          <li>
-            {laneMeta.needsKane
-              ? "Specialist blocks money, subscriptions, and workflow edits."
-              : "No specialist pass — this is a read or an internal todo."}
-          </li>
-          <li>
-            {laneMeta.needsKane
-              ? "Kane approves on Alerts, or it never leaves Command."
-              : "Kane still sees it in the audit trail."}
-          </li>
-        </ol>
-      </div>
-
-      <div className="wf-walls">
-        {HARD_WALLS.map((wall) => (
-          <span key={wall}>{wall}</span>
-        ))}
+        <div className="wf-walls">
+          {HARD_WALLS.map((wall) => (
+            <span key={wall}>{wall}</span>
+          ))}
+        </div>
       </div>
 
       <div className="wf-live">
@@ -173,9 +262,7 @@ export function CtoWorkflow({ activity, pending }: Props) {
         <section>
           <div className="wf-kicker">Recent CTO runs</div>
           {activity.length === 0 ? (
-            <p className="wf-empty">
-              No runs yet. The agent writes here after the first prompt.
-            </p>
+            <p className="wf-empty">No runs yet. The agent writes here after the first prompt.</p>
           ) : (
             <ul>
               {activity.map((item) => (

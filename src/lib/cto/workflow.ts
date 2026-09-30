@@ -7,12 +7,6 @@ export type WorkflowLaneId = "read" | "meta" | "email" | "desk";
 
 export type DepartmentId = "leah" | "lemoni" | "indigo" | "asim";
 
-export type WorkflowStep = {
-  id: string;
-  label: string;
-  detail: string;
-};
-
 export type DepartmentDesk = {
   id: DepartmentId;
   name: string;
@@ -22,29 +16,6 @@ export type DepartmentDesk = {
   ctoDoes: string;
   never: string;
 };
-
-export const WORKFLOW_STEPS: WorkflowStep[] = [
-  {
-    id: "sources",
-    label: "Desks & warehouse",
-    detail: "Alerts, yesterday’s numbers, stock, team todos and reports.",
-  },
-  {
-    id: "cto",
-    label: "CTO agent",
-    detail: "Reads, drafts, and flags gaps. It does not send, publish, or pay.",
-  },
-  {
-    id: "specialist",
-    label: "Specialist check",
-    detail: "Blocks money, subscriptions, and Indigo’s automations before Kane sees them.",
-  },
-  {
-    id: "kane",
-    label: "Kane",
-    detail: "Approve or reject. Nothing external happens until this tap.",
-  },
-];
 
 export const DEPARTMENTS: DepartmentDesk[] = [
   {

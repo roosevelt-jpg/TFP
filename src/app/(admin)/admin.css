@@ -1908,16 +1908,123 @@
   flex-direction: column;
   gap: 16px;
 }
-.tfp-command .wf-board {
-  display: grid;
-  grid-template-columns: minmax(180px, 1fr) 28px minmax(240px, 1.15fr) 28px minmax(200px, 1fr);
-  gap: 8px;
-  align-items: stretch;
+.tfp-command .wf-canvas-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--cmd-border);
+  border-radius: var(--cmd-radius);
+  background:
+    radial-gradient(circle, var(--cmd-border) 1px, transparent 1px) 0 0 / 18px 18px,
+    var(--cmd-bg-raised);
 }
-.tfp-command .wf-col {
+.tfp-command .wf-canvas {
+  position: relative;
+}
+.tfp-command .wf-wires {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.tfp-command .wf-edge {
+  fill: none;
+  stroke: color-mix(in srgb, var(--cmd-text-dim) 55%, transparent);
+  stroke-width: 1.5;
+}
+.tfp-command .wf-edge.is-hot {
+  stroke: var(--cmd-text);
+  stroke-width: 2;
+  stroke-dasharray: 7 9;
+  animation: wf-flow 0.9s linear infinite;
+}
+.tfp-command .wf-edge.is-blocked {
+  stroke: var(--cmd-red);
+  stroke-dasharray: 4 6;
+  opacity: 0.85;
+}
+@keyframes wf-flow {
+  to {
+    stroke-dashoffset: -32;
+  }
+}
+.tfp-command .wf-node {
+  position: absolute;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  justify-content: center;
+  gap: 1px;
+  text-align: left;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--cmd-border);
+  background: var(--cmd-surface);
+  color: inherit;
+  box-shadow: var(--cmd-shadow-card);
+  font: inherit;
+}
+.tfp-command button.wf-node {
+  cursor: pointer;
+}
+.tfp-command .wf-node.is-picked {
+  border-color: var(--cmd-text);
+  background: var(--cmd-surface-2);
+}
+.tfp-command .wf-node.is-dim {
+  opacity: 0.38;
+}
+.tfp-command .wf-node.tone-cto {
+  border-color: var(--cmd-text);
+  background: var(--cmd-text);
+  color: var(--cmd-bg);
+}
+.tfp-command .wf-node.tone-cto .wf-kicker,
+.tfp-command .wf-node.tone-cto .wf-role {
+  color: color-mix(in srgb, var(--cmd-bg) 72%, transparent);
+}
+.tfp-command .wf-node.tone-kane {
+  border-color: var(--cmd-amber);
+}
+.tfp-command .wf-node.tone-block {
+  border-color: var(--cmd-red);
+  background: var(--cmd-red-soft);
+  color: var(--cmd-red);
+}
+.tfp-command .wf-node.tone-block .wf-role,
+.tfp-command .wf-node.tone-block .wf-kicker {
+  color: var(--cmd-red);
+}
+.tfp-command .wf-port {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: var(--cmd-bg);
+  border: 2px solid var(--cmd-text-muted);
+}
+.tfp-command .wf-port.in {
+  left: -5px;
+}
+.tfp-command .wf-port.out {
+  right: -5px;
+}
+.tfp-command .wf-port.down,
+.tfp-command .wf-port.up {
+  left: 50%;
+  right: auto;
+  margin-left: -5px;
+  margin-top: 0;
+}
+.tfp-command .wf-port.down {
+  top: auto;
+  bottom: -5px;
+}
+.tfp-command .wf-port.up {
+  top: -5px;
+}
+.tfp-command .wf-node.tone-cto .wf-port {
+  border-color: var(--cmd-bg);
+  background: var(--cmd-text);
 }
 .tfp-command .wf-kicker {
   font-family: var(--cmd-font-mono);
@@ -1925,54 +2032,6 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--cmd-text-dim);
-}
-.tfp-command .wf-card,
-.tfp-command .wf-step {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  text-align: left;
-  width: 100%;
-  background: var(--cmd-surface);
-  border: 1px solid var(--cmd-border);
-  border-radius: var(--cmd-radius);
-  color: inherit;
-  padding: 10px 12px;
-  box-shadow: var(--cmd-shadow-card);
-}
-.tfp-command .wf-card {
-  cursor: pointer;
-  font: inherit;
-}
-.tfp-command .wf-card.is-on,
-.tfp-command .wf-card.is-picked,
-.tfp-command .wf-step-cto {
-  border-color: var(--cmd-text-muted);
-}
-.tfp-command .wf-card.is-picked,
-.tfp-command .wf-step-kane {
-  background: var(--cmd-surface-2);
-}
-.tfp-command .wf-card.is-off {
-  opacity: 0.35;
-  cursor: default;
-}
-.tfp-command .wf-avatar,
-.tfp-command .wf-step-index {
-  flex: none;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: var(--cmd-accent-soft);
-  color: var(--cmd-text);
-  font-family: var(--cmd-font-display);
-  font-size: 14px;
-}
-.tfp-command .wf-step-cto .wf-step-index {
-  background: var(--cmd-text);
-  color: var(--cmd-bg);
 }
 .tfp-command .wf-name,
 .tfp-command .wf-role {
@@ -1984,39 +2043,6 @@
 .tfp-command .wf-role {
   color: var(--cmd-text-muted);
   font-size: 12px;
-}
-.tfp-command .wf-rail {
-  position: relative;
-}
-.tfp-command .wf-rail::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 28px;
-  bottom: 28px;
-  width: 1px;
-  background: var(--cmd-border);
-}
-.tfp-command .wf-col-center {
-  position: relative;
-}
-.tfp-command .wf-arrow {
-  display: none;
-}
-.tfp-command .wf-pill {
-  margin-left: auto;
-  font-family: var(--cmd-font-mono);
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--cmd-green);
-  background: var(--cmd-green-soft);
-  border-radius: 99px;
-  padding: 3px 7px;
-}
-.tfp-command .wf-pill.needs {
-  color: var(--cmd-amber);
-  background: var(--cmd-amber-soft);
 }
 .tfp-command .wf-detail {
   display: grid;
@@ -2102,13 +2128,9 @@
   margin: 10px 0 0;
 }
 @media (max-width: 960px) {
-  .tfp-command .wf-board,
   .tfp-command .wf-detail,
   .tfp-command .wf-live {
     grid-template-columns: 1fr;
-  }
-  .tfp-command .wf-rail {
-    display: none;
   }
 }
 @media (max-width: 720px) {
