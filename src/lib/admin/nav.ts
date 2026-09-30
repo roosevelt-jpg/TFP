@@ -19,6 +19,13 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     group: "Overview",
     items: [
       { id: "command", label: "Command", href: "/admin", icon: "command" },
+      {
+        id: "workflow",
+        label: "CTO workflow",
+        href: "/admin/workflow",
+        icon: "team",
+        kaneOnly: true,
+      },
       { id: "clients", label: "Clients", href: "/admin/clients", icon: "clients" },
     ],
   },
@@ -141,6 +148,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
 
 export const ADMIN_TITLES: Record<string, string> = {
   command: "Command",
+  workflow: "CTO workflow",
   me: "My Desk",
   clients: "Clients",
   funnel: "Funnel metrics",
