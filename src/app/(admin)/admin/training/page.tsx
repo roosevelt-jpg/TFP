@@ -66,12 +66,15 @@ export default async function TrainingPage() {
           <div className="cmd-kpi-value" style={{ fontSize: "1.15rem" }}>
             {data.coachHealth.status}
           </div>
+          <p className="cmd-list-sub" style={{ marginTop: 8 }}>
+            {data.coachHealth.detail}
+          </p>
           <div className="cmd-kpi-foot">
             <span className={coachBadgeClass(data.coachHealth.status)}>
-              {data.coachHealth.detail}
+              {data.coachHealth.status}
             </span>
             {data.coachHealth.lastInboundAt ? (
-              <span className="cmd-list-sub" style={{ display: "block" }}>
+              <span className="cmd-list-sub">
                 Inbound {relativeFreshness(data.coachHealth.lastInboundAt)}
               </span>
             ) : null}
@@ -81,8 +84,8 @@ export default async function TrainingPage() {
           <div className="cmd-kpi-label">Silent ({data.silentDays}+ days)</div>
           <div className="cmd-kpi-value">{data.silentCount}</div>
           <div className="cmd-kpi-foot">
-            <span className="cmd-badge cmd-badge-recorded">
-              Enrolment updatedAt
+            <span className="cmd-list-sub">
+              Counted from the last enrolment update
             </span>
           </div>
         </div>
