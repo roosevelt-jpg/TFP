@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const { create } = vi.hoisted(() => ({ create: vi.fn() }));
 
 vi.mock("@/lib/clients/stripe", () => ({
-  stripe: { checkout: { sessions: { create } } },
+  getStripe: async () => ({ checkout: { sessions: { create } } }),
 }));
 vi.mock("@/lib/logger", () => ({
   logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() },

@@ -33,11 +33,13 @@ beforeEach(() => {
   // override this (unanswered now defaults to denied).
   document.cookie = "tfp_tracking_consent=granted; path=/";
   mocks.env.NEXT_PUBLIC_META_PIXEL_ID = "1234567890";
+  vi.stubEnv("NEXT_PUBLIC_META_PIXEL_ID", "1234567890");
 });
 
 describe("loadMetaPixel", () => {
   it("no-ops without a pixel id — no stub, no script", async () => {
     mocks.env.NEXT_PUBLIC_META_PIXEL_ID = undefined;
+    vi.stubEnv("NEXT_PUBLIC_META_PIXEL_ID", "");
     const { loadMetaPixel } = await importModule();
 
     loadMetaPixel();

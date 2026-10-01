@@ -42,7 +42,7 @@ export const sendPurchaseWelcome = schemaTask({
         pdfToken: true,
         purchasedAt: true,
         welcomeEmailAt: true,
-        customer: { select: { name: true, email: true } },
+        customer: { select: { id: true, name: true, email: true } },
       },
     });
 
@@ -76,6 +76,7 @@ export const sendPurchaseWelcome = schemaTask({
         subject: "You're in - The Formula Programme",
         eligibility: {
           purpose: "transactional",
+          customerId: purchase.customer.id,
         },
         react: (
           <PurchaseWelcomeEmail

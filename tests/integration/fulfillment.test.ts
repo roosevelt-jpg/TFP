@@ -6,8 +6,8 @@ const { retrieve } = vi.hoisted(() => ({ retrieve: vi.fn() }));
 // Stripe is the one thing stubbed: every DB write below hits real Postgres,
 // because that is where the guarantees actually live.
 vi.mock("@/lib/clients/stripe", () => ({
-  stripe: { checkout: { sessions: { retrieve } } },
-  STRIPE_KEY_IS_LIVE: false,
+  getStripe: async () => ({ checkout: { sessions: { retrieve } } }),
+  stripeKeyIsLive: async () => false,
 }));
 
 const { fulfillCheckout } = await import("@/lib/payments/fulfill-checkout");

@@ -162,6 +162,16 @@ export const createCheckoutSession = actionClient
     await recordConsent({
       customerId: existing?.id,
       waitlistId: waitlist?.id,
+      channel: "email",
+      purpose: "checkout",
+      source: "checkout_form",
+      policyVersion: CHECKOUT_POLICY_VERSION,
+      ipAddress: ip,
+    });
+
+    await recordConsent({
+      customerId: existing?.id,
+      waitlistId: waitlist?.id,
       channel: "whatsapp",
       purpose: "checkout",
       source: "checkout_form",

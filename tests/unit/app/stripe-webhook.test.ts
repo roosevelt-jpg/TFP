@@ -4,9 +4,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { StripeEventStatus } from "@/generated/prisma/enums";
 
-const WEBHOOK_SECRET = "whsec_ci_placeholder";
-
-const { mocks } = vi.hoisted(() => ({
+const { mocks, WEBHOOK_SECRET } = vi.hoisted(() => ({
+  WEBHOOK_SECRET: "whsec_ci_placeholder",
   mocks: {
     recordStripeEvent: vi.fn(),
     markStripeEventStatus: vi.fn(),
@@ -26,11 +25,11 @@ vi.mock("@/lib/stripe-events/handle-event", () => ({
 
 vi.mock("@/lib/clients/stripe", async () => {
   const Stripe = (await import("stripe")).default;
+  const client = new Stripe("sk_test_fake", { apiVersion: Stripe.API_VERSION });
   return {
-    stripe: new Stripe("sk_test_fake", { apiVersion: Stripe.API_VERSION }),
-    get STRIPE_KEY_IS_LIVE() {
-      return mocks.keyIsLive;
-    },
+    getStripe: async () => client,
+    getStripeWebhookSecret: async () => WEBHOOK_SECRET,
+    stripeKeyIsLive: async () => mocks.keyIsLive,
   };
 });
 

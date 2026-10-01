@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const { list } = vi.hoisted(() => ({ list: vi.fn() }));
 
 vi.mock("@/lib/clients/stripe", () => ({
-  stripe: { promotionCodes: { list } },
+  getStripe: async () => ({ promotionCodes: { list } }),
 }));
 vi.mock("@/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },

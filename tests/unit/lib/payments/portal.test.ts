@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const { create } = vi.hoisted(() => ({ create: vi.fn() }));
 
 vi.mock("@/lib/clients/stripe", () => ({
-  stripe: { billingPortal: { sessions: { create } } },
+  getStripe: async () => ({ billingPortal: { sessions: { create } } }),
 }));
 
 const { createPortalSession } = await import("@/lib/payments/portal");

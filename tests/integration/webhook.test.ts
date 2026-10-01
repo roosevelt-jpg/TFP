@@ -12,11 +12,12 @@ vi.mock("@/lib/clients/stripe", async () => {
   const Stripe = (await import("stripe")).default;
   const real = new Stripe("sk_test_fake", { apiVersion: Stripe.API_VERSION });
   return {
-    stripe: {
+    getStripe: async () => ({
       webhooks: real.webhooks,
       checkout: { sessions: { retrieve } },
-    },
-    STRIPE_KEY_IS_LIVE: false,
+    }),
+    getStripeWebhookSecret: async () => "whsec_ci_placeholder",
+    stripeKeyIsLive: async () => false,
   };
 });
 

@@ -43,6 +43,8 @@ const details = {
   subscription: null,
   stripeInvoiceId: null,
   stripePaymentIntentId: null,
+  funnelVersion: "funnel-v2",
+  acquisitionSource: "direct",
 };
 
 // findUnique is called for stripeCustomerId, email, whatsapp in that order.

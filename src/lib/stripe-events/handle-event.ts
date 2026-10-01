@@ -6,6 +6,7 @@ import { logger } from "@/lib/logger";
 import { fulfillCheckout } from "@/lib/payments/fulfill-checkout";
 
 import { handleChargeRefunded, handleDisputeCreated } from "./handlers/charges";
+import { handleCheckoutAsyncPaymentFailed } from "./handlers/checkout-async-failed";
 import { handleCheckoutExpired } from "./handlers/checkout-expired";
 import {
   handleInvoiceActionRequired,
@@ -71,15 +72,19 @@ export async function handleStripeEvent(
       return "handled";
 
     case "charge.dispute.created":
-      handleDisputeCreated(event.data.object);
+      await handleDisputeCreated(event.data.object);
       return "handled";
 
     case "checkout.session.expired":
       await handleCheckoutExpired(event.data.object);
       return "handled";
 
-    // Comms and analytics ship in a later phase, so these stay findable for
-    // redrive rather than looking like finished work.
+    case "checkout.session.async_payment_failed":
+      await handleCheckoutAsyncPaymentFailed(event.data.object);
+      return "handled";
+
+    // Anything else we subscribed to but have not classified stays findable
+    // for redrive rather than looking like finished work.
     default:
       logger.info("Stripe event recorded, handler pending", {
         stripeEventId: event.id,

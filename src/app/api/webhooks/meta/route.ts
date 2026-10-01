@@ -367,15 +367,8 @@ async function handleWhatsAppInbound(message: WaMessage, value: WaChangeValue) {
     eventId: message.id ?? `wa:${from}:${message.timestamp}`,
   });
 
-  if (customer) {
-    await recordFunnelEvent({
-      eventName: "programme_activated",
-      customerId: customer.id,
-      source: "meta",
-      properties: { channel: "whatsapp", from },
-      eventId: `programme-activated:wa:${customer.id}`,
-    });
-  }
+  // Activation is the coaching intake, not any inbound message. A stop
+  // reply or a question must not count as the programme starting.
 
   if (
     text &&

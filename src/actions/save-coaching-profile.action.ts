@@ -4,6 +4,7 @@ import { returnValidationErrors } from "next-safe-action";
 
 import { AppError, ERROR_CODES } from "@/lib/errors/app-error";
 import { logger } from "@/lib/logger";
+import { recordFunnelEvent } from "@/lib/funnel/records";
 import { enqueueCoachingAnswers } from "@/lib/payments/enqueue-ghl";
 import { saveCoachingProfile } from "@/lib/payments/persist-coaching";
 import { resolvePaidPurchase } from "@/lib/payments/resolve-purchase";
@@ -16,7 +17,7 @@ import { firstNameOf } from "@/lib/name";
 
 // The session id is the only credential: the customer is resolved from Stripe
 // server-side, so nothing the client sends can point these answers at someone
-// else's record. Same 24h box as the page that renders the form.
+// else's record. Same window as the page that renders the form.
 export const saveCoaching = actionClient
   .metadata({ actionName: "saveCoaching" })
   .inputSchema(coachingSchema)
@@ -51,6 +52,14 @@ export const saveCoaching = actionClient
     logger.info("Coaching profile saved", {
       purchaseRef: purchase.ref,
       customerId: purchase.customerId,
+    });
+
+    await recordFunnelEvent({
+      eventName: "programme_activated",
+      customerId: purchase.customerId,
+      source: "web",
+      properties: { channel: "coaching_intake", purchaseRef: purchase.ref },
+      eventId: `programme-activated:coaching:${purchase.customerId}`,
     });
 
     // The answers are the reason the coach can start from something specific,

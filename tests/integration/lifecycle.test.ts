@@ -7,11 +7,11 @@ const { retrieveSession, retrieveSubscription } = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/clients/stripe", () => ({
-  stripe: {
+  getStripe: async () => ({
     checkout: { sessions: { retrieve: retrieveSession } },
     subscriptions: { retrieve: retrieveSubscription },
-  },
-  STRIPE_KEY_IS_LIVE: false,
+  }),
+  stripeKeyIsLive: async () => false,
 }));
 
 const { fulfillCheckout } = await import("@/lib/payments/fulfill-checkout");

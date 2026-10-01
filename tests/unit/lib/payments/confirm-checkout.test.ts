@@ -9,7 +9,9 @@ const { mocks } = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/clients/stripe", () => ({
-  stripe: { checkout: { sessions: { retrieve: mocks.retrieve } } },
+  getStripe: async () => ({
+    checkout: { sessions: { retrieve: mocks.retrieve } },
+  }),
 }));
 
 vi.mock("@/db", () => ({

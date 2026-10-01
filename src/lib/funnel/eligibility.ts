@@ -132,7 +132,11 @@ export async function checkChannelEligibility(
       !c.withdrawnAt &&
       (c.channel === channelKey ||
         c.channel === "marketing" ||
-        (input.purpose === "lifecycle" && c.channel === "email")),
+        // Checkout records programme consent, not a separate email row.
+        // Recovery mail still has to go out to that buyer.
+        (input.purpose === "lifecycle" &&
+          input.channel === "email" &&
+          (c.channel === "email" || c.channel === "programme"))),
   );
 
   if (!granted) {

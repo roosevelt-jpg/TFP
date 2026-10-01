@@ -7,7 +7,7 @@ const { list, create, update } = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/clients/stripe", () => ({
-  stripe: { promotionCodes: { list, create, update } },
+  getStripe: async () => ({ promotionCodes: { list, create, update } }),
 }));
 vi.mock("@/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
